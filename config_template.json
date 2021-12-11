@@ -1,0 +1,6 @@
+{
+    "endpoint": "xxxxxxxx-ats.iot.us-east-1.amazonaws.com",
+    "certs": {
+        "CA": "certs/AmazonRootCA1.pem"
+    }
+}
