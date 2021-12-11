@@ -153,7 +153,7 @@ def on_connection_resumed(
     **kwargs
 ) -> None:
     print(f"Connection resumed. return code: {return_code} session present: {session_present}")
-    
+
     if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
         print("Session did not persist. Resubscribing to existing topics...")
         resubscribe_future, _ = connection.resubscribe_existing_topics()
@@ -191,16 +191,16 @@ def waitForRegisterThingResponse():
         time.sleep(1)
 
 
-def __wait_for(api, response):
-    # Wait for the response.
-    loopCount = 0
-    while loopCount < 10 and response is None:
-        if response is not None:
-            break
-        loopCount += 1
-        message = json.dumps(response)
-        print(f'Waiting {api}... : {message}')
-        time.sleep(1)
+# def __wait_for(api, response):
+#     # Wait for the response.
+#     loopCount = 0
+#     while loopCount < 10 and response is None:
+#         if response is not None:
+#             break
+#         loopCount += 1
+#         message = json.dumps(response)
+#         print(f'Waiting {api}... : {message}')
+#         time.sleep(1)
 
 
 def __create_connection(endpoint: str, cert: str, key: str, ca: str) -> Connection:
