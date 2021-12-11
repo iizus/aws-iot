@@ -19,4 +19,5 @@ python code/pubsub.py \
     --endpoint $endpoint \
     --root-ca $CA \
     --cert certs/client.pem.crt \
-    --key certs/client.pem.key
+    --key certs/client.pem.key \
+    --count 0
