@@ -53,7 +53,6 @@ is_sample_done = threading.Event()
 args = parser.parse_args()
 
 io.init_logging(getattr(io.LogLevel, args.verbosity), 'stderr')
-mqtt_connection = None
 identity_client = None
 
 createKeysAndCertificateResponse = None
@@ -68,7 +67,7 @@ class LockedData:
 locked_data = LockedData()
 
 # Function for gracefully quitting this sample
-def exit(msg_or_exception):
+def exit(msg_or_exception, mqtt_connection):
     if isinstance(msg_or_exception, Exception):
         print("Exiting Sample due to exception.")
         traceback.print_exception(msg_or_exception.__class__, msg_or_exception, sys.exc_info()[2])
@@ -85,7 +84,6 @@ def exit(msg_or_exception):
 def on_disconnected(disconnect_future):
     # type: (Future) -> None
     print("Disconnected.")
-
     # Signal that sample is finished
     is_sample_done.set()
 
@@ -94,7 +92,6 @@ def on_publish_register_thing(future):
     try:
         future.result() # raises exception if publish failed
         print("Published RegisterThing request..")
-
     except Exception as e:
         print("Failed to publish RegisterThing request.")
         exit(e)
@@ -114,7 +111,6 @@ def on_publish_create_certificate_from_csr(future):
     try:
         future.result() # raises exception if publish failed
         print("Published CreateCertificateFromCsr request..")
-
     except Exception as e:
         print("Failed to publish CreateCertificateFromCsr request.")
         exit(e)
@@ -130,9 +126,7 @@ def createkeysandcertificate_execution_accepted(response):
         path = 'certs/client.pem'
         write_file(path=f'{path}.crt', content=createKeysAndCertificateResponse.certificate_pem)
         write_file(path=f'{path}.key', content=createKeysAndCertificateResponse.private_key)
-
         return
-
     except Exception as e:
         exit(e)
 
@@ -157,9 +151,7 @@ def createcertificatefromcsr_execution_accepted(response):
         print("Received a new message {}".format(createCertificateFromCsrResponse))
         global certificateOwnershipToken
         certificateOwnershipToken = response.certificate_ownership_token
-
         return
-
     except Exception as e:
         exit(e)
 
@@ -239,50 +231,140 @@ def waitForRegisterThingResponse():
         print('Waiting... RegisterThingResponse: ' + json.dumps(registerThingResponse))
         time.sleep(1)
 
-if __name__ == '__main__':
+
+def __create_connection(endpoint, cert, key, ca):
     # Spin up resources
     event_loop_group = io.EventLoopGroup(1)
     host_resolver = io.DefaultHostResolver(event_loop_group)
-    client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver)
 
-    proxy_options = None
-    if (args.proxy_host):
-        proxy_options = http.HttpProxyOptions(host_name=args.proxy_host, port=args.proxy_port)
+    mqtt_connection = mqtt_connection_builder.mtls_from_path(
+        endpoint = endpoint,
+        cert_filepath = cert,
+        pri_key_filepath = key,
+        client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
+        ca_filepath = ca,
+        client_id = str(uuid4()),
+        on_connection_interrupted = on_connection_interrupted,
+        on_connection_resumed = on_connection_resumed,
+        clean_session = False,
+        keep_alive_secs = 30,
+        http_proxy_options = None,
+    )
+    print("Connecting to {args.endpoint} with client ID '{args.client_id}'...")
+    return mqtt_connection
 
-    if args.use_websocket == True:
-        credentials_provider = auth.AwsCredentialsProvider.new_default_chain(client_bootstrap)
-        mqtt_connection = mqtt_connection_builder.websockets_with_default_aws_signing(
-            endpoint=args.endpoint,
-            client_bootstrap=client_bootstrap,
-            region=args.signing_region,
-            credentials_provider=credentials_provider,
-            http_proxy_options=proxy_options,
-            on_connection_interrupted=on_connection_interrupted,
-            on_connection_resumed=on_connection_resumed,
-            ca_filepath=args.root_ca,
-            client_id=args.client_id,
-            clean_session=False,
-            keep_alive_secs=30)
 
-    else:
-        mqtt_connection = mqtt_connection_builder.mtls_from_path(
-            endpoint=args.endpoint,
-            cert_filepath=args.cert,
-            pri_key_filepath=args.key,
-            client_bootstrap=client_bootstrap,
-            ca_filepath=args.root_ca,
-            client_id=args.client_id,
-            on_connection_interrupted=on_connection_interrupted,
-            on_connection_resumed=on_connection_resumed,
-            clean_session=False,
-            keep_alive_secs=30,
-            http_proxy_options=proxy_options)
+def __subscribe_CreateKeysAndCertificate_topics_by(client):
+    request = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
+    __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request)
+    __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request)
 
-    print("Connecting to {} with client ID '{}'...".format(
-        args.endpoint, args.client_id))
 
+def __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request):
+    print("Subscribing to CreateKeysAndCertificate Accepted topic...")
+    future, _ = client.subscribe_to_create_keys_and_certificate_accepted(
+        request = request,
+        qos = mqtt.QoS.AT_LEAST_ONCE,
+        callback = createkeysandcertificate_execution_accepted
+    )
+    # Wait for subscription to succeed
+    future.result()
+
+
+def __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request):
+    print("Subscribing to CreateKeysAndCertificate Rejected topic...")
+    future, _ = client.subscribe_to_create_keys_and_certificate_rejected(
+        request = request,
+        qos = mqtt.QoS.AT_LEAST_ONCE,
+        callback = createkeysandcertificate_execution_rejected
+    )
+    # Wait for subscription to succeed
+    future.result()
+
+
+def __subscribe_RegisterThing_topics_by(client):
+    request = iotidentity.RegisterThingSubscriptionRequest(
+        template_name = args.templateName
+    )
+    __subscribe_RegisterThing_accepted_topic_by(client, request)
+    __subscribe_RegisterThing_rejected_topic_by(client, request)
+
+
+def __subscribe_RegisterThing_accepted_topic_by(client, request):
+    print("Subscribing to CreateKeysAndCertificate Accepted topic...")
+    future, _ = client.subscribe_to_register_thing_accepted(
+        request = request,
+        qos = mqtt.QoS.AT_LEAST_ONCE,
+        callback = registerthing_execution_accepted
+    )
+    # Wait for subscription to succeed
+    future.result()
+
+
+def __subscribe_RegisterThing_rejected_topic_by(client, request):
+    print("Subscribing to CreateKeysAndCertificate Rejected topic...")
+    future, _ = client.subscribe_to_register_thing_rejected(
+        request = request,
+        qos = mqtt.QoS.AT_LEAST_ONCE,
+        callback = registerthing_execution_rejected
+    )
+    # Wait for subscription to succeed
+    future.result()
+
+
+def __publish_CreateKeysAndCertificate_topic_by(client):
+    print("Publishing to CreateKeysAndCertificate...")
+    future = client.publish_create_keys_and_certificate(
+        request = iotidentity.CreateKeysAndCertificateRequest(),
+        qos = mqtt.QoS.AT_LEAST_ONCE
+    )
+    future.add_done_callback(on_publish_create_keys_and_certificate)
+
+    waitForCreateKeysAndCertificateResponse()
+
+    if createKeysAndCertificateResponse is None:
+        raise Exception('CreateKeysAndCertificate API did not succeed')
+
+
+def __publish_registerThing_topic_by(client):
+    request = iotidentity.RegisterThingRequest(
+        template_name = args.templateName,
+        certificate_ownership_token = createKeysAndCertificateResponse.certificate_ownership_token,
+        parameters = json.loads(args.templateParameters)
+    )
+
+    print("Publishing to RegisterThing topic...")
+    future = client.publish_register_thing(
+        request = request,
+        qos = mqtt.QoS.AT_LEAST_ONCE
+    )
+    future.add_done_callback(on_publish_register_thing)
+
+    waitForRegisterThingResponse()
+
+
+def __provision_by(client, mqtt_connection):
+    try:
+        # Subscribe to necessary topics.
+        # Note that is **is** important to wait for "accepted/rejected" subscriptions
+        # to succeed before publishing the corresponding "request".
+        __subscribe_CreateKeysAndCertificate_topics_by(client)
+        __subscribe_RegisterThing_topics_by(client)
+        __publish_CreateKeysAndCertificate_topic_by(client)
+        __publish_registerThing_topic_by(client)
+        exit("success", mqtt_connection)
+    except Exception as e:
+        exit(e, mqtt_connection)
+
+
+def provision():
+    mqtt_connection = __create_connection(
+        endpoint = args.endpoint,
+        cert = args.cert,
+        key = args.key,
+        ca = args.root_ca,
+    )
     connected_future = mqtt_connection.connect()
-
     identity_client = iotidentity.IotIdentityClient(mqtt_connection)
 
     # Wait for connection to be fully established.
@@ -292,117 +374,11 @@ if __name__ == '__main__':
     # fails or succeeds.
     connected_future.result()
     print("Connected!")
-
-    try:
-        # Subscribe to necessary topics.
-        # Note that is **is** important to wait for "accepted/rejected" subscriptions
-        # to succeed before publishing the corresponding "request".
-
-        # Keys workflow if csr is not provided
-        if args.csr is None:
-            createkeysandcertificate_subscription_request = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
-
-            print("Subscribing to CreateKeysAndCertificate Accepted topic...")
-            createkeysandcertificate_subscribed_accepted_future, _ = identity_client.subscribe_to_create_keys_and_certificate_accepted(
-                request=createkeysandcertificate_subscription_request,
-                qos=mqtt.QoS.AT_LEAST_ONCE,
-                callback=createkeysandcertificate_execution_accepted)
-
-            # Wait for subscription to succeed
-            createkeysandcertificate_subscribed_accepted_future.result()
-
-            print("Subscribing to CreateKeysAndCertificate Rejected topic...")
-            createkeysandcertificate_subscribed_rejected_future, _ = identity_client.subscribe_to_create_keys_and_certificate_rejected(
-                request=createkeysandcertificate_subscription_request,
-                qos=mqtt.QoS.AT_LEAST_ONCE,
-                callback=createkeysandcertificate_execution_rejected)
-
-            # Wait for subscription to succeed
-            createkeysandcertificate_subscribed_rejected_future.result()
-        else:
-            createcertificatefromcsr_subscription_request = iotidentity.CreateCertificateFromCsrSubscriptionRequest()
-
-            print("Subscribing to CreateCertificateFromCsr Accepted topic...")
-            createcertificatefromcsr_subscribed_accepted_future, _ = identity_client.subscribe_to_create_certificate_from_csr_accepted(
-                request=createcertificatefromcsr_subscription_request,
-                qos=mqtt.QoS.AT_LEAST_ONCE,
-                callback=createcertificatefromcsr_execution_accepted)
-
-            # Wait for subscription to succeed
-            createcertificatefromcsr_subscribed_accepted_future.result()
-
-            print("Subscribing to CreateCertificateFromCsr Rejected topic...")
-            createcertificatefromcsr_subscribed_rejected_future, _ = identity_client.subscribe_to_create_certificate_from_csr_rejected(
-                request=createcertificatefromcsr_subscription_request,
-                qos=mqtt.QoS.AT_LEAST_ONCE,
-                callback=createcertificatefromcsr_execution_rejected)
-
-            # Wait for subscription to succeed
-            createcertificatefromcsr_subscribed_rejected_future.result()
-
-
-        registerthing_subscription_request = iotidentity.RegisterThingSubscriptionRequest(template_name=args.templateName)
-
-        print("Subscribing to RegisterThing Accepted topic...")
-        registerthing_subscribed_accepted_future, _ = identity_client.subscribe_to_register_thing_accepted(
-            request=registerthing_subscription_request,
-            qos=mqtt.QoS.AT_LEAST_ONCE,
-            callback=registerthing_execution_accepted)
-
-        # Wait for subscription to succeed
-        registerthing_subscribed_accepted_future.result()
-
-        print("Subscribing to RegisterThing Rejected topic...")
-        registerthing_subscribed_rejected_future, _ = identity_client.subscribe_to_register_thing_rejected(
-            request=registerthing_subscription_request,
-            qos=mqtt.QoS.AT_LEAST_ONCE,
-            callback=registerthing_execution_rejected)
-        # Wait for subscription to succeed
-        registerthing_subscribed_rejected_future.result()
-
-        if args.csr is None:
-            print("Publishing to CreateKeysAndCertificate...")
-            publish_future = identity_client.publish_create_keys_and_certificate(
-                request=iotidentity.CreateKeysAndCertificateRequest(), qos=mqtt.QoS.AT_LEAST_ONCE)
-            publish_future.add_done_callback(on_publish_create_keys_and_certificate)
-
-            waitForCreateKeysAndCertificateResponse()
-
-            if createKeysAndCertificateResponse is None:
-                raise Exception('CreateKeysAndCertificate API did not succeed')
-
-            registerThingRequest = iotidentity.RegisterThingRequest(
-                template_name=args.templateName,
-                certificate_ownership_token=createKeysAndCertificateResponse.certificate_ownership_token,
-                parameters=json.loads(args.templateParameters))
-        else:
-            print("Publishing to CreateCertificateFromCsr...")
-            csrPath = open(args.csr, 'r').read()
-            publish_future = identity_client.publish_create_certificate_from_csr(
-                request=iotidentity.CreateCertificateFromCsrRequest(certificate_signing_request=csrPath),
-                qos=mqtt.QoS.AT_LEAST_ONCE)
-            publish_future.add_done_callback(on_publish_create_certificate_from_csr)
-
-            waitForCreateCertificateFromCsrResponse()
-
-            if createCertificateFromCsrResponse is None:
-                raise Exception('CreateCertificateFromCsr API did not succeed')
-
-            registerThingRequest = iotidentity.RegisterThingRequest(
-                template_name=args.templateName,
-                certificate_ownership_token=createCertificateFromCsrResponse.certificate_ownership_token,
-                parameters=json.loads(args.templateParameters))
-
-        print("Publishing to RegisterThing topic...")
-        registerthing_publish_future = identity_client.publish_register_thing(registerThingRequest, mqtt.QoS.AT_LEAST_ONCE)
-        registerthing_publish_future.add_done_callback(on_publish_register_thing)
-
-        waitForRegisterThingResponse()
-        exit("success")
-
-    except Exception as e:
-        exit(e)
+    __provision_by(identity_client, mqtt_connection)
 
     # Wait for the sample to finish
     is_sample_done.wait()
 
+
+if __name__ == '__main__':
+    provision()

@@ -15,9 +15,9 @@ python code/fleetprovisioning.py \
     --templateName ec2 \
     --templateParameters "{}"
 
-python code/pubsub.py \
-    --endpoint $endpoint \
-    --root-ca $CA \
-    --cert certs/client.pem.crt \
-    --key certs/client.pem.key \
-    --count 0
+# python code/pubsub.py \
+#     --endpoint $endpoint \
+#     --root-ca $CA \
+#     --cert certs/client.pem.crt \
+#     --key certs/client.pem.key \
+#     --count 0
