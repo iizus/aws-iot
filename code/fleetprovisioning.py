@@ -237,12 +237,12 @@ def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
     client: iotidentity.IotIdentityClient,
     request: iotidentity.CreateKeysAndCertificateSubscriptionRequest
 ) -> None:
-    print("Subscribing to CreateKeysAndCertificate Accepted topic...")
-    future, _ = client.subscribe_to_create_keys_and_certificate_accepted(
+    future, topic = client.subscribe_to_create_keys_and_certificate_accepted(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
         callback = createkeysandcertificate_execution_accepted
     )
+    print(f"Subscribed {topic}")
     # Wait for subscription to succeed
     future.result()
 
@@ -251,12 +251,12 @@ def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
     client: iotidentity.IotIdentityClient,
     request: iotidentity.CreateKeysAndCertificateSubscriptionRequest
 ) -> None:
-    print("Subscribing to CreateKeysAndCertificate Rejected topic...")
-    future, _ = client.subscribe_to_create_keys_and_certificate_rejected(
+    future, topic = client.subscribe_to_create_keys_and_certificate_rejected(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
         callback = createkeysandcertificate_execution_rejected
     )
+    print(f"Subscribed {topic}")
     # Wait for subscription to succeed
     future.result()
 
@@ -273,12 +273,12 @@ def __subscribe_RegisterThing_accepted_topic_by(
     client: iotidentity.IotIdentityClient,
     request: iotidentity.RegisterThingRequest
 ) -> None:
-    print("Subscribing to CreateKeysAndCertificate Accepted topic...")
-    future, _ = client.subscribe_to_register_thing_accepted(
+    future, topic = client.subscribe_to_register_thing_accepted(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
         callback = registerthing_execution_accepted
     )
+    print(f"Subscribed {topic}")
     # Wait for subscription to succeed
     future.result()
 
@@ -287,12 +287,13 @@ def __subscribe_RegisterThing_rejected_topic_by(
     client: iotidentity.IotIdentityClient,
     request: iotidentity.RegisterThingRequest
 ) -> None:
-    print("Subscribing to CreateKeysAndCertificate Rejected topic...")
-    future, _ = client.subscribe_to_register_thing_rejected(
+    # print("Subscribing to CreateKeysAndCertificate Rejected topic...")
+    future, topic = client.subscribe_to_register_thing_rejected(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
         callback = registerthing_execution_rejected
     )
+    print(f"Subscribed {topic}")
     # Wait for subscription to succeed
     future.result()
 
