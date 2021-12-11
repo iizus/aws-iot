@@ -1,5 +1,5 @@
 import argparse
-from msilib.schema import Feature
+from multiprocessing.connection import Connection
 from awscrt import io, mqtt
 from awsiot import iotidentity, mqtt_connection_builder
 from concurrent.futures import Future
@@ -70,38 +70,26 @@ def __error(msg_or_exception):
     )
 
     
-def on_disconnected(disconnect_future):
-    # type: (Future) -> None
+def on_disconnected(future: Future) -> None:
     print("Disconnected")
     # Signal that sample is finished
     is_sample_done.set()
 
 
-def on_publish_register_thing(future):
-    # type: (Future) -> None
+def on_publish_register_thing(future: Future) -> None:
+    __callback('RegisterThing', future)
+
+
+def on_publish_create_keys_and_certificate(future: Future) -> None:
+    __callback('CreateKeysAndCertificate', future)
+
+
+def __callback(api: str, future: Future) -> None:
     try:
         future.result() # raises exception if publish failed
-        print("Published RegisterThing request")
+        print(f"Published {api} request")
     except Exception as e:
-        print("Failed to publish RegisterThing request")
-        __error(e)
-
-
-def on_publish_create_keys_and_certificate(future: Feature) -> None:
-    try:
-        future.result() # raises exception if publish failed
-        print("Published CreateKeysAndCertificate request")
-    except Exception as e:
-        print("Failed to publish CreateKeysAndCertificate request")
-        __error(e)
-
-
-def on_publish_create_certificate_from_csr(future: Feature) -> None:
-    try:
-        future.result() # raises exception if publish failed
-        print("Published CreateCertificateFromCsr request")
-    except Exception as e:
-        print("Failed to publish CreateCertificateFromCsr request")
+        print(f"Failed to publish {api} request")
         __error(e)
 
 
@@ -167,13 +155,11 @@ def on_connection_resumed(connection, return_code, session_present, **kwargs):
         resubscribe_future.add_done_callback(on_resubscribe_complete)
 
 
-def on_resubscribe_complete(resubscribe_future):
-    resubscribe_results = resubscribe_future.result()
-    print(f"Resubscribe results: {resubscribe_results}")
-
-    for topic, qos in resubscribe_results['topics']:
-        if qos is None:
-            sys.__error(f"Server rejected resubscribe to topic: {topic}")
+def on_resubscribe_complete(future: Future) -> None:
+    results = future.result()
+    print(f"Resubscribe results: {results}")
+    for topic, qos in results.get('topics'):
+        if qos is None: sys.__error(f"Server rejected resubscribe to topic: {topic}")
 
 
 def waitForCreateKeysAndCertificateResponse():
@@ -210,7 +196,7 @@ def __wait_for(api, response):
         time.sleep(1)
 
 
-def __create_connection(endpoint, cert, key, ca):
+def __create_connection(endpoint: str, cert: str, key: str, ca: str) -> Connection:
     # Spin up resources
     event_loop_group = io.EventLoopGroup(1)
     host_resolver = io.DefaultHostResolver(event_loop_group)
