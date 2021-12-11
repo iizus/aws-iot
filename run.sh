@@ -7,7 +7,7 @@ read_config () {
 endpoint=$(read_config '.endpoint')
 CA=$(read_config '.certs.CA')
 
-python fleetprovisioning.py \
+python code/fleetprovisioning.py \
     --endpoint $endpoint \
     --root-ca $CA \
     --cert certs/claim.pem.crt \
@@ -15,7 +15,7 @@ python fleetprovisioning.py \
     --templateName ec2 \
     --templateParameters "{}"
 
-python aws-iot-device-sdk-python-v2/samples/pubsub.py \
+python code/samples/pubsub.py \
     --endpoint $endpoint \
     --root-ca $CA \
     --cert certs/client.pem.crt \
