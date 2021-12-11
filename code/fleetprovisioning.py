@@ -19,7 +19,7 @@ parser.add_argument('--key', help="File path to your private key file, in PEM fo
 parser.add_argument('--root-ca', help="File path to root certificate authority, in PEM format. " +
                                       "Necessary if MQTT server uses a certificate that's not already in " +
                                       "your trust store")
-parser.add_argument('--client-id', default="test-" + str(uuid4()), help="Client ID for MQTT connection.")
+parser.add_argument('--client-id', default="provisioning-" + str(uuid4()), help="Client ID for MQTT connection.")
 parser.add_argument('--use-websocket', default=False, action='store_true',
                     help="To use a websocket instead of raw mqtt. If you " +
                          "specify this option you must specify a region for signing.")
@@ -366,10 +366,13 @@ def provision():
     connected_future.result()
     print("Connected!")
     __provision_by(mqtt_connection)
+    thing_name = registerThingResponse.thing_name
 
     # Wait for the sample to finish
     is_sample_done.wait()
+    return thing_name
 
 
 if __name__ == '__main__':
-    provision()
+    thing_name = provision()
+    print(thing_name)
