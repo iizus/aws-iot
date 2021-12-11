@@ -116,7 +116,9 @@ def __save_file(path: str, content: str) -> None:
         print(f'Saved {path}')
 
 
-def createkeysandcertificate_execution_rejected(response: iotidentity.ErrorResponse) -> None:
+def createkeysandcertificate_execution_rejected(
+    response: iotidentity.ErrorResponse
+) -> None:
     __print_rejected('CreateKeysAndCertificate', response)
 
 
@@ -139,14 +141,19 @@ def __print_rejected(api: str, response: iotidentity.ErrorResponse) -> None:
 
 
 # Callback when connection is accidentally lost.
-def on_connection_interrupted(connection, error, **kwargs) -> None:
+def on_connection_interrupted(connection: Connection, error, **kwargs) -> None:
     print(f"Connection interrupted. Error: {error}")
 
 
 # Callback when an interrupted connection is re-established.
-def on_connection_resumed(connection, return_code, session_present, **kwargs):
+def on_connection_resumed(
+    connection: Connection,
+    return_code,
+    session_present,
+    **kwargs
+) -> None:
     print(f"Connection resumed. return code: {return_code} session present: {session_present}")
-
+    
     if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
         print("Session did not persist. Resubscribing to existing topics...")
         resubscribe_future, _ = connection.resubscribe_existing_topics()
@@ -218,13 +225,18 @@ def __create_connection(endpoint: str, cert: str, key: str, ca: str) -> Connecti
     return mqtt_connection
 
 
-def __subscribe_CreateKeysAndCertificate_topics_by(client):
+def __subscribe_CreateKeysAndCertificate_topics_by(
+    client: iotidentity.IotIdentityClient
+) -> None:
     request = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
     __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request)
     __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request)
 
 
-def __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request):
+def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
+    client: iotidentity.IotIdentityClient,
+    request: iotidentity.CreateKeysAndCertificateSubscriptionRequest
+) -> None:
     print("Subscribing to CreateKeysAndCertificate Accepted topic...")
     future, _ = client.subscribe_to_create_keys_and_certificate_accepted(
         request = request,
@@ -235,7 +247,10 @@ def __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request):
     future.result()
 
 
-def __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request):
+def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
+    client: iotidentity.IotIdentityClient,
+    request: iotidentity.CreateKeysAndCertificateSubscriptionRequest
+) -> None:
     print("Subscribing to CreateKeysAndCertificate Rejected topic...")
     future, _ = client.subscribe_to_create_keys_and_certificate_rejected(
         request = request,
@@ -246,7 +261,7 @@ def __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request):
     future.result()
 
 
-def __subscribe_RegisterThing_topics_by(client):
+def __subscribe_RegisterThing_topics_by(client: iotidentity.IotIdentityClient) -> None:
     request = iotidentity.RegisterThingSubscriptionRequest(
         template_name = args.templateName
     )
@@ -254,7 +269,10 @@ def __subscribe_RegisterThing_topics_by(client):
     __subscribe_RegisterThing_rejected_topic_by(client, request)
 
 
-def __subscribe_RegisterThing_accepted_topic_by(client, request):
+def __subscribe_RegisterThing_accepted_topic_by(
+    client: iotidentity.IotIdentityClient,
+    request: iotidentity.RegisterThingRequest
+) -> None:
     print("Subscribing to CreateKeysAndCertificate Accepted topic...")
     future, _ = client.subscribe_to_register_thing_accepted(
         request = request,
@@ -265,7 +283,10 @@ def __subscribe_RegisterThing_accepted_topic_by(client, request):
     future.result()
 
 
-def __subscribe_RegisterThing_rejected_topic_by(client, request):
+def __subscribe_RegisterThing_rejected_topic_by(
+    client: iotidentity.IotIdentityClient,
+    request: iotidentity.RegisterThingRequest
+) -> None:
     print("Subscribing to CreateKeysAndCertificate Rejected topic...")
     future, _ = client.subscribe_to_register_thing_rejected(
         request = request,
@@ -276,7 +297,9 @@ def __subscribe_RegisterThing_rejected_topic_by(client, request):
     future.result()
 
 
-def __publish_CreateKeysAndCertificate_topic_by(client):
+def __publish_CreateKeysAndCertificate_topic_by(
+    client: iotidentity.IotIdentityClient
+) -> None:
     print("Publishing to CreateKeysAndCertificate...")
     future = client.publish_create_keys_and_certificate(
         request = iotidentity.CreateKeysAndCertificateRequest(),
@@ -285,18 +308,16 @@ def __publish_CreateKeysAndCertificate_topic_by(client):
     future.add_done_callback(on_publish_create_keys_and_certificate)
     waitForCreateKeysAndCertificateResponse()
     # __wait_for('createKeysAndCertificateResponse', createKeysAndCertificateResponse)
-
     if createKeysAndCertificateResponse is None:
         raise Exception('CreateKeysAndCertificate API did not succeed')
 
 
-def __publish_registerThing_topic_by(client):
+def __publish_registerThing_topic_by(client: iotidentity.IotIdentityClient) -> None:
     request = iotidentity.RegisterThingRequest(
         template_name = args.templateName,
         certificate_ownership_token = createKeysAndCertificateResponse.certificate_ownership_token,
         parameters = json.loads(args.templateParameters)
     )
-
     print("Publishing to RegisterThing topic...")
     future = client.publish_register_thing(
         request = request,
@@ -307,20 +328,20 @@ def __publish_registerThing_topic_by(client):
     # __wait_for('registerThingResponse', registerThingResponse)
 
 
-def __provision_by(mqtt_connection):
+def __provision_by(connection: Connection) -> None:
     try:
         # Subscribe to necessary topics.
         # Note that is **is** important to wait for "accepted/rejected" subscriptions
         # to succeed before publishing the corresponding "request".
-        client = iotidentity.IotIdentityClient(mqtt_connection)
+        client = iotidentity.IotIdentityClient(connection)
         __subscribe_and_pubrish_topics_by(client)
         print("Success")
-        __disconnect(mqtt_connection)
+        __disconnect(connection)
     except Exception as e:
         __error(e)
 
 
-def __subscribe_and_pubrish_topics_by(client):
+def __subscribe_and_pubrish_topics_by(client: iotidentity.IotIdentityClient) -> None:
     __subscribe_CreateKeysAndCertificate_topics_by(client)
     __subscribe_RegisterThing_topics_by(client)
     __publish_CreateKeysAndCertificate_topic_by(client)
