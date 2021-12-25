@@ -33,15 +33,15 @@ def on_disconnected(future: Future) -> None:
     is_sample_done.set()
 
 
-def on_publish_register_thing(future: Future) -> None:
+def on_publish_RegisterThing(future: Future) -> None:
     fp.callback('RegisterThing', future)
 
 
-def on_publish_create_keys_and_certificate(future: Future) -> None:
+def on_publish_CreateKeysAndCertificate(future: Future) -> None:
     fp.callback('CreateKeysAndCertificate', future)
 
 
-def createkeysandcertificate_execution_accepted(response: iotidentity.CreateKeysAndCertificateResponse) -> None:
+def on_CreateKeysAndCertificate_accepted(response: iotidentity.CreateKeysAndCertificateResponse) -> None:
     try:
         global createKeysAndCertificateResponse
         createKeysAndCertificateResponse = response
@@ -52,13 +52,13 @@ def createkeysandcertificate_execution_accepted(response: iotidentity.CreateKeys
         fp.error(e)
 
 
-def createkeysandcertificate_execution_rejected(
+def on_CreateKeysAndCertificate_rejected(
     response: iotidentity.ErrorResponse
 ) -> None:
     fp.print_rejected('CreateKeysAndCertificate', response)
 
 
-def registerthing_execution_accepted(response: iotidentity.RegisterThingResponse) -> None:
+def on_RegisterThing_accepted(response: iotidentity.RegisterThingResponse) -> None:
     try:
         global registerThingResponse
         registerThingResponse = response
@@ -68,7 +68,7 @@ def registerthing_execution_accepted(response: iotidentity.RegisterThingResponse
         fp.error(e)
 
 
-def registerthing_execution_rejected(response: iotidentity.ErrorResponse) -> None:
+def on_RegisterThing_rejected(response: iotidentity.ErrorResponse) -> None:
     fp.print_rejected('RegisterThing', response)
 
 
@@ -174,7 +174,7 @@ def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
     future, topic = client.subscribe_to_create_keys_and_certificate_accepted(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
-        callback = createkeysandcertificate_execution_accepted
+        callback = on_CreateKeysAndCertificate_accepted
     )
     print(f"Subscribed {topic}")
     # Wait for subscription to succeed
@@ -188,7 +188,7 @@ def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
     future, topic = client.subscribe_to_create_keys_and_certificate_rejected(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
-        callback = createkeysandcertificate_execution_rejected
+        callback = on_CreateKeysAndCertificate_rejected
     )
     print(f"Subscribed {topic}")
     # Wait for subscription to succeed
@@ -213,7 +213,7 @@ def __subscribe_RegisterThing_accepted_topic_by(
     future, topic = client.subscribe_to_register_thing_accepted(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
-        callback = registerthing_execution_accepted
+        callback = on_RegisterThing_accepted
     )
     print(f"Subscribed {topic}")
     # Wait for subscription to succeed
@@ -228,7 +228,7 @@ def __subscribe_RegisterThing_rejected_topic_by(
     future, topic = client.subscribe_to_register_thing_rejected(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE,
-        callback = registerthing_execution_rejected
+        callback = on_RegisterThing_rejected
     )
     print(f"Subscribed {topic}")
     # Wait for subscription to succeed
@@ -243,14 +243,14 @@ def __publish_CreateKeysAndCertificate_topic_by(
         request = iotidentity.CreateKeysAndCertificateRequest(),
         qos = mqtt.QoS.AT_LEAST_ONCE
     )
-    future.add_done_callback(on_publish_create_keys_and_certificate)
+    future.add_done_callback(on_publish_CreateKeysAndCertificate)
     waitForCreateKeysAndCertificateResponse()
     # __wait_for('createKeysAndCertificateResponse', createKeysAndCertificateResponse)
     if createKeysAndCertificateResponse is None:
         raise Exception('CreateKeysAndCertificate API did not succeed')
 
 
-def __publish_registerThing_topic_by(
+def __publish_RegisterThing_topic_by(
     client: iotidentity.IotIdentityClient,
     template_name: str,
     template_parameters: dict
@@ -265,7 +265,7 @@ def __publish_registerThing_topic_by(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE
     )
-    future.add_done_callback(on_publish_register_thing)
+    future.add_done_callback(on_publish_RegisterThing)
     waitForRegisterThingResponse()
     # __wait_for('registerThingResponse', registerThingResponse)
 
@@ -291,7 +291,7 @@ def __subscribe_and_pubrish_topics_by(
     __subscribe_CreateKeysAndCertificate_topics_by(client)
     __subscribe_RegisterThing_topics_by(client, template_name)
     __publish_CreateKeysAndCertificate_topic_by(client)
-    __publish_registerThing_topic_by(client, template_name, template_parameters)
+    __publish_RegisterThing_topic_by(client, template_name, template_parameters)
 
 
 def provision_thing(
