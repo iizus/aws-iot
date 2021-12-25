@@ -19,17 +19,17 @@ registerThingResponse = None
 
 class LockedData:
     def __init__(self):
-        self.lock = threading.Lock()
-        self.disconnect_called = False
+        self.lock: threading.Lock = threading.Lock()
+        self.disconnect_called: bool = False
 
 
 def __disconnect(mqtt_connection):
-    locked_data = LockedData()
+    locked_data: LockedData = LockedData()
     with locked_data.lock:
         if not locked_data.disconnect_called:
             print("Disconnecting...")
             locked_data.disconnect_called = True
-            future = mqtt_connection.disconnect()
+            future: Future = mqtt_connection.disconnect()
             future.add_done_callback(on_disconnected)
 
 
@@ -81,7 +81,7 @@ def __save_certs_based_on(
     response: iotidentity.CreateKeysAndCertificateResponse,
     folder: str = 'certs'
 ) -> None:
-    path = f"{folder}/client.pem"
+    path: str = f"{folder}/client.pem"
     __save_file(path=f'{path}.crt', content=response.certificate_pem)
     __save_file(path=f'{path}.key', content=response.private_key)
 
@@ -147,18 +147,19 @@ def on_resubscribe_complete(future: Future) -> None:
 
 def waitForCreateKeysAndCertificateResponse():
     # Wait for the response.
-    loopCount = 0
+    loopCount: int = 0
     while loopCount < 10 and createKeysAndCertificateResponse is None:
         if createKeysAndCertificateResponse is not None:
             break
-        print('Waiting... CreateKeysAndCertificateResponse: ' + json.dumps(createKeysAndCertificateResponse))
+        message = json.dumps(createKeysAndCertificateResponse)
+        print(f"Waiting... CreateKeysAndCertificateResponse: {message}")
         loopCount += 1
         time.sleep(1)
 
 
 def waitForRegisterThingResponse():
     # Wait for the response.
-    loopCount = 0
+    loopCount: int = 0
     while loopCount < 20 and registerThingResponse is None:
         if registerThingResponse is not None:
             break
@@ -185,7 +186,7 @@ def __create_connection(endpoint: str, cert: str, key: str, ca: str, client_id: 
     event_loop_group: io.EventLoopGroup = io.EventLoopGroup(1)
     host_resolver: io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
-    connection = mqtt_connection_builder.mtls_from_path(
+    connection: Connection = mqtt_connection_builder.mtls_from_path(
         endpoint = endpoint,
         cert_filepath = cert,
         pri_key_filepath = key,
@@ -205,7 +206,7 @@ def __create_connection(endpoint: str, cert: str, key: str, ca: str, client_id: 
 def __subscribe_CreateKeysAndCertificate_topics_by(
     client: iotidentity.IotIdentityClient
 ) -> None:
-    request = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
+    request: iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
     __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request)
     __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request)
 
@@ -282,7 +283,7 @@ def __publish_CreateKeysAndCertificate_topic_by(
     client: iotidentity.IotIdentityClient
 ) -> None:
     print("Publishing to CreateKeysAndCertificate...")
-    future = client.publish_create_keys_and_certificate(
+    future: Future = client.publish_create_keys_and_certificate(
         request = iotidentity.CreateKeysAndCertificateRequest(),
         qos = mqtt.QoS.AT_LEAST_ONCE
     )
@@ -346,7 +347,7 @@ def provision_thing(
     template_parameters: str
 ) -> str:
     connection: Connection = __create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
-    future = connection.connect()
+    future: Future = connection.connect()
 
     # Wait for connection to be fully established.
     # Note that it's not necessary to wait, commands issued to the
