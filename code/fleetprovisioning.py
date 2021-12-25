@@ -1,4 +1,3 @@
-import argparse
 from multiprocessing.connection import Connection
 from awscrt import io, mqtt
 from awsiot import iotidentity, mqtt_connection_builder
@@ -11,38 +10,16 @@ from uuid import uuid4
 import json
 
 
-parser = argparse.ArgumentParser(description="Fleet Provisioning sample script.")
-parser.add_argument('--endpoint', required=True, help="Your AWS IoT custom endpoint, not including a port. " +
-                                                      "Ex: \"w6zbse3vjd5b4p-ats.iot.us-west-2.amazonaws.com\"")
-parser.add_argument('--cert', help="File path to your client certificate, in PEM format")
-parser.add_argument('--key', help="File path to your private key file, in PEM format")
-parser.add_argument('--root-ca', help="File path to root certificate authority, in PEM format. " +
-                                      "Necessary if MQTT server uses a certificate that's not already in " +
-                                      "your trust store")
-parser.add_argument('--client-id', default="provisioning-" + str(uuid4()), help="Client ID for MQTT connection.")
-parser.add_argument('--use-websocket', default=False, action='store_true',
-                    help="To use a websocket instead of raw mqtt. If you " +
-                         "specify this option you must specify a region for signing.")
-parser.add_argument('--signing-region', default='us-east-1', help="If you specify --use-web-socket, this " +
-                                                                  "is the region that will be used for computing the Sigv4 signature")
-parser.add_argument('--proxy-host', help="Hostname of proxy to connect to.")
-parser.add_argument('--proxy-port', type=int, default=8080, help="Port of proxy to connect to.")
-parser.add_argument('--verbosity', choices=[x.name for x in io.LogLevel], default=io.LogLevel.NoLogs.name,
-                    help='Logging level')
-parser.add_argument("--csr", help="File path to your client CSR in PEM format")
-parser.add_argument("--templateName", help="Template name")
-parser.add_argument("--templateParameters", help="Values for Template Parameters")
+# __log_levels = io.LogLevel
+# __log_level = getattr(__log_levels, __log_levels.NoLogs.name)
+# io.init_logging(__log_level, 'stderr')
 
 # Using globals to simplify sample code
 is_sample_done = threading.Event()
-args = parser.parse_args()
-
-__log_level = getattr(io.LogLevel, args.verbosity)
-io.init_logging(__log_level, 'stderr')
-
 createKeysAndCertificateResponse = None
 createCertificateFromCsrResponse = None
 registerThingResponse = None
+
 
 class LockedData:
     def __init__(self):
@@ -97,15 +74,18 @@ def createkeysandcertificate_execution_accepted(response: iotidentity.CreateKeys
     try:
         global createKeysAndCertificateResponse
         createKeysAndCertificateResponse = response
-        print(f'Certificate ID: {response.certificate_id}')
+        print(f"Certificate ID: {response.certificate_id}")
         __save_certs_based_on(response)
         return
     except Exception as e:
         __error(e)
 
 
-def __save_certs_based_on(response: iotidentity.CreateKeysAndCertificateResponse) -> None:
-    path = 'certs/client.pem'
+def __save_certs_based_on(
+    response: iotidentity.CreateKeysAndCertificateResponse,
+    folder: str = 'certs'
+) -> None:
+    path = f"{folder}/client.pem"
     __save_file(path=f'{path}.crt', content=response.certificate_pem)
     __save_file(path=f'{path}.key', content=response.private_key)
 
@@ -187,7 +167,8 @@ def waitForRegisterThingResponse():
         if registerThingResponse is not None:
             break
         loopCount += 1
-        print('Waiting... registerThingResponse: ' + json.dumps(registerThingResponse))
+        message = json.dumps(registerThingResponse)
+        print(f"Waiting... registerThingResponse: {message}")
         time.sleep(1)
 
 
@@ -203,26 +184,26 @@ def waitForRegisterThingResponse():
 #         time.sleep(1)
 
 
-def __create_connection(endpoint: str, cert: str, key: str, ca: str) -> Connection:
+def __create_connection(endpoint: str, cert: str, key: str, ca: str, client_id: str) -> Connection:
     # Spin up resources
     event_loop_group = io.EventLoopGroup(1)
     host_resolver = io.DefaultHostResolver(event_loop_group)
 
-    mqtt_connection = mqtt_connection_builder.mtls_from_path(
+    connection = mqtt_connection_builder.mtls_from_path(
         endpoint = endpoint,
         cert_filepath = cert,
         pri_key_filepath = key,
         client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
         ca_filepath = ca,
-        client_id = str(uuid4()),
+        client_id = client_id,
         on_connection_interrupted = on_connection_interrupted,
         on_connection_resumed = on_connection_resumed,
         clean_session = False,
         keep_alive_secs = 30,
         http_proxy_options = None,
     )
-    print(f"Connecting to {args.endpoint} with client ID '{args.client_id}'...")
-    return mqtt_connection
+    print(f"Connecting to {endpoint} with client ID '{client_id}'...")
+    return connection
 
 
 def __subscribe_CreateKeysAndCertificate_topics_by(
@@ -261,9 +242,12 @@ def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
     future.result()
 
 
-def __subscribe_RegisterThing_topics_by(client: iotidentity.IotIdentityClient) -> None:
+def __subscribe_RegisterThing_topics_by(
+    client: iotidentity.IotIdentityClient,
+    template_name: str
+) -> None:
     request = iotidentity.RegisterThingSubscriptionRequest(
-        template_name = args.templateName
+        template_name = template_name
     )
     __subscribe_RegisterThing_accepted_topic_by(client, request)
     __subscribe_RegisterThing_rejected_topic_by(client, request)
@@ -313,11 +297,15 @@ def __publish_CreateKeysAndCertificate_topic_by(
         raise Exception('CreateKeysAndCertificate API did not succeed')
 
 
-def __publish_registerThing_topic_by(client: iotidentity.IotIdentityClient) -> None:
+def __publish_registerThing_topic_by(
+    client: iotidentity.IotIdentityClient,
+    template_name: str,
+    template_parameters: dict
+) -> None:
     request = iotidentity.RegisterThingRequest(
-        template_name = args.templateName,
+        template_name = template_name,
         certificate_ownership_token = createKeysAndCertificateResponse.certificate_ownership_token,
-        parameters = json.loads(args.templateParameters)
+        parameters = json.loads(template_parameters)
     )
     print("Publishing to RegisterThing topic...")
     future = client.publish_register_thing(
@@ -329,33 +317,39 @@ def __publish_registerThing_topic_by(client: iotidentity.IotIdentityClient) -> N
     # __wait_for('registerThingResponse', registerThingResponse)
 
 
-def __provision_by(connection: Connection) -> None:
+def __provision_by(connection: Connection, template_name: str, template_parameters: str) -> None:
     try:
         # Subscribe to necessary topics.
         # Note that is **is** important to wait for "accepted/rejected" subscriptions
         # to succeed before publishing the corresponding "request".
         client = iotidentity.IotIdentityClient(connection)
-        __subscribe_and_pubrish_topics_by(client)
+        __subscribe_and_pubrish_topics_by(client, template_name, template_parameters)
         print("Success")
         __disconnect(connection)
     except Exception as e:
         __error(e)
 
 
-def __subscribe_and_pubrish_topics_by(client: iotidentity.IotIdentityClient) -> None:
+def __subscribe_and_pubrish_topics_by(
+    client: iotidentity.IotIdentityClient,
+    template_name: str,
+    template_parameters: dict
+) -> None:
     __subscribe_CreateKeysAndCertificate_topics_by(client)
-    __subscribe_RegisterThing_topics_by(client)
+    __subscribe_RegisterThing_topics_by(client, template_name)
     __publish_CreateKeysAndCertificate_topic_by(client)
-    __publish_registerThing_topic_by(client)
+    __publish_registerThing_topic_by(client, template_name, template_parameters)
 
 
-def provision_thing():
-    connection = __create_connection(
-        endpoint = args.endpoint,
-        cert = args.cert,
-        key = args.key,
-        ca = args.root_ca,
-    )
+def provision_thing(
+    endpoint: str,
+    cert: str,
+    key: str,
+    ca: str,
+    template_name: str,
+    template_parameters: str
+) -> str:
+    connection = __create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
     future = connection.connect()
 
     # Wait for connection to be fully established.
@@ -365,7 +359,7 @@ def provision_thing():
     # fails or succeeds.
     future.result()
     print("Connected!")
-    __provision_by(connection)
+    __provision_by(connection, template_name, template_parameters)
     thing_name = registerThingResponse.thing_name
 
     # Wait for the sample to finish
@@ -374,5 +368,23 @@ def provision_thing():
 
 
 if __name__ == '__main__':
-    thing_name = provision_thing()
-    print(thing_name)
+    config_path = 'config.json'
+    with open(config_path) as config_file:
+        config = json.load(config_file)
+    
+    endpoint = config.get('endpoint')
+    template_name = config.get('template_name')
+    template_parameters = config.get('template_parameters')
+
+    folder = 'certs'
+    claim = f'{folder}/claim.pem'
+
+    thing_name = provision_thing(
+        endpoint = endpoint,
+        cert = f'{claim}.crt',
+        key = f'{claim}.key',
+        ca = f'{folder}/AmazonRootCA1.pem',
+        template_name = template_name,
+        template_parameters = template_parameters,
+    )
+    print(f"Thing name: {thing_name}")
