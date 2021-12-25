@@ -46,31 +46,16 @@ def createkeysandcertificate_execution_accepted(response: iotidentity.CreateKeys
         global createKeysAndCertificateResponse
         createKeysAndCertificateResponse = response
         print(f"Certificate ID: {response.certificate_id}")
-        __save_certs_based_on(response)
+        fp.save_certs_based_on(response)
         return
     except Exception as e:
         fp.error(e)
 
 
-def __save_certs_based_on(
-    response: iotidentity.CreateKeysAndCertificateResponse,
-    folder: str = 'certs'
-) -> None:
-    path: str = f"{folder}/client.pem"
-    __save_file(path=f'{path}.crt', content=response.certificate_pem)
-    __save_file(path=f'{path}.key', content=response.private_key)
-
-
-def __save_file(path: str, content: str) -> None:
-    with open(path, mode='w') as file:
-        file.write(content)
-        print(f'Saved {path}')
-
-
 def createkeysandcertificate_execution_rejected(
     response: iotidentity.ErrorResponse
 ) -> None:
-    __print_rejected('CreateKeysAndCertificate', response)
+    fp.print_rejected('CreateKeysAndCertificate', response)
 
 
 def registerthing_execution_accepted(response: iotidentity.RegisterThingResponse) -> None:
@@ -84,11 +69,7 @@ def registerthing_execution_accepted(response: iotidentity.RegisterThingResponse
 
 
 def registerthing_execution_rejected(response: iotidentity.ErrorResponse) -> None:
-    __print_rejected('RegisterThing', response)
-
-
-def __print_rejected(api: str, response: iotidentity.ErrorResponse) -> None:
-    fp.error(f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
+    fp.print_rejected('RegisterThing', response)
 
 
 # Callback when connection is accidentally lost.
