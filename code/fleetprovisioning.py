@@ -349,23 +349,23 @@ def __subscribe_and_pubrish_topics_by(client: iotidentity.IotIdentityClient) -> 
     __publish_registerThing_topic_by(client)
 
 
-def provision():
-    mqtt_connection = __create_connection(
+def provision_thing():
+    connection = __create_connection(
         endpoint = args.endpoint,
         cert = args.cert,
         key = args.key,
         ca = args.root_ca,
     )
-    connected_future = mqtt_connection.connect()
+    future = connection.connect()
 
     # Wait for connection to be fully established.
     # Note that it's not necessary to wait, commands issued to the
     # mqtt_connection before its fully connected will simply be queued.
     # But this sample waits here so it's obvious when a connection
     # fails or succeeds.
-    connected_future.result()
+    future.result()
     print("Connected!")
-    __provision_by(mqtt_connection)
+    __provision_by(connection)
     thing_name = registerThingResponse.thing_name
 
     # Wait for the sample to finish
@@ -374,5 +374,5 @@ def provision():
 
 
 if __name__ == '__main__':
-    thing_name = provision()
+    thing_name = provision_thing()
     print(thing_name)
