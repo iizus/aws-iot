@@ -371,20 +371,16 @@ if __name__ == '__main__':
     config_path = 'config.json'
     with open(config_path) as config_file:
         config = json.load(config_file)
-    
-    endpoint = config.get('endpoint')
-    template_name = config.get('template_name')
-    template_parameters = config.get('template_parameters')
 
     folder = 'certs'
     claim = f'{folder}/claim.pem'
 
     thing_name = provision_thing(
-        endpoint = endpoint,
+        endpoint = config.get('endpoint'),
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
-        template_name = template_name,
-        template_parameters = template_parameters,
+        template_name = config.get('template_name'),
+        template_parameters = config.get('template_parameters'),
     )
     print(f"Thing name: {thing_name}")
