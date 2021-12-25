@@ -5,9 +5,9 @@ from concurrent.futures import Future
 import sys
 import threading
 import time
-import traceback
 from uuid import uuid4
 import json
+import fp
 
 
 # Using globals to simplify sample code
@@ -17,30 +17,14 @@ createCertificateFromCsrResponse = None
 registerThingResponse = None
 
 
-class LockedData:
-    def __init__(self):
-        self.lock: threading.Lock = threading.Lock()
-        self.disconnect_called: bool = False
-
-
 def __disconnect(mqtt_connection):
-    locked_data: LockedData = LockedData()
+    locked_data: fp.LockedData = fp.LockedData()
     with locked_data.lock:
         if not locked_data.disconnect_called:
             print("Disconnecting...")
             locked_data.disconnect_called = True
             future: Future = mqtt_connection.disconnect()
             future.add_done_callback(on_disconnected)
-
-
-# Function for gracefully quitting this sample
-def __error(msg_or_exception):
-    print("Exiting Sample due to exception")
-    traceback.print_exception(
-        msg_or_exception.__class__,
-        msg_or_exception,
-        sys.exc_info()[2]
-    )
 
     
 def on_disconnected(future: Future) -> None:
@@ -50,20 +34,11 @@ def on_disconnected(future: Future) -> None:
 
 
 def on_publish_register_thing(future: Future) -> None:
-    __callback('RegisterThing', future)
+    fp.callback('RegisterThing', future)
 
 
 def on_publish_create_keys_and_certificate(future: Future) -> None:
-    __callback('CreateKeysAndCertificate', future)
-
-
-def __callback(api: str, future: Future) -> None:
-    try:
-        future.result() # raises exception if publish failed
-        print(f"Published {api} request")
-    except Exception as e:
-        print(f"Failed to publish {api} request")
-        __error(e)
+    fp.callback('CreateKeysAndCertificate', future)
 
 
 def createkeysandcertificate_execution_accepted(response: iotidentity.CreateKeysAndCertificateResponse) -> None:
@@ -74,7 +49,7 @@ def createkeysandcertificate_execution_accepted(response: iotidentity.CreateKeys
         __save_certs_based_on(response)
         return
     except Exception as e:
-        __error(e)
+        fp.error(e)
 
 
 def __save_certs_based_on(
@@ -105,7 +80,7 @@ def registerthing_execution_accepted(response: iotidentity.RegisterThingResponse
         print(f"Received a new message {registerThingResponse}")
         return
     except Exception as e:
-        __error(e)
+        fp.error(e)
 
 
 def registerthing_execution_rejected(response: iotidentity.ErrorResponse) -> None:
@@ -113,7 +88,7 @@ def registerthing_execution_rejected(response: iotidentity.ErrorResponse) -> Non
 
 
 def __print_rejected(api: str, response: iotidentity.ErrorResponse) -> None:
-    __error(f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
+    fp.error(f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
 
 
 # Callback when connection is accidentally lost.
@@ -142,7 +117,7 @@ def on_resubscribe_complete(future: Future) -> None:
     results = future.result()
     print(f"Resubscribe results: {results}")
     for topic, qos in results.get('topics'):
-        if qos is None: sys.__error(f"Server rejected resubscribe to topic: {topic}")
+        if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
 
 
 def waitForCreateKeysAndCertificateResponse():
@@ -324,7 +299,7 @@ def __provision_by(connection: Connection, template_name: str, template_paramete
         print("Success")
         __disconnect(connection)
     except Exception as e:
-        __error(e)
+        fp.error(e)
 
 
 def __subscribe_and_pubrish_topics_by(
