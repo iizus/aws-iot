@@ -10,10 +10,6 @@ from uuid import uuid4
 import json
 
 
-# __log_levels = io.LogLevel
-# __log_level = getattr(__log_levels, __log_levels.NoLogs.name)
-# io.init_logging(__log_level, 'stderr')
-
 # Using globals to simplify sample code
 is_sample_done = threading.Event()
 createKeysAndCertificateResponse = None
@@ -186,8 +182,8 @@ def waitForRegisterThingResponse():
 
 def __create_connection(endpoint: str, cert: str, key: str, ca: str, client_id: str) -> Connection:
     # Spin up resources
-    event_loop_group = io.EventLoopGroup(1)
-    host_resolver = io.DefaultHostResolver(event_loop_group)
+    event_loop_group: io.EventLoopGroup = io.EventLoopGroup(1)
+    host_resolver: io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
     connection = mqtt_connection_builder.mtls_from_path(
         endpoint = endpoint,
@@ -246,7 +242,7 @@ def __subscribe_RegisterThing_topics_by(
     client: iotidentity.IotIdentityClient,
     template_name: str
 ) -> None:
-    request = iotidentity.RegisterThingSubscriptionRequest(
+    request: iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
         template_name = template_name
     )
     __subscribe_RegisterThing_accepted_topic_by(client, request)
@@ -322,7 +318,7 @@ def __provision_by(connection: Connection, template_name: str, template_paramete
         # Subscribe to necessary topics.
         # Note that is **is** important to wait for "accepted/rejected" subscriptions
         # to succeed before publishing the corresponding "request".
-        client = iotidentity.IotIdentityClient(connection)
+        client: iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
         __subscribe_and_pubrish_topics_by(client, template_name, template_parameters)
         print("Success")
         __disconnect(connection)
@@ -349,7 +345,7 @@ def provision_thing(
     template_name: str,
     template_parameters: str
 ) -> str:
-    connection = __create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
+    connection: Connection = __create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
     future = connection.connect()
 
     # Wait for connection to be fully established.
@@ -360,7 +356,7 @@ def provision_thing(
     future.result()
     print("Connected!")
     __provision_by(connection, template_name, template_parameters)
-    thing_name = registerThingResponse.thing_name
+    thing_name: str = registerThingResponse.thing_name
 
     # Wait for the sample to finish
     is_sample_done.wait()
@@ -368,14 +364,14 @@ def provision_thing(
 
 
 if __name__ == '__main__':
-    config_path = 'config.json'
+    config_path: str = 'config.json'
     with open(config_path) as config_file:
-        config = json.load(config_file)
+        config: dict = json.load(config_file)
 
-    folder = 'certs'
-    claim = f'{folder}/claim.pem'
+    folder: str = 'certs'
+    claim: str = f'{folder}/claim.pem'
 
-    thing_name = provision_thing(
+    thing_name: str = provision_thing(
         endpoint = config.get('endpoint'),
         cert = f'{claim}.crt',
         key = f'{claim}.key',
