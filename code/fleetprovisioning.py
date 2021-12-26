@@ -8,10 +8,8 @@ from connection import MQTT
 
 
 class FleetProvisioning:
-    def __init__(self, endpoint:str, template_name:str) -> None:
-        self.__endpoint:str = endpoint
+    def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
-
         self.__is_sample_done:Event = Event()
         self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
         self.__registerThingResponse:iotidentity.RegisterThingResponse = None
@@ -220,14 +218,9 @@ class FleetProvisioning:
 
     def provision_thing_by(
         self,
-        cert:str,
-        key:str,
-        ca:str,
+        connection:mqtt.Connection,
         template_parameters:str,
-        client_id:str = str(uuid4()),
     ) -> str:
-        mqtt_connection = MQTT(self.__endpoint)
-        connection = mqtt_connection.connect_with(client_id, cert, key, ca)
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
         self.__is_sample_done.wait() # Wait for the sample to finish
@@ -240,20 +233,21 @@ if __name__ == '__main__':
         from json import load
         config:dict = load(config_file)
 
-    fleet:FleetProvisioning = FleetProvisioning(
-        endpoint = config.get('endpoint'),
-        template_name = config.get('template_name'),
-    )
+    fleet:FleetProvisioning = FleetProvisioning(template_name = config.get('template_name'))
 
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
     device_ID = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    thing_name:str = fleet.provision_thing_by(
+    mqtt_connection = MQTT(endpoint=config.get('endpoint'))
+    connection = mqtt_connection.connect_with(
+        client_id = device_ID,
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
+    )
+    thing_name:str = fleet.provision_thing_by(
+        connection = connection,
         template_parameters = {"DeviceID": device_ID},
-        client_id = device_ID,
     )
