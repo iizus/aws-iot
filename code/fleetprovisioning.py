@@ -4,6 +4,7 @@ from concurrent.futures import Future
 from threading import Event
 from uuid import uuid4
 import fp
+from connection import MQTT
 
 
 class FleetProvisioning:
@@ -59,34 +60,6 @@ class FleetProvisioning:
 
     def on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
         fp.print_rejected('RegisterThing', response)
-
-
-    def __create_connection_with(
-        self,
-        client_id:str,
-        cert:str,
-        key:str,
-        ca:str,
-    ) -> mqtt.Connection:
-        # Spin up resources
-        event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
-        host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
-
-        connection:mqtt.Connection = mqtt_connection_builder.mtls_from_path(
-            endpoint = self.__endpoint,
-            cert_filepath = cert,
-            pri_key_filepath = key,
-            client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
-            ca_filepath = ca,
-            client_id = client_id,
-            on_connection_interrupted = fp.on_connection_interrupted,
-            on_connection_resumed = fp.on_connection_resumed,
-            clean_session = False,
-            keep_alive_secs = 30,
-            http_proxy_options = None,
-        )
-        print(f"Connecting to {self.__endpoint} with client ID '{client_id}'...")
-        return connection
 
 
     def __subscribe_CreateKeysAndCertificate_topics_by(
@@ -245,25 +218,6 @@ class FleetProvisioning:
         self.__register_thing_by(client, template_parameters)
 
 
-    def __connect_with(
-        self,
-        client_id:str,
-        cert:str,
-        key:str,
-        ca:str,
-    ) -> None:
-        connection:mqtt.Connection = self.__create_connection_with(client_id, cert, key, ca)
-        future:Future = connection.connect()
-        # Wait for connection to be fully established.
-        # Note that it's not necessary to wait, commands issued to the
-        # mqtt_connection before its fully connected will simply be queued.
-        # But this sample waits here so it's obvious when a connection
-        # fails or succeeds.
-        future.result()
-        print("Connected!")
-        return connection
-
-
     def provision_thing_by(
         self,
         cert:str,
@@ -272,7 +226,8 @@ class FleetProvisioning:
         template_parameters:str,
         client_id:str = str(uuid4()),
     ) -> str:
-        connection = self.__connect_with(client_id, cert, key, ca)
+        mqtt_connection = MQTT(self.__endpoint)
+        connection = mqtt_connection.connect_with(client_id, cert, key, ca)
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
         self.__is_sample_done.wait() # Wait for the sample to finish
