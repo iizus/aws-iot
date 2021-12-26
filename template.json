@@ -1,13 +1,28 @@
 {
 	"Parameters": {
-		"SerialNumber": {
-			"Type": "String"
-		},
-		"AWS::IoT::Certificate::Id": {
+		"DeviceID": {
 			"Type": "String"
 		}
 	},
 	"Resources": {
+		"thing": {
+			"Type": "AWS::IoT::Thing",
+			"Properties": {
+				"ThingName": {
+					"Ref": "DeviceID"
+				},
+				"ThingGroups": [
+					"EC2"
+				],
+				"ThingTypeName": "ec2",
+				"BillingGroup": "ec2"
+			},
+			"OverrideSettings": {
+				"AttributePayload": "MERGE",
+				"ThingGroups": "DO_NOTHING",
+				"ThingTypeName": "REPLACE"
+			}
+		},
 		"certificate": {
 			"Properties": {
 				"CertificateId": {
@@ -22,31 +37,6 @@
 				"PolicyName": "Full-Access-Policy"
 			},
 			"Type": "AWS::IoT::Policy"
-		},
-		"thing": {
-			"OverrideSettings": {
-				"AttributePayload": "MERGE",
-				"ThingGroups": "DO_NOTHING",
-				"ThingTypeName": "REPLACE"
-			},
-			"Properties": {
-				"AttributePayload": {},
-				"ThingGroups": [
-					"EC2"
-				],
-				"ThingName": {
-					"Fn::Join": [
-						"",
-						[
-							"EC2_",
-							{
-								"Ref": "AWS::IoT::Certificate::Id"
-							}
-						]
-					]
-				}
-			},
-			"Type": "AWS::IoT::Thing"
 		}
 	}
 }
