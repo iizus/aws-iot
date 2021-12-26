@@ -72,7 +72,7 @@ class FleetProvisioning:
 
 
     # Callback when connection is accidentally lost.
-    def on_connection_interrupted(self, connection:Connection, error, **kwargs) -> None:
+    def on_connection_interrupted(self, error) -> None:
         print(f"Connection interrupted. Error: {error}")
 
 
@@ -81,8 +81,7 @@ class FleetProvisioning:
         self,
         connection: Connection,
         return_code,
-        session_present,
-        **kwargs
+        session_present
     ) -> None:
         print(f"Connection resumed. return code: {return_code} session present: {session_present}")
 
