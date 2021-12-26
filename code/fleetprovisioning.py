@@ -1,11 +1,8 @@
-from multiprocessing import connection
-from multiprocessing.connection import Connection
 from awscrt import io, mqtt
 from awsiot import iotidentity, mqtt_connection_builder
 from concurrent.futures import Future
 from threading import Event
 from uuid import uuid4
-import json
 import fp
 
 
@@ -19,7 +16,7 @@ class FleetProvisioning:
         self.__registerThingResponse:iotidentity.RegisterThingResponse = None
 
 
-    def __disconnect(self, mqtt_connection:Connection):
+    def __disconnect(self, mqtt_connection:mqtt.Connection):
         locked_data:fp.LockedData = fp.LockedData()
         with locked_data.lock:
             if not locked_data.disconnect_called:
@@ -70,12 +67,12 @@ class FleetProvisioning:
         cert:str,
         key:str,
         ca:str,
-    ) -> Connection:
+    ) -> mqtt.Connection:
         # Spin up resources
         event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
         host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
-        connection:Connection = mqtt_connection_builder.mtls_from_path(
+        connection:mqtt.Connection = mqtt_connection_builder.mtls_from_path(
             endpoint = self.__endpoint,
             cert_filepath = cert,
             pri_key_filepath = key,
@@ -214,7 +211,7 @@ class FleetProvisioning:
         request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
             template_name = self.__template_name,
             certificate_ownership_token = self.__createKeysAndCertificateResponse.certificate_ownership_token,
-            parameters = json.loads(template_parameters)
+            parameters = template_parameters,
         )
         print("Publishing to RegisterThing topic...")
         future:Future = client.publish_register_thing(
@@ -224,7 +221,7 @@ class FleetProvisioning:
         future.add_done_callback(fp.on_publish_RegisterThing)
 
 
-    def __provision_by(self, connection:Connection, template_parameters:str) -> None:
+    def __provision_by(self, connection:mqtt.Connection, template_parameters:str) -> None:
         try:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
@@ -255,7 +252,7 @@ class FleetProvisioning:
         key:str,
         ca:str,
     ) -> None:
-        connection:Connection = self.__create_connection_with(client_id, cert, key, ca)
+        connection:mqtt.Connection = self.__create_connection_with(client_id, cert, key, ca)
         future:Future = connection.connect()
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
@@ -285,7 +282,8 @@ class FleetProvisioning:
 if __name__ == '__main__':
     config_path:str = 'config.json'
     with open(config_path) as config_file:
-        config:dict = json.load(config_file)
+        from json import load
+        config:dict = load(config_file)
 
     fleet:FleetProvisioning = FleetProvisioning(
         endpoint = config.get('endpoint'),
@@ -295,10 +293,13 @@ if __name__ == '__main__':
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
 
+    id = str(uuid4())
+    print(id)
+
     thing_name:str = fleet.provision_thing_by(
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
-        template_parameters = config.get('template_parameters'),
-        client_id = str(uuid4()),
+        template_parameters = {"DeviceID": id},
+        client_id = id,
     )

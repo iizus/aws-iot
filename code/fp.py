@@ -37,7 +37,7 @@ def on_connection_resumed(
         resubscribe_future, _ = connection.resubscribe_existing_topics()
         # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
         # evaluate result with a callback instead.
-        resubscribe_future.add_done_callback(self.on_resubscribe_complete)
+        resubscribe_future.add_done_callback(on_resubscribe_complete)
 
 
 def on_resubscribe_complete(future:Future) -> None:
