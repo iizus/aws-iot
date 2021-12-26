@@ -234,8 +234,4 @@ if __name__ == '__main__':
         connection = connection,
         template_parameters = {"DeviceID": device_ID},
     )
-
-    print("Disconnecting...")
-    disconnect_future = connection.disconnect()
-    disconnect_future.result()
-    print("Disconnected!")
+    mqtt_connection.disconnect(connection)

@@ -33,6 +33,13 @@ class MQTT:
         return connection
 
 
+    def disconnect(self, connection:mqtt.Connection) -> None:
+        print("Disconnecting...")
+        disconnect_future = connection.disconnect()
+        disconnect_future.result()
+        print("Disconnected!")
+
+
     def __create_connection_with(
         self,
         client_id:str,
