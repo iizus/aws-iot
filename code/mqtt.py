@@ -1,7 +1,8 @@
 from awscrt import io, mqtt
-from awsiot import iotidentity, mqtt_connection_builder
+from awsiot import mqtt_connection_builder
 from concurrent.futures import Future
 import sys
+from uuid import uuid4
 
 
 class MQTT:
@@ -11,10 +12,10 @@ class MQTT:
 
     def connect_with(
         self,
-        client_id:str,
         cert:str,
         key:str,
         ca:str,
+        client_id:str = str(uuid4()),
     ) -> None:
         connection:mqtt.Connection = self.__create_connection_with(
             client_id,

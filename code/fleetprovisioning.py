@@ -1,9 +1,7 @@
 import fp
-from mqtt import MQTT
-from awscrt.mqtt import Connection, QoS
 from awsiot import iotidentity
+from awscrt.mqtt import Connection, QoS
 from concurrent.futures import Future
-from uuid import uuid4
 
 
 class FleetProvisioning:
@@ -216,17 +214,19 @@ if __name__ == '__main__':
 
     fleet:FleetProvisioning = FleetProvisioning(template_name=config.get('template_name'))
 
+    from uuid import uuid4
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
+    from mqtt import MQTT
     mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
     connection:Connection = mqtt.connect_with(
-        client_id = device_ID,
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
+        client_id = device_ID,
     )
     thing_name:str = fleet.provision_thing_by(
         connection = connection,
