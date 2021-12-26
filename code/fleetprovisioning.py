@@ -4,7 +4,6 @@ from awsiot import iotidentity, mqtt_connection_builder
 from concurrent.futures import Future
 import sys
 from threading import Event
-from time import sleep
 from uuid import uuid4
 import json
 import fp
@@ -16,8 +15,8 @@ class FleetProvisioning:
         self.__template_name = template_name
 
         self.__is_sample_done:Event = Event()
-        self.__createKeysAndCertificateResponse = None
-        self.__registerThingResponse = None
+        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
+        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
 
 
     def __disconnect(self, mqtt_connection:Connection):
@@ -32,8 +31,7 @@ class FleetProvisioning:
         
     def on_disconnected(self, future:Future) -> None:
         print("Disconnected")
-        # Signal that sample is finished
-        self.__is_sample_done.set()
+        self.__is_sample_done.set() # Signal that sample is finished
 
 
     def on_publish_RegisterThing(self, future:Future) -> None:
@@ -101,12 +99,6 @@ class FleetProvisioning:
         print(f"Resubscribe results: {results}")
         for topic, qos in results.get('topics'):
             if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
-
-
-    def __wait_for(self, response) -> None:
-        message = json.dumps(response)
-        print(f'Waiting... : {message}')
-        sleep(1)
 
 
     def __create_connection_with(
@@ -225,7 +217,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
             if self.__createKeysAndCertificateResponse is not None: break
-            self.__wait_for(self.__createKeysAndCertificateResponse)
+            fp.wait_for(self.__createKeysAndCertificateResponse)
             loop_count += 1
 
         if self.__createKeysAndCertificateResponse is None:
@@ -252,7 +244,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
             if self.__registerThingResponse is not None: break
-            self.__wait_for(self.__registerThingResponse)
+            fp.wait_for(self.__registerThingResponse)
             loop_count += 1
 
 

@@ -1,8 +1,11 @@
 from sys import exc_info
 from threading import Lock
 from traceback import print_exception
+from typing import Any
 from awsiot import iotidentity
 from concurrent.futures import Future
+from time import sleep
+import json
 
 
 class LockedData:
@@ -47,3 +50,9 @@ def error(msg_or_exception:Exception) -> None:
         msg_or_exception,
         exc_info()[2],
     )
+
+
+def wait_for(response:Any) -> None:
+    message = json.dumps(response)
+    print(f'Waiting... : {message}')
+    sleep(1)
