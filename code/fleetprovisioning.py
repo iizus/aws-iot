@@ -1,3 +1,4 @@
+from xml.dom.pulldom import PROCESSING_INSTRUCTION
 import fp
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
@@ -208,23 +209,46 @@ class FleetProvisioning:
 
 from mqtt import MQTT
 
-def provision_thing_at(
-    endpoint:str,
-    cert:str,
-    key:str,
-    ca:str,
-    client_id:str,
-    template_name:str,
-    template_parameters:str,
-) -> str:
-    mqtt:MQTT = MQTT(endpoint)
-    fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
+# def provision_thing_at(
+#     endpoint:str,
+#     cert:str,
+#     key:str,
+#     ca:str,
+#     client_id:str,
+#     template_name:str,
+#     template_parameters:str,
+# ) -> str:
+#     mqtt:MQTT = MQTT(endpoint)
+#     fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
 
-    connection:Connection = mqtt.connect_with(cert, key, ca, client_id)
-    thing_name:str = fleet_provisioning.provision_thing_by(connection, template_parameters)
+#     connection:Connection = mqtt.connect_with(cert, key, ca, client_id)
+#     thing_name:str = fleet_provisioning.provision_thing_by(connection, template_parameters)
     
-    mqtt.disconnect(connection)
-    return thing_name
+#     mqtt.disconnect(connection)
+#     return thing_name
+
+
+class FP:
+    def __init__(self, endpoint:str, template_name:str) -> None:
+        self.__mqtt:MQTT = MQTT(endpoint)
+        self.__fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
+
+
+    def provision_thing_at(
+        self,
+        cert:str,
+        key:str,
+        ca:str,
+        client_id:str,
+        template_parameters:str,
+    ) -> str:
+        connection:Connection = self.__mqtt.connect_with(cert, key, ca, client_id)
+        thing_name:str = self.__fleet_provisioning.provision_thing_by(
+            connection,
+            template_parameters
+        )
+        self.__mqtt.disconnect(connection)
+        return thing_name
 
 
 if __name__ == '__main__':
@@ -233,18 +257,31 @@ if __name__ == '__main__':
         from json import load
         config:dict = load(config_file)
 
+    __fp = FP(
+        endpoint = config.get('endpoint'),
+        template_name = config.get('template_name')
+    )
+
     from uuid import uuid4
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    thing_name:str = provision_thing_at(
-        endpoint = config.get('endpoint'),
+    thing_name:str = __fp.provision_thing_at(
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
         client_id = device_ID,
-        template_name = config.get('template_name'),
         template_parameters = {"DeviceID": device_ID},
     )
+
+    # thing_name:str = provision_thing_at(
+    #     endpoint = config.get('endpoint'),
+    #     cert = f'{claim}.crt',
+    #     key = f'{claim}.key',
+    #     ca = f'{folder}/AmazonRootCA1.pem',
+    #     client_id = device_ID,
+    #     template_name = config.get('template_name'),
+    #     template_parameters = {"DeviceID": device_ID},
+    # )
