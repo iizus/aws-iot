@@ -5,7 +5,6 @@ from typing import Any
 from awsiot import iotidentity
 from concurrent.futures import Future
 from time import sleep
-import json
 from multiprocessing.connection import Connection
 from awscrt import mqtt
 
@@ -90,7 +89,6 @@ def error(msg_or_exception:Exception) -> None:
     )
 
 
-def wait_for(response:Any) -> None:
-    message = json.dumps(response)
-    print(f'Waiting... : {message}')
+def wait_for(response:str) -> None:
+    print(f'Waiting... {response}')
     sleep(1)

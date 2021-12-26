@@ -171,7 +171,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
             if self.__createKeysAndCertificateResponse is not None: break
-            fp.wait_for(self.__createKeysAndCertificateResponse)
+            fp.wait_for('createKeysAndCertificateResponse')
             loop_count += 1
 
         if self.__createKeysAndCertificateResponse is None:
@@ -199,7 +199,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
             if self.__registerThingResponse is not None: break
-            fp.wait_for(self.__registerThingResponse)
+            fp.wait_for('registerThingResponse')
             loop_count += 1
 
 
@@ -228,7 +228,7 @@ class FleetProvisioning:
             # to succeed before publishing the corresponding "request".
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
             self.__subscribe_and_pubrish_topics_by(client, template_parameters)
-            print("Success")
+            print("Success fleet provisioning")
             self.__disconnect(connection)
         except Exception as e:
             fp.error(e)
