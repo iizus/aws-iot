@@ -183,7 +183,6 @@ class FleetProvisioning:
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
             self.__subscribe_and_pubrish_topics_by(client, template_parameters)
             print("Success fleet provisioning")
-            # self.__disconnect(connection)
         except Exception as e:
             fp.error(e)
 
@@ -206,7 +205,6 @@ class FleetProvisioning:
     ) -> str:
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
-        # self.__is_sample_done.wait() # Wait for the sample to finish
         return thing_name
 
 
