@@ -1,4 +1,4 @@
-from sys import exc_info
+import sys
 from threading import Lock
 from traceback import print_exception
 from typing import Any
@@ -6,12 +6,50 @@ from awsiot import iotidentity
 from concurrent.futures import Future
 from time import sleep
 import json
+from multiprocessing.connection import Connection
+from awscrt import mqtt
 
 
 class LockedData:
     def __init__(self):
         self.lock:Lock = Lock()
         self.disconnect_called:bool = False
+
+
+def on_publish_CreateKeysAndCertificate(future:Future) -> None:
+    callback('CreateKeysAndCertificate', future)
+
+
+def on_publish_RegisterThing(future:Future) -> None:
+    callback('RegisterThing', future)
+
+
+# Callback when an interrupted connection is re-established.
+def on_connection_resumed(
+    connection:Connection,
+    return_code,
+    session_present
+) -> None:
+    print(f"Connection resumed. return code: {return_code} session present: {session_present}")
+
+    if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
+        print("Session did not persist. Resubscribing to existing topics...")
+        resubscribe_future, _ = connection.resubscribe_existing_topics()
+        # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
+        # evaluate result with a callback instead.
+        resubscribe_future.add_done_callback(self.on_resubscribe_complete)
+
+
+def on_resubscribe_complete(future:Future) -> None:
+    results = future.result()
+    print(f"Resubscribe results: {results}")
+    for topic, qos in results.get('topics'):
+        if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
+
+
+# Callback when connection is accidentally lost.
+def on_connection_interrupted(error) -> None:
+    print(f"Connection interrupted. Error: {error}")
 
 
 def callback(api:str, future:Future) -> None:
@@ -48,7 +86,7 @@ def error(msg_or_exception:Exception) -> None:
     print_exception(
         msg_or_exception.__class__,
         msg_or_exception,
-        exc_info()[2],
+        sys.exc_info()[2],
     )
 
 

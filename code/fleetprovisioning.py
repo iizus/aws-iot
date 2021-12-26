@@ -2,7 +2,6 @@ from multiprocessing.connection import Connection
 from awscrt import io, mqtt
 from awsiot import iotidentity, mqtt_connection_builder
 from concurrent.futures import Future
-import sys
 from threading import Event
 from uuid import uuid4
 import json
@@ -32,14 +31,6 @@ class FleetProvisioning:
     def on_disconnected(self, future:Future) -> None:
         print("Disconnected")
         self.__is_sample_done.set() # Signal that sample is finished
-
-
-    def on_publish_RegisterThing(self, future:Future) -> None:
-        fp.callback('RegisterThing', future)
-
-
-    def on_publish_CreateKeysAndCertificate(self, future:Future) -> None:
-        fp.callback('CreateKeysAndCertificate', future)
 
 
     def on_CreateKeysAndCertificate_accepted(
@@ -72,35 +63,6 @@ class FleetProvisioning:
         fp.print_rejected('RegisterThing', response)
 
 
-    # Callback when connection is accidentally lost.
-    def on_connection_interrupted(self, error) -> None:
-        print(f"Connection interrupted. Error: {error}")
-
-
-    # Callback when an interrupted connection is re-established.
-    def on_connection_resumed(
-        self,
-        connection:Connection,
-        return_code,
-        session_present
-    ) -> None:
-        print(f"Connection resumed. return code: {return_code} session present: {session_present}")
-
-        if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
-            print("Session did not persist. Resubscribing to existing topics...")
-            resubscribe_future, _ = connection.resubscribe_existing_topics()
-            # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
-            # evaluate result with a callback instead.
-            resubscribe_future.add_done_callback(self.on_resubscribe_complete)
-
-
-    def on_resubscribe_complete(self, future:Future) -> None:
-        results = future.result()
-        print(f"Resubscribe results: {results}")
-        for topic, qos in results.get('topics'):
-            if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
-
-
     def __create_connection_with(
         self,
         client_id:str,
@@ -119,8 +81,8 @@ class FleetProvisioning:
             client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
             ca_filepath = ca,
             client_id = client_id,
-            on_connection_interrupted = self.on_connection_interrupted,
-            on_connection_resumed = self.on_connection_resumed,
+            on_connection_interrupted = fp.on_connection_interrupted,
+            on_connection_resumed = fp.on_connection_resumed,
             clean_session = False,
             keep_alive_secs = 30,
             http_proxy_options = None,
@@ -207,13 +169,7 @@ class FleetProvisioning:
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
-        print("Publishing to CreateKeysAndCertificate...")
-        future:Future = client.publish_create_keys_and_certificate(
-            request = iotidentity.CreateKeysAndCertificateRequest(),
-            qos = mqtt.QoS.AT_LEAST_ONCE
-        )
-        future.add_done_callback(self.on_publish_CreateKeysAndCertificate)
-
+        self.__CreateKeysAndCertificate_topic_by(client)
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
             if self.__createKeysAndCertificateResponse is not None: break
@@ -224,7 +180,32 @@ class FleetProvisioning:
             raise Exception('CreateKeysAndCertificate API did not succeed')
 
 
+    def __CreateKeysAndCertificate_topic_by(
+        self,
+        client:iotidentity.IotIdentityClient
+    ) -> None:
+        print("Publishing to CreateKeysAndCertificate...")
+        future:Future = client.publish_create_keys_and_certificate(
+            request = iotidentity.CreateKeysAndCertificateRequest(),
+            qos = mqtt.QoS.AT_LEAST_ONCE
+        )
+        future.add_done_callback(fp.on_publish_CreateKeysAndCertificate)
+
+
     def __publish_RegisterThing_topic_by(
+        self,
+        client:iotidentity.IotIdentityClient,
+        template_parameters:dict
+    ) -> None:
+        self.__RegisterThing_topic_by(client, template_parameters)
+        loop_count:int = 0
+        while loop_count < 10 and self.__registerThingResponse is None:
+            if self.__registerThingResponse is not None: break
+            fp.wait_for(self.__registerThingResponse)
+            loop_count += 1
+
+
+    def __RegisterThing_topic_by(
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
@@ -239,13 +220,7 @@ class FleetProvisioning:
             request = request,
             qos = mqtt.QoS.AT_LEAST_ONCE
         )
-        future.add_done_callback(self.on_publish_RegisterThing)
-
-        loop_count:int = 0
-        while loop_count < 10 and self.__registerThingResponse is None:
-            if self.__registerThingResponse is not None: break
-            fp.wait_for(self.__registerThingResponse)
-            loop_count += 1
+        future.add_done_callback(fp.on_publish_RegisterThing)
 
 
     def __provision_by(self, connection:Connection, template_parameters:str) -> None:
