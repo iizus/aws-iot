@@ -3,37 +3,41 @@ from awscrt import io, mqtt
 from awsiot import iotidentity, mqtt_connection_builder
 from concurrent.futures import Future
 import sys
-import threading
+from threading import Event
 import time
 from uuid import uuid4
 import json
 import fp
 
 
+# class Fleetprovisioning:
+#     def __init__(self) -> None:
+#         pass
+
 # Using globals to simplify sample code
-is_sample_done = threading.Event()
+is_sample_done:Event = Event()
 createKeysAndCertificateResponse = None
 createCertificateFromCsrResponse = None
 registerThingResponse = None
 
 
 def __disconnect(mqtt_connection):
-    locked_data: fp.LockedData = fp.LockedData()
+    locked_data:fp.LockedData = fp.LockedData()
     with locked_data.lock:
         if not locked_data.disconnect_called:
             print("Disconnecting...")
             locked_data.disconnect_called = True
-            future: Future = mqtt_connection.disconnect()
+            future:Future = mqtt_connection.disconnect()
             future.add_done_callback(on_disconnected)
 
     
-def on_disconnected(future: Future) -> None:
+def on_disconnected(future:Future) -> None:
     print("Disconnected")
     # Signal that sample is finished
     is_sample_done.set()
 
 
-def on_publish_RegisterThing(future: Future) -> None:
+def on_publish_RegisterThing(future:Future) -> None:
     fp.callback('RegisterThing', future)
 
 
@@ -137,12 +141,12 @@ def waitForRegisterThingResponse():
 #         time.sleep(1)
 
 
-def __create_connection(endpoint: str, cert: str, key: str, ca: str, client_id: str) -> Connection:
+def __create_connection(endpoint:str, cert:str, key:str, ca:str, client_id:str) -> Connection:
     # Spin up resources
     event_loop_group: io.EventLoopGroup = io.EventLoopGroup(1)
     host_resolver: io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
-    connection: Connection = mqtt_connection_builder.mtls_from_path(
+    connection:Connection = mqtt_connection_builder.mtls_from_path(
         endpoint = endpoint,
         cert_filepath = cert,
         pri_key_filepath = key,
@@ -160,16 +164,16 @@ def __create_connection(endpoint: str, cert: str, key: str, ca: str, client_id: 
 
 
 def __subscribe_CreateKeysAndCertificate_topics_by(
-    client: iotidentity.IotIdentityClient
+    client:iotidentity.IotIdentityClient
 ) -> None:
-    request: iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
+    request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
     __subscribe_CreateKeysAndCertificate_accepted_topic_by(client, request)
     __subscribe_CreateKeysAndCertificate_rejected_topic_by(client, request)
 
 
 def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
-    client: iotidentity.IotIdentityClient,
-    request: iotidentity.CreateKeysAndCertificateSubscriptionRequest
+    client:iotidentity.IotIdentityClient,
+    request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
 ) -> None:
     future, topic = client.subscribe_to_create_keys_and_certificate_accepted(
         request = request,
@@ -182,8 +186,8 @@ def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
 
 
 def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
-    client: iotidentity.IotIdentityClient,
-    request: iotidentity.CreateKeysAndCertificateSubscriptionRequest
+    client:iotidentity.IotIdentityClient,
+    request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
 ) -> None:
     future, topic = client.subscribe_to_create_keys_and_certificate_rejected(
         request = request,
@@ -196,10 +200,10 @@ def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
 
 
 def __subscribe_RegisterThing_topics_by(
-    client: iotidentity.IotIdentityClient,
-    template_name: str
+    client:iotidentity.IotIdentityClient,
+    template_name:str
 ) -> None:
-    request: iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
+    request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
         template_name = template_name
     )
     __subscribe_RegisterThing_accepted_topic_by(client, request)
@@ -207,8 +211,8 @@ def __subscribe_RegisterThing_topics_by(
 
 
 def __subscribe_RegisterThing_accepted_topic_by(
-    client: iotidentity.IotIdentityClient,
-    request: iotidentity.RegisterThingRequest
+    client:iotidentity.IotIdentityClient,
+    request:iotidentity.RegisterThingRequest
 ) -> None:
     future, topic = client.subscribe_to_register_thing_accepted(
         request = request,
@@ -221,8 +225,8 @@ def __subscribe_RegisterThing_accepted_topic_by(
 
 
 def __subscribe_RegisterThing_rejected_topic_by(
-    client: iotidentity.IotIdentityClient,
-    request: iotidentity.RegisterThingRequest
+    client:iotidentity.IotIdentityClient,
+    request:iotidentity.RegisterThingRequest
 ) -> None:
     # print("Subscribing to CreateKeysAndCertificate Rejected topic...")
     future, topic = client.subscribe_to_register_thing_rejected(
@@ -236,10 +240,10 @@ def __subscribe_RegisterThing_rejected_topic_by(
 
 
 def __publish_CreateKeysAndCertificate_topic_by(
-    client: iotidentity.IotIdentityClient
+    client:iotidentity.IotIdentityClient
 ) -> None:
     print("Publishing to CreateKeysAndCertificate...")
-    future: Future = client.publish_create_keys_and_certificate(
+    future:Future = client.publish_create_keys_and_certificate(
         request = iotidentity.CreateKeysAndCertificateRequest(),
         qos = mqtt.QoS.AT_LEAST_ONCE
     )
@@ -251,17 +255,17 @@ def __publish_CreateKeysAndCertificate_topic_by(
 
 
 def __publish_RegisterThing_topic_by(
-    client: iotidentity.IotIdentityClient,
-    template_name: str,
-    template_parameters: dict
+    client:iotidentity.IotIdentityClient,
+    template_name:str,
+    template_parameters:dict
 ) -> None:
-    request = iotidentity.RegisterThingRequest(
+    request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
         template_name = template_name,
         certificate_ownership_token = createKeysAndCertificateResponse.certificate_ownership_token,
         parameters = json.loads(template_parameters)
     )
     print("Publishing to RegisterThing topic...")
-    future = client.publish_register_thing(
+    future:Future = client.publish_register_thing(
         request = request,
         qos = mqtt.QoS.AT_LEAST_ONCE
     )
@@ -270,12 +274,12 @@ def __publish_RegisterThing_topic_by(
     # __wait_for('registerThingResponse', registerThingResponse)
 
 
-def __provision_by(connection: Connection, template_name: str, template_parameters: str) -> None:
+def __provision_by(connection:Connection, template_name:str, template_parameters:str) -> None:
     try:
         # Subscribe to necessary topics.
         # Note that is **is** important to wait for "accepted/rejected" subscriptions
         # to succeed before publishing the corresponding "request".
-        client: iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
+        client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
         __subscribe_and_pubrish_topics_by(client, template_name, template_parameters)
         print("Success")
         __disconnect(connection)
@@ -284,9 +288,9 @@ def __provision_by(connection: Connection, template_name: str, template_paramete
 
 
 def __subscribe_and_pubrish_topics_by(
-    client: iotidentity.IotIdentityClient,
-    template_name: str,
-    template_parameters: dict
+    client:iotidentity.IotIdentityClient,
+    template_name:str,
+    template_parameters:dict
 ) -> None:
     __subscribe_CreateKeysAndCertificate_topics_by(client)
     __subscribe_RegisterThing_topics_by(client, template_name)
@@ -295,15 +299,15 @@ def __subscribe_and_pubrish_topics_by(
 
 
 def provision_thing(
-    endpoint: str,
-    cert: str,
-    key: str,
-    ca: str,
-    template_name: str,
-    template_parameters: str
+    endpoint:str,
+    cert:str,
+    key:str,
+    ca:str,
+    template_name:str,
+    template_parameters:str
 ) -> str:
-    connection: Connection = __create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
-    future: Future = connection.connect()
+    connection:Connection = __create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
+    future:Future = connection.connect()
 
     # Wait for connection to be fully established.
     # Note that it's not necessary to wait, commands issued to the
@@ -313,7 +317,7 @@ def provision_thing(
     future.result()
     print("Connected!")
     __provision_by(connection, template_name, template_parameters)
-    thing_name: str = registerThingResponse.thing_name
+    thing_name:str = registerThingResponse.thing_name
 
     # Wait for the sample to finish
     is_sample_done.wait()
@@ -321,14 +325,14 @@ def provision_thing(
 
 
 if __name__ == '__main__':
-    config_path: str = 'config.json'
+    config_path:str = 'config.json'
     with open(config_path) as config_file:
-        config: dict = json.load(config_file)
+        config:dict = json.load(config_file)
 
-    folder: str = 'certs'
-    claim: str = f'{folder}/claim.pem'
+    folder:str = 'certs'
+    claim:str = f'{folder}/claim.pem'
 
-    thing_name: str = provision_thing(
+    thing_name:str = provision_thing(
         endpoint = config.get('endpoint'),
         cert = f'{claim}.crt',
         key = f'{claim}.key',
