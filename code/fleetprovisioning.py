@@ -11,7 +11,10 @@ import fp
 
 
 class FleetProvisioning:
-    def __init__(self) -> None:
+    def __init__(self, endpoint:str, template_name:str) -> None:
+        self.__endpoint = endpoint
+        self.__template_name = template_name
+
         self.__is_sample_done:Event = Event()
         self.__createKeysAndCertificateResponse = None
         self.__registerThingResponse = None
@@ -138,7 +141,6 @@ class FleetProvisioning:
 
     def __create_connection(
         self,
-        endpoint:str,
         cert:str,
         key:str,
         ca:str,
@@ -149,7 +151,7 @@ class FleetProvisioning:
         host_resolver: io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
         connection:Connection = mqtt_connection_builder.mtls_from_path(
-            endpoint = endpoint,
+            endpoint = self.__endpoint,
             cert_filepath = cert,
             pri_key_filepath = key,
             client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
@@ -161,7 +163,7 @@ class FleetProvisioning:
             keep_alive_secs = 30,
             http_proxy_options = None,
         )
-        print(f"Connecting to {endpoint} with client ID '{client_id}'...")
+        print(f"Connecting to {self.__endpoint} with client ID '{client_id}'...")
         return connection
 
 
@@ -204,13 +206,9 @@ class FleetProvisioning:
         future.result()
 
 
-    def __subscribe_RegisterThing_topics_by(
-        self,
-        client:iotidentity.IotIdentityClient,
-        template_name:str
-    ) -> None:
+    def __subscribe_RegisterThing_topics_by(self, client:iotidentity.IotIdentityClient) -> None:
         request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
-            template_name = template_name
+            template_name = self.__template_name
         )
         self.__subscribe_RegisterThing_accepted_topic_by(client, request)
         self.__subscribe_RegisterThing_rejected_topic_by(client, request)
@@ -266,11 +264,10 @@ class FleetProvisioning:
     def __publish_RegisterThing_topic_by(
         self,
         client:iotidentity.IotIdentityClient,
-        template_name:str,
         template_parameters:dict
     ) -> None:
         request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
-            template_name = template_name,
+            template_name = self.__template_name,
             certificate_ownership_token = self.__createKeysAndCertificateResponse.certificate_ownership_token,
             parameters = json.loads(template_parameters)
         )
@@ -284,22 +281,13 @@ class FleetProvisioning:
         # __wait_for('registerThingResponse', registerThingResponse)
 
 
-    def __provision_by(
-        self,
-        connection:Connection,
-        template_name:str,
-        template_parameters:str
-    ) -> None:
+    def __provision_by(self, connection:Connection, template_parameters:str) -> None:
         try:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
             # to succeed before publishing the corresponding "request".
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
-            self.__subscribe_and_pubrish_topics_by(
-                client,
-                template_name,
-                template_parameters
-            )
+            self.__subscribe_and_pubrish_topics_by(client, template_parameters)
             print("Success")
             self.__disconnect(connection)
         except Exception as e:
@@ -309,25 +297,16 @@ class FleetProvisioning:
     def __subscribe_and_pubrish_topics_by(
         self,
         client:iotidentity.IotIdentityClient,
-        template_name:str,
         template_parameters:dict
     ) -> None:
         self.__subscribe_CreateKeysAndCertificate_topics_by(client)
-        self.__subscribe_RegisterThing_topics_by(client, template_name)
+        self.__subscribe_RegisterThing_topics_by(client)
         self.__publish_CreateKeysAndCertificate_topic_by(client)
-        self.__publish_RegisterThing_topic_by(client, template_name, template_parameters)
+        self.__publish_RegisterThing_topic_by(client, template_parameters)
 
 
-    def provision_thing(
-        self,
-        endpoint:str,
-        cert:str,
-        key:str,
-        ca:str,
-        template_name:str,
-        template_parameters:str
-    ) -> str:
-        connection:Connection = self.__create_connection(endpoint, cert, key, ca, client_id=str(uuid4()))
+    def provision_thing(self, cert:str, key:str, ca:str, template_parameters:str) -> str:
+        connection:Connection = self.__create_connection(cert, key, ca, client_id=str(uuid4()))
         future:Future = connection.connect()
 
         # Wait for connection to be fully established.
@@ -337,7 +316,7 @@ class FleetProvisioning:
         # fails or succeeds.
         future.result()
         print("Connected!")
-        self.__provision_by(connection, template_name, template_parameters)
+        self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
 
         # Wait for the sample to finish
@@ -350,17 +329,18 @@ if __name__ == '__main__':
     with open(config_path) as config_file:
         config:dict = json.load(config_file)
 
+    fleet:FleetProvisioning = FleetProvisioning(
+        endpoint = config.get('endpoint'),
+        template_name = config.get('template_name'),
+    )
+
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
 
-    fleet:FleetProvisioning = FleetProvisioning()
-
     thing_name:str = fleet.provision_thing(
-        endpoint = config.get('endpoint'),
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
-        template_name = config.get('template_name'),
         template_parameters = config.get('template_parameters'),
     )
     print(f"Thing name: {thing_name}")
