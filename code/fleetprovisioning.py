@@ -1,3 +1,4 @@
+from multiprocessing import connection
 from multiprocessing.connection import Connection
 from awscrt import io, mqtt
 from awsiot import iotidentity, mqtt_connection_builder
@@ -165,11 +166,11 @@ class FleetProvisioning:
         future.result() # Wait for subscription to succeed
 
 
-    def __publish_CreateKeysAndCertificate_topic_by(
+    def __create_keys_and_certificate_by(
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
-        self.__CreateKeysAndCertificate_topic_by(client)
+        self.__publish_CreateKeysAndCertificate_topic_by(client)
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
             if self.__createKeysAndCertificateResponse is not None: break
@@ -180,7 +181,7 @@ class FleetProvisioning:
             raise Exception('CreateKeysAndCertificate API did not succeed')
 
 
-    def __CreateKeysAndCertificate_topic_by(
+    def __publish_CreateKeysAndCertificate_topic_by(
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
@@ -192,12 +193,12 @@ class FleetProvisioning:
         future.add_done_callback(fp.on_publish_CreateKeysAndCertificate)
 
 
-    def __publish_RegisterThing_topic_by(
+    def __register_thing_by(
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
     ) -> None:
-        self.__RegisterThing_topic_by(client, template_parameters)
+        self.__publish_RegisterThing_topic_by(client, template_parameters)
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
             if self.__registerThingResponse is not None: break
@@ -205,7 +206,7 @@ class FleetProvisioning:
             loop_count += 1
 
 
-    def __RegisterThing_topic_by(
+    def __publish_RegisterThing_topic_by(
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
@@ -243,21 +244,19 @@ class FleetProvisioning:
     ) -> None:
         self.__subscribe_CreateKeysAndCertificate_topics_by(client)
         self.__subscribe_RegisterThing_topics_by(client)
-        self.__publish_CreateKeysAndCertificate_topic_by(client)
-        self.__publish_RegisterThing_topic_by(client, template_parameters)
+        self.__create_keys_and_certificate_by(client)
+        self.__register_thing_by(client, template_parameters)
 
 
-    def provision_thing(
+    def __connect_with(
         self,
+        client_id:str,
         cert:str,
         key:str,
         ca:str,
-        template_parameters:str,
-        client_id:str = str(uuid4()),
-    ) -> str:
+    ) -> None:
         connection:Connection = self.__create_connection_with(client_id, cert, key, ca)
         future:Future = connection.connect()
-
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
@@ -265,6 +264,18 @@ class FleetProvisioning:
         # fails or succeeds.
         future.result()
         print("Connected!")
+        return connection
+
+
+    def provision_thing_by(
+        self,
+        cert:str,
+        key:str,
+        ca:str,
+        template_parameters:str,
+        client_id:str = str(uuid4()),
+    ) -> str:
+        connection = self.__connect_with(client_id, cert, key, ca)
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
         self.__is_sample_done.wait() # Wait for the sample to finish
@@ -284,11 +295,10 @@ if __name__ == '__main__':
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
 
-    thing_name:str = fleet.provision_thing(
+    thing_name:str = fleet.provision_thing_by(
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
         template_parameters = config.get('template_parameters'),
         client_id = str(uuid4()),
     )
-    print(f"Thing name: {thing_name}")
