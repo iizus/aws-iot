@@ -139,16 +139,16 @@ class FleetProvisioning:
     #         time.sleep(1)
 
 
-    def __create_connection(
+    def __create_connection_with(
         self,
+        client_id:str,
         cert:str,
         key:str,
         ca:str,
-        client_id:str
     ) -> Connection:
         # Spin up resources
-        event_loop_group: io.EventLoopGroup = io.EventLoopGroup(1)
-        host_resolver: io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
+        event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
+        host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
         connection:Connection = mqtt_connection_builder.mtls_from_path(
             endpoint = self.__endpoint,
@@ -305,8 +305,15 @@ class FleetProvisioning:
         self.__publish_RegisterThing_topic_by(client, template_parameters)
 
 
-    def provision_thing(self, cert:str, key:str, ca:str, template_parameters:str) -> str:
-        connection:Connection = self.__create_connection(cert, key, ca, client_id=str(uuid4()))
+    def provision_thing(
+        self,
+        cert:str,
+        key:str,
+        ca:str,
+        template_parameters:str,
+        client_id:str = str(uuid4()),
+    ) -> str:
+        connection:Connection = self.__create_connection_with(client_id, cert, key, ca)
         future:Future = connection.connect()
 
         # Wait for connection to be fully established.
@@ -342,5 +349,6 @@ if __name__ == '__main__':
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
         template_parameters = config.get('template_parameters'),
+        client_id = str(uuid4()),
     )
     print(f"Thing name: {thing_name}")
