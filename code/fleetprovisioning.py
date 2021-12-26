@@ -47,7 +47,7 @@ class FleetProvisioning:
         response:iotidentity.CreateKeysAndCertificateResponse
     ) -> None:
         try:
-            self.__createKeysAndCertificateResponse = response
+            self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
             print(f"Certificate ID: {response.certificate_id}")
             fp.save_certs_based_on(response)
             return
@@ -55,14 +55,14 @@ class FleetProvisioning:
             fp.error(e)
 
 
-    def on_CreateKeysAndCertificate_rejected(self, response: iotidentity.ErrorResponse) -> None:
+    def on_CreateKeysAndCertificate_rejected(self, response:iotidentity.ErrorResponse) -> None:
         fp.print_rejected('CreateKeysAndCertificate', response)
 
 
     def on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
         try:
-            self.__registerThingResponse = response
-            print(f"Received a new message {response}")
+            self.__registerThingResponse:iotidentity.RegisterThingResponse = response
+            print(f"Thing name: {response.thing_name}")
             return
         except Exception as e:
             fp.error(e)
@@ -80,7 +80,7 @@ class FleetProvisioning:
     # Callback when an interrupted connection is re-established.
     def on_connection_resumed(
         self,
-        connection: Connection,
+        connection:Connection,
         return_code,
         session_present
     ) -> None:
