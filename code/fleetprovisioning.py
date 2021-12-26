@@ -26,7 +26,7 @@ class FleetProvisioning:
                 future.add_done_callback(self.on_disconnected)
 
         
-    def on_disconnected(self) -> None:
+    def on_disconnected(self, future:Future) -> None:
         print("Disconnected")
         self.__is_sample_done.set() # Signal that sample is finished
 
