@@ -1,4 +1,3 @@
-from xml.dom.pulldom import PROCESSING_INSTRUCTION
 import fp
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
@@ -209,32 +208,13 @@ class FleetProvisioning:
 
 from mqtt import MQTT
 
-# def provision_thing_at(
-#     endpoint:str,
-#     cert:str,
-#     key:str,
-#     ca:str,
-#     client_id:str,
-#     template_name:str,
-#     template_parameters:str,
-# ) -> str:
-#     mqtt:MQTT = MQTT(endpoint)
-#     fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
-
-#     connection:Connection = mqtt.connect_with(cert, key, ca, client_id)
-#     thing_name:str = fleet_provisioning.provision_thing_by(connection, template_parameters)
-    
-#     mqtt.disconnect(connection)
-#     return thing_name
-
 
 class FP:
     def __init__(self, endpoint:str, template_name:str) -> None:
         self.__mqtt:MQTT = MQTT(endpoint)
         self.__fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
 
-
-    def provision_thing_at(
+    def provision_thing_by(
         self,
         cert:str,
         key:str,
@@ -251,11 +231,15 @@ class FP:
         return thing_name
 
 
-if __name__ == '__main__':
-    config_path:str = 'config.json'
-    with open(config_path) as config_file:
+def get_config_from(file_path:str) -> dict:
+    with open(file_path) as config_file:
         from json import load
         config:dict = load(config_file)
+        return config
+
+
+if __name__ == '__main__':
+    config:dict = get_config_from(file_path='config.json')
 
     __fp = FP(
         endpoint = config.get('endpoint'),
@@ -268,20 +252,10 @@ if __name__ == '__main__':
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    thing_name:str = __fp.provision_thing_at(
+    thing_name:str = __fp.provision_thing_by(
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
         client_id = device_ID,
         template_parameters = {"DeviceID": device_ID},
     )
-
-    # thing_name:str = provision_thing_at(
-    #     endpoint = config.get('endpoint'),
-    #     cert = f'{claim}.crt',
-    #     key = f'{claim}.key',
-    #     ca = f'{folder}/AmazonRootCA1.pem',
-    #     client_id = device_ID,
-    #     template_name = config.get('template_name'),
-    #     template_parameters = {"DeviceID": device_ID},
-    # )
