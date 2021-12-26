@@ -1,15 +1,8 @@
-import sys
-from threading import Lock
+from sys import exc_info
 from traceback import print_exception
 from awsiot import iotidentity
 from concurrent.futures import Future
 from time import sleep
-
-
-class LockedData:
-    def __init__(self):
-        self.lock:Lock = Lock()
-        self.disconnect_called:bool = False
 
 
 def on_publish_CreateKeysAndCertificate(future:Future) -> None:
@@ -59,5 +52,5 @@ def error(msg_or_exception:Exception) -> None:
     print_exception(
         msg_or_exception.__class__,
         msg_or_exception,
-        sys.exc_info()[2],
+        exc_info()[2],
     )
