@@ -24,19 +24,19 @@
 			}
 		},
 		"certificate": {
+			"Type": "AWS::IoT::Certificate",
 			"Properties": {
 				"CertificateId": {
 					"Ref": "AWS::IoT::Certificate::Id"
 				},
 				"Status": "Active"
-			},
-			"Type": "AWS::IoT::Certificate"
+			}
 		},
 		"policy": {
+			"Type": "AWS::IoT::Policy",
 			"Properties": {
 				"PolicyName": "Full-Access-Policy"
-			},
-			"Type": "AWS::IoT::Policy"
+			}
 		}
 	}
 }
