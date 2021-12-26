@@ -1,9 +1,9 @@
-from awscrt import mqtt
+import fp
+from mqtt import MQTT
+from awscrt.mqtt import Connection, QoS
 from awsiot import iotidentity
 from concurrent.futures import Future
 from uuid import uuid4
-import fp
-from connection import MQTT
 
 
 class FleetProvisioning:
@@ -59,7 +59,7 @@ class FleetProvisioning:
     ) -> None:
         future, topic = client.subscribe_to_create_keys_and_certificate_accepted(
             request = request,
-            qos = mqtt.QoS.AT_LEAST_ONCE,
+            qos = QoS.AT_LEAST_ONCE,
             callback = self.on_CreateKeysAndCertificate_accepted
         )
         print(f"Subscribed {topic}")
@@ -73,7 +73,7 @@ class FleetProvisioning:
     ) -> None:
         future, topic = client.subscribe_to_create_keys_and_certificate_rejected(
             request = request,
-            qos = mqtt.QoS.AT_LEAST_ONCE,
+            qos = QoS.AT_LEAST_ONCE,
             callback = self.on_CreateKeysAndCertificate_rejected
         )
         print(f"Subscribed {topic}")
@@ -95,7 +95,7 @@ class FleetProvisioning:
     ) -> None:
         future, topic = client.subscribe_to_register_thing_accepted(
             request = request,
-            qos = mqtt.QoS.AT_LEAST_ONCE,
+            qos = QoS.AT_LEAST_ONCE,
             callback = self.on_RegisterThing_accepted
         )
         print(f"Subscribed {topic}")
@@ -110,7 +110,7 @@ class FleetProvisioning:
         print("Subscribing to CreateKeysAndCertificate Rejected topic...")
         future, topic = client.subscribe_to_register_thing_rejected(
             request = request,
-            qos = mqtt.QoS.AT_LEAST_ONCE,
+            qos = QoS.AT_LEAST_ONCE,
             callback = self.on_RegisterThing_rejected
         )
         print(f"Subscribed {topic}")
@@ -139,7 +139,7 @@ class FleetProvisioning:
         print("Publishing to CreateKeysAndCertificate...")
         future:Future = client.publish_create_keys_and_certificate(
             request = iotidentity.CreateKeysAndCertificateRequest(),
-            qos = mqtt.QoS.AT_LEAST_ONCE
+            qos = QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(fp.on_publish_CreateKeysAndCertificate)
 
@@ -170,12 +170,12 @@ class FleetProvisioning:
         print("Publishing to RegisterThing topic...")
         future:Future = client.publish_register_thing(
             request = request,
-            qos = mqtt.QoS.AT_LEAST_ONCE
+            qos = QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(fp.on_publish_RegisterThing)
 
 
-    def __provision_by(self, connection:mqtt.Connection, template_parameters:str) -> None:
+    def __provision_by(self, connection:Connection, template_parameters:str) -> None:
         try:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
@@ -200,7 +200,7 @@ class FleetProvisioning:
 
     def provision_thing_by(
         self,
-        connection:mqtt.Connection,
+        connection:Connection,
         template_parameters:str,
     ) -> str:
         self.__provision_by(connection, template_parameters)
@@ -214,15 +214,15 @@ if __name__ == '__main__':
         from json import load
         config:dict = load(config_file)
 
-    fleet:FleetProvisioning = FleetProvisioning(template_name = config.get('template_name'))
+    fleet:FleetProvisioning = FleetProvisioning(template_name=config.get('template_name'))
 
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
-    device_ID = str(uuid4())
+    device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    mqtt_connection = MQTT(endpoint=config.get('endpoint'))
-    connection = mqtt_connection.connect_with(
+    mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
+    connection:Connection = mqtt.connect_with(
         client_id = device_ID,
         cert = f'{claim}.crt',
         key = f'{claim}.key',
@@ -232,4 +232,4 @@ if __name__ == '__main__':
         connection = connection,
         template_parameters = {"DeviceID": device_ID},
     )
-    mqtt_connection.disconnect(connection)
+    mqtt.disconnect(connection)
