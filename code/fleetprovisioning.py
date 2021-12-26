@@ -1,7 +1,6 @@
-from awscrt import io, mqtt
-from awsiot import iotidentity, mqtt_connection_builder
+from awscrt import mqtt
+from awsiot import iotidentity
 from concurrent.futures import Future
-from threading import Event
 from uuid import uuid4
 import fp
 from connection import MQTT
@@ -10,24 +9,8 @@ from connection import MQTT
 class FleetProvisioning:
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
-        self.__is_sample_done:Event = Event()
         self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
         self.__registerThingResponse:iotidentity.RegisterThingResponse = None
-
-
-    def __disconnect(self, mqtt_connection:mqtt.Connection):
-        locked_data:fp.LockedData = fp.LockedData()
-        with locked_data.lock:
-            if not locked_data.disconnect_called:
-                print("Disconnecting...")
-                locked_data.disconnect_called = True
-                future:Future = mqtt_connection.disconnect()
-                future.add_done_callback(self.on_disconnected)
-
-        
-    def on_disconnected(self, future:Future) -> None:
-        print("Disconnected")
-        self.__is_sample_done.set() # Signal that sample is finished
 
 
     def on_CreateKeysAndCertificate_accepted(
@@ -200,7 +183,7 @@ class FleetProvisioning:
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
             self.__subscribe_and_pubrish_topics_by(client, template_parameters)
             print("Success fleet provisioning")
-            self.__disconnect(connection)
+            # self.__disconnect(connection)
         except Exception as e:
             fp.error(e)
 
@@ -223,7 +206,7 @@ class FleetProvisioning:
     ) -> str:
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
-        self.__is_sample_done.wait() # Wait for the sample to finish
+        # self.__is_sample_done.wait() # Wait for the sample to finish
         return thing_name
 
 
@@ -251,3 +234,8 @@ if __name__ == '__main__':
         connection = connection,
         template_parameters = {"DeviceID": device_ID},
     )
+
+    print("Disconnecting...")
+    disconnect_future = connection.disconnect()
+    disconnect_future.result()
+    print("Disconnected!")
