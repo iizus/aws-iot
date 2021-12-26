@@ -8,8 +8,8 @@ import fp
 
 class FleetProvisioning:
     def __init__(self, endpoint:str, template_name:str) -> None:
-        self.__endpoint = endpoint
-        self.__template_name = template_name
+        self.__endpoint:str = endpoint
+        self.__template_name:str = template_name
 
         self.__is_sample_done:Event = Event()
         self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
@@ -26,7 +26,7 @@ class FleetProvisioning:
                 future.add_done_callback(self.on_disconnected)
 
         
-    def on_disconnected(self, future:Future) -> None:
+    def on_disconnected(self) -> None:
         print("Disconnected")
         self.__is_sample_done.set() # Signal that sample is finished
 

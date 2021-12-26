@@ -49,6 +49,11 @@ def on_connection_interrupted(error) -> None:
     print(f"Connection interrupted. Error: {error}")
 
 
+def wait_for(response:str) -> None:
+    print(f'Waiting... {response}')
+    sleep(1)
+
+
 def __callback(api:str, future:Future) -> None:
     try:
         future.result() # raises exception if publish failed
@@ -85,8 +90,3 @@ def error(msg_or_exception:Exception) -> None:
         msg_or_exception,
         sys.exc_info()[2],
     )
-
-
-def wait_for(response:str) -> None:
-    print(f'Waiting... {response}')
-    sleep(1)
