@@ -45,5 +45,5 @@ def error(msg_or_exception:Exception) -> None:
     print_exception(
         msg_or_exception.__class__,
         msg_or_exception,
-        exc_info()[2]
+        exc_info()[2],
     )

@@ -4,7 +4,7 @@ from awsiot import iotidentity, mqtt_connection_builder
 from concurrent.futures import Future
 import sys
 from threading import Event
-import time
+from time import sleep
 from uuid import uuid4
 import json
 import fp
@@ -103,40 +103,10 @@ class FleetProvisioning:
             if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
 
 
-    def waitForCreateKeysAndCertificateResponse(self):
-        # Wait for the response.
-        loopCount: int = 0
-        while loopCount < 10 and self.__createKeysAndCertificateResponse is None:
-            if self.__createKeysAndCertificateResponse is not None:
-                break
-            message = json.dumps(self.__createKeysAndCertificateResponse)
-            print(f"Waiting... CreateKeysAndCertificateResponse: {message}")
-            loopCount += 1
-            time.sleep(1)
-
-
-    def waitForRegisterThingResponse(self):
-        # Wait for the response.
-        loopCount: int = 0
-        while loopCount < 20 and self.__registerThingResponse is None:
-            if self.__registerThingResponse is not None:
-                break
-            loopCount += 1
-            message = json.dumps(self.__registerThingResponse)
-            print(f"Waiting... registerThingResponse: {message}")
-            time.sleep(1)
-
-
-    # def __wait_for(api, response):
-    #     # Wait for the response.
-    #     loopCount = 0
-    #     while loopCount < 10 and response is None:
-    #         if response is not None:
-    #             break
-    #         loopCount += 1
-    #         message = json.dumps(response)
-    #         print(f'Waiting {api}... : {message}')
-    #         time.sleep(1)
+    def __wait_for(self, response) -> None:
+        message = json.dumps(response)
+        print(f'Waiting... : {message}')
+        sleep(1)
 
 
     def __create_connection_with(
@@ -187,8 +157,7 @@ class FleetProvisioning:
             callback = self.on_CreateKeysAndCertificate_accepted
         )
         print(f"Subscribed {topic}")
-        # Wait for subscription to succeed
-        future.result()
+        future.result() # Wait for subscription to succeed
 
 
     def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
@@ -202,8 +171,7 @@ class FleetProvisioning:
             callback = self.on_CreateKeysAndCertificate_rejected
         )
         print(f"Subscribed {topic}")
-        # Wait for subscription to succeed
-        future.result()
+        future.result() # Wait for subscription to succeed
 
 
     def __subscribe_RegisterThing_topics_by(self, client:iotidentity.IotIdentityClient) -> None:
@@ -225,8 +193,7 @@ class FleetProvisioning:
             callback = self.on_RegisterThing_accepted
         )
         print(f"Subscribed {topic}")
-        # Wait for subscription to succeed
-        future.result()
+        future.result() # Wait for subscription to succeed
 
 
     def __subscribe_RegisterThing_rejected_topic_by(
@@ -234,15 +201,14 @@ class FleetProvisioning:
         client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
     ) -> None:
-        # print("Subscribing to CreateKeysAndCertificate Rejected topic...")
+        print("Subscribing to CreateKeysAndCertificate Rejected topic...")
         future, topic = client.subscribe_to_register_thing_rejected(
             request = request,
             qos = mqtt.QoS.AT_LEAST_ONCE,
             callback = self.on_RegisterThing_rejected
         )
         print(f"Subscribed {topic}")
-        # Wait for subscription to succeed
-        future.result()
+        future.result() # Wait for subscription to succeed
 
 
     def __publish_CreateKeysAndCertificate_topic_by(
@@ -255,8 +221,13 @@ class FleetProvisioning:
             qos = mqtt.QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(self.on_publish_CreateKeysAndCertificate)
-        self.waitForCreateKeysAndCertificateResponse()
-        # __wait_for('createKeysAndCertificateResponse', createKeysAndCertificateResponse)
+
+        loop_count:int = 0
+        while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
+            if self.__createKeysAndCertificateResponse is not None: break
+            self.__wait_for(self.__createKeysAndCertificateResponse)
+            loop_count += 1
+
         if self.__createKeysAndCertificateResponse is None:
             raise Exception('CreateKeysAndCertificate API did not succeed')
 
@@ -277,8 +248,12 @@ class FleetProvisioning:
             qos = mqtt.QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(self.on_publish_RegisterThing)
-        self.waitForRegisterThingResponse()
-        # __wait_for('registerThingResponse', registerThingResponse)
+
+        loop_count:int = 0
+        while loop_count < 10 and self.__registerThingResponse is None:
+            if self.__registerThingResponse is not None: break
+            self.__wait_for(self.__registerThingResponse)
+            loop_count += 1
 
 
     def __provision_by(self, connection:Connection, template_parameters:str) -> None:
@@ -325,9 +300,7 @@ class FleetProvisioning:
         print("Connected!")
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
-
-        # Wait for the sample to finish
-        self.__is_sample_done.wait()
+        self.__is_sample_done.wait() # Wait for the sample to finish
         return thing_name
 
 
