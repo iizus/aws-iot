@@ -292,14 +292,13 @@ if __name__ == '__main__':
 
     folder:str = 'certs'
     claim:str = f'{folder}/claim.pem'
-
-    id = str(uuid4())
-    print(id)
+    device_ID = str(uuid4())
+    print(f"Device ID: {device_ID}")
 
     thing_name:str = fleet.provision_thing_by(
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
-        template_parameters = {"DeviceID": id},
-        client_id = id,
+        template_parameters = {"DeviceID": device_ID},
+        client_id = device_ID,
     )

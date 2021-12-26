@@ -1,12 +1,10 @@
 import sys
 from threading import Lock
 from traceback import print_exception
-from typing import Any
 from awsiot import iotidentity
 from concurrent.futures import Future
 from time import sleep
-from multiprocessing.connection import Connection
-from awscrt import mqtt
+from awscrt.mqtt import Connection, ConnectReturnCode
 
 
 class LockedData:
@@ -16,11 +14,11 @@ class LockedData:
 
 
 def on_publish_CreateKeysAndCertificate(future:Future) -> None:
-    callback('CreateKeysAndCertificate', future)
+    __callback('CreateKeysAndCertificate', future)
 
 
 def on_publish_RegisterThing(future:Future) -> None:
-    callback('RegisterThing', future)
+    __callback('RegisterThing', future)
 
 
 # Callback when an interrupted connection is re-established.
@@ -31,7 +29,7 @@ def on_connection_resumed(
 ) -> None:
     print(f"Connection resumed. return code: {return_code} session present: {session_present}")
 
-    if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
+    if return_code == ConnectReturnCode.ACCEPTED and not session_present:
         print("Session did not persist. Resubscribing to existing topics...")
         resubscribe_future, _ = connection.resubscribe_existing_topics()
         # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
@@ -51,7 +49,7 @@ def on_connection_interrupted(error) -> None:
     print(f"Connection interrupted. Error: {error}")
 
 
-def callback(api:str, future:Future) -> None:
+def __callback(api:str, future:Future) -> None:
     try:
         future.result() # raises exception if publish failed
         print(f"Published {api} request")
