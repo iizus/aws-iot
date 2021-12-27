@@ -1,14 +1,15 @@
 from uuid import uuid4
 from awscrt import mqtt
-from mqtt import MQTT, get_config
+from mqtt import MQTT, read_config
 
 
 class Client:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__mqtt:MQTT = MQTT(endpoint, ca)
 
-    def connect(self, cert:str, key:str, client_id:str=str(uuid4())) -> None:
+    def connect(self, cert:str, key:str, client_id:str=str(uuid4())) -> mqtt.Connection:
         self.__connection:mqtt.Connection = self.__mqtt.connect_with(cert, key, client_id)
+        return self.__connection
 
     def publish(
         self,
@@ -38,7 +39,7 @@ class Client:
 
 
 if __name__ == '__main__':
-    config:dict = get_config()
+    config:dict = read_config()
     folder:str = 'certs'
     cert:str = f'{folder}/client.pem'
 

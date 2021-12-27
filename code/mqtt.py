@@ -5,7 +5,7 @@ from awscrt import io, mqtt
 from awsiot import mqtt_connection_builder
 
 
-def get_config(file_path:str='config.json') -> dict:
+def read_config(file_path:str='config.json') -> dict:
     with open(file_path) as config_file:
         from json import load
         config:dict = load(config_file)
@@ -51,7 +51,6 @@ class MQTT:
         cert:str,
         key:str,
     ) -> mqtt.Connection:
-        # Spin up resources
         event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
         host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 

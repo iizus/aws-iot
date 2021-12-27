@@ -207,8 +207,8 @@ class FleetProvisioning:
 
 
 if __name__ == '__main__':
-    from mqtt import MQTT, get_config
-    config:dict = get_config(file_path='config.json')
+    from mqtt import MQTT, read_config
+    config:dict = read_config(file_path='config.json')
     folder:str = 'certs'
 
     claim:MQTT = MQTT(
