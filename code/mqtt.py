@@ -1,8 +1,8 @@
-from awscrt import io, mqtt
-from awsiot import mqtt_connection_builder
-from concurrent.futures import Future
 import sys
 from uuid import uuid4
+from concurrent.futures import Future
+from awscrt import io, mqtt
+from awsiot import mqtt_connection_builder
 
 
 class MQTT:
@@ -96,3 +96,25 @@ class MQTT:
     # Callback when connection is accidentally lost.
     def on_connection_interrupted(self, error) -> None:
         print(f"Connection interrupted. Error: {error}")
+
+
+def get_config(file_path:str='config.json') -> dict:
+    with open(file_path) as config_file:
+        from json import load
+        config:dict = load(config_file)
+        return config
+
+
+if __name__ == '__main__':
+    config:dict = get_config()
+    __mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
+
+    folder:str = 'certs'
+    claim:str = f'{folder}/client.pem'
+
+    connection:mqtt.Connection = __mqtt.connect_with(
+        cert = f'{claim}.crt',
+        key = f'{claim}.key',
+        ca = f'{folder}/AmazonRootCA1.pem',
+    )
+    __mqtt.disconnect(connection)

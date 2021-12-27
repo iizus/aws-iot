@@ -206,17 +206,10 @@ class FleetProvisioning:
         return thing_name
 
 
-def get_config_from(file_path:str='config.json') -> dict:
-    with open(file_path) as config_file:
-        from json import load
-        config:dict = load(config_file)
-        return config
-
-
 if __name__ == '__main__':
-    config:dict = get_config_from(file_path='config.json')
+    from mqtt import MQTT, get_config
+    config:dict = get_config(file_path='config.json')
 
-    from mqtt import MQTT
     mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
     fleet_provisioning:FleetProvisioning = FleetProvisioning(
         template_name = config.get('template_name')

@@ -1,5 +1,5 @@
-from mqtt import MQTT
-from fleetprovisioning import FleetProvisioning, get_config_from
+from mqtt import MQTT, get_config
+from fleetprovisioning import FleetProvisioning
 from awscrt.mqtt import Connection
 
 
@@ -27,7 +27,7 @@ class Provisioning:
 
 
 if __name__ == '__main__':
-    config:dict = get_config_from(file_path='config.json')
+    config:dict = get_config(file_path='config.json')
 
     provisioning = Provisioning(
         endpoint = config.get('endpoint'),
