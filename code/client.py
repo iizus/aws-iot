@@ -1,5 +1,4 @@
 from sys import exit
-from uuid import uuid4
 from concurrent.futures import Future
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
@@ -12,7 +11,7 @@ def read_config(file_path:str='config.json') -> dict:
         return config
 
 
-def connect(endpoint:str, client_cert:str, ca:str, client_id:str=str(uuid4())) -> None:
+def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
     from threading import Event
     received_event:Event = Event()
 
@@ -31,14 +30,14 @@ def connect(endpoint:str, client_cert:str, ca:str, client_id:str=str(uuid4())) -
     print("Waiting for all messages to be received...")
     received_event.wait()
     client.disconnect()
-    
+
 
 class Client:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__endpoint:str = endpoint
         self.__ca:str = ca
 
-    def connect(self, cert:str, key:str, client_id:str=str(uuid4())) -> mqtt.Connection:
+    def connect(self, cert:str, key:str, client_id:str) -> mqtt.Connection:
         print(f"Connecting to {self.__endpoint} with client ID {client_id}")
         self.__connection:mqtt.Connection = self.__create_connection_with(
             client_id,
@@ -137,8 +136,10 @@ class Client:
 if __name__ == '__main__':
     config:dict = read_config()
     folder:str = 'certs'
+    from uuid import uuid4
     connect(
         endpoint = config.get('endpoint'),
-        client_cert = f'{folder}/client.pem',
         ca = f'{folder}/AmazonRootCA1.pem',
+        client_id = str(uuid4()),
+        client_cert = f'{folder}/client.pem',
     )
