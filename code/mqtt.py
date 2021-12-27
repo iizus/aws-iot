@@ -5,11 +5,17 @@ from awscrt import io, mqtt
 from awsiot import mqtt_connection_builder
 
 
+def get_config(file_path:str='config.json') -> dict:
+    with open(file_path) as config_file:
+        from json import load
+        config:dict = load(config_file)
+        return config
+
+
 class MQTT:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__endpoint:str = endpoint
         self.__ca = ca
-
 
     def connect_with(
         self,
@@ -32,13 +38,11 @@ class MQTT:
         print("Connected!")
         return connection
 
-
     def disconnect(self, connection:mqtt.Connection) -> None:
         print("Disconnecting...")
         disconnect_future = connection.disconnect()
         disconnect_future.result()
         print("Disconnected!")
-
 
     def __create_connection_with(
         self,
@@ -66,7 +70,6 @@ class MQTT:
         print(f"Connecting to {self.__endpoint} with client ID '{client_id}'...")
         return connection
 
-
     # Callback when an interrupted connection is re-established.
     def __on_connection_resumed(
         self,
@@ -83,32 +86,56 @@ class MQTT:
             # evaluate result with a callback instead.
             resubscribe_future.add_done_callback(self.__on_resubscribe_complete)
 
-
     def __on_resubscribe_complete(self, future:Future) -> None:
         results = future.result()
         print(f"Resubscribe results: {results}")
         for topic, qos in results.get('topics'):
             if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
 
-
     # Callback when connection is accidentally lost.
     def __on_connection_interrupted(self, error) -> None:
         print(f"Connection interrupted. Error: {error}")
 
-
-    def on_resubscribe_complete(self, resubscribe_future:Future):
+    def __on_resubscribe_complete(self, resubscribe_future:Future):
         resubscribe_results = resubscribe_future.result()
         print(f"Resubscribe results: {resubscribe_results}")
-        for topic, QoS in resubscribe_results.get('topics'):
+        topics = resubscribe_results.get('topics')
+        for topic, QoS in topics:
             if QoS is None:
                 sys.exit(f"Server rejected resubscribe to topic: {topic}")
 
 
-def get_config(file_path:str='config.json') -> dict:
-    with open(file_path) as config_file:
-        from json import load
-        config:dict = load(config_file)
-        return config
+class Client:
+    def __init__(self, endpoint:str, ca:str) -> None:
+        self.__mqtt:MQTT = MQTT(endpoint, ca)
+
+    def connect(self, cert:str, key:str, client_id:str=str(uuid4)) -> None:
+        self.__connection:mqtt.Connection = self.__mqtt.connect_with(cert, key, client_id)
+
+    def publish(
+        self,
+        topic:str = 'test/test',
+        payload:dict = "{'message': 'test'}",
+        QoS:int = mqtt.QoS.AT_MOST_ONCE
+    ) -> None:
+        print(f"Publishing message to topic '{topic}': {message}")
+        self.__connection.publish(topic, payload, QoS)
+        print(f"Published message to topic '{topic}': {message}")
+
+    def subscribe(
+        self,
+        topic:str,
+        callback,
+        QoS:int = mqtt.QoS.AT_MOST_ONCE,
+    ) -> None:
+        print(f"Subscribing to topic '{topic}'...")
+        subscribe_future, _ = self.__connection.subscribe(topic, QoS, callback)
+        subscribe_result = subscribe_future.result()
+        # print(f"Subscribed with QoS{subscribe_result.get('qos')}")
+        print(subscribe_result)
+
+    def disconnect(self) -> None:
+        self.__mqtt.disconnect(self.__connection)
 
 
 if __name__ == '__main__':
@@ -130,7 +157,7 @@ if __name__ == '__main__':
 
     # Subscribe
     # Callback when the subscribed topic receives a message
-    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs):
+    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
         print(f"Received message from topic '{topic}': {payload}")
 
     print(f"Subscribing to topic '{topic}'...")
