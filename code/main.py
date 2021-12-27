@@ -14,29 +14,8 @@ def provision(endpoint:str, claim_cert:str, ca:str, template_name:str) -> str:
     return thing_name
 
 
-def connect(endpoint:str, client_cert:str, ca:str, thing_name:str) -> None:
-    from threading import Event
-    received_event:Event = Event()
 
-    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
-        print(f"Received {payload} from {topic}")
-        received_event.set()
-
-    from client import Client, mqtt
-    client:Client = Client(endpoint, ca)
-    client.connect(
-        cert = f'{client_cert}.crt',
-        key = f'{client_cert}.key',
-        client_id = thing_name,
-    )
-    client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
-    client.publish(QoS=mqtt.QoS.AT_LEAST_ONCE)
-    print("Waiting for all messages to be received...")
-    received_event.wait()
-    client.disconnect()
-
-
-from client import read_config
+from client import read_config, connect
 config:dict = read_config(file_path='config.json')
 endpoint:str = config.get('endpoint')
 template_name:str = config.get('template_name')

@@ -12,6 +12,27 @@ def read_config(file_path:str='config.json') -> dict:
         return config
 
 
+def connect(endpoint:str, client_cert:str, ca:str, client_id:str=str(uuid4())) -> None:
+    from threading import Event
+    received_event:Event = Event()
+
+    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
+        print(f"Received {payload} from {topic}")
+        received_event.set()
+
+    client:Client = Client(endpoint, ca)
+    client.connect(
+        cert = f'{client_cert}.crt',
+        key = f'{client_cert}.key',
+        client_id = client_id,
+    )
+    client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
+    client.publish(QoS=mqtt.QoS.AT_LEAST_ONCE)
+    print("Waiting for all messages to be received...")
+    received_event.wait()
+    client.disconnect()
+    
+
 class Client:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__endpoint:str = endpoint
@@ -116,22 +137,8 @@ class Client:
 if __name__ == '__main__':
     config:dict = read_config()
     folder:str = 'certs'
-    cert:str = f'{folder}/client.pem'
-
-    from threading import Event
-    received_event:Event = Event()
-
-    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
-        print(f"Received {payload} from {topic}")
-        received_event.set()
-
-    client:Client = Client(
+    connect(
         endpoint = config.get('endpoint'),
+        client_cert = f'{folder}/client.pem',
         ca = f'{folder}/AmazonRootCA1.pem',
     )
-    client.connect(f'{cert}.crt', f'{cert}.key')
-    client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
-    client.publish(QoS=mqtt.QoS.AT_LEAST_ONCE)
-    print("Waiting for all messages to be received...")
-    received_event.wait()
-    client.disconnect()
