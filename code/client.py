@@ -7,18 +7,19 @@ class Client:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__mqtt:MQTT = MQTT(endpoint, ca)
 
-    def connect(self, cert:str, key:str, client_id:str=str(uuid4)) -> None:
+    def connect(self, cert:str, key:str, client_id:str=str(uuid4())) -> None:
         self.__connection:mqtt.Connection = self.__mqtt.connect_with(cert, key, client_id)
 
     def publish(
         self,
         topic:str = 'test/test',
         payload:dict = "{'message': 'test'}",
-        QoS:int = mqtt.QoS.AT_MOST_ONCE
+        QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE
     ) -> None:
-        print(f"Publishing message to topic '{topic}': {message}")
-        self.__connection.publish(topic, payload, QoS)
-        print(f"Published message to topic '{topic}': {message}")
+        print(f"Publishing {payload} to {topic} by {QoS}")
+        future = self.__connection.publish(topic, payload, QoS)
+        print(future)
+        print(f"Published {payload} to {topic} by {QoS}")
 
     def subscribe(
         self,
@@ -26,10 +27,10 @@ class Client:
         topic:str = 'test/test',
         QoS:int = mqtt.QoS.AT_MOST_ONCE,
     ) -> None:
-        print(f"Subscribing to topic '{topic}'...")
+        print(f"Subscribing {topic}")
         subscribe_future, _ = self.__connection.subscribe(topic, QoS, callback)
         subscribe_result = subscribe_future.result()
-        # print(f"Subscribed with QoS{subscribe_result.get('qos')}")
+        print(f"Subscribed {topic}")
         print(subscribe_result)
 
     def disconnect(self) -> None:
@@ -39,31 +40,22 @@ class Client:
 if __name__ == '__main__':
     config:dict = get_config()
     folder:str = 'certs'
+    cert:str = f'{folder}/client.pem'
+
+    from threading import Event
+    received_event = Event()
 
     def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
-        print(f"Received message from topic '{topic}': {payload}")
+        print(f"Received {payload} from {topic}")
+        received_event.set()
 
     client:Client = Client(
         endpoint = config.get('endpoint'),
         ca = f'{folder}/AmazonRootCA1.pem',
     )
-
-    cert:str = f'{folder}/client.pem'
-    client.connect(
-        cert = f'{cert}.crt',
-        key = f'{cert}.key',
-    )
-
+    client.connect(f'{cert}.crt', f'{cert}.key')
     client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
-
-    from time import sleep
-    import json
-
-    publish_count:int = 1
-    while publish_count <= 3:
-        message:str = f"test [{publish_count}]"
-        client.publish(payload=json.dumps(message), QoS=mqtt.QoS.AT_LEAST_ONCE)
-        sleep(3)
-        publish_count += 1
-    
+    client.publish(QoS=mqtt.QoS.AT_LEAST_ONCE)
+    print("Waiting for all messages to be received...")
+    received_event.wait()
     client.disconnect()

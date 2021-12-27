@@ -23,18 +23,19 @@ class MQTT:
         key:str,
         client_id:str = str(uuid4()),
     ) -> None:
+        print(f"Connecting to {self.__endpoint} with client ID {client_id}")
         connection:mqtt.Connection = self.__create_connection_with(
             client_id,
             cert,
             key,
         )
-        future:Future = connection.connect()
+        connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
-        future.result()
+        connect_future.result()
         print("Connected!")
         return connection
 
@@ -67,7 +68,6 @@ class MQTT:
             keep_alive_secs = 30,
             http_proxy_options = None,
         )
-        print(f"Connecting to {self.__endpoint} with client ID '{client_id}'...")
         return connection
 
     # Callback when an interrupted connection is re-established.
@@ -103,85 +103,3 @@ class MQTT:
         for topic, QoS in topics:
             if QoS is None:
                 sys.exit(f"Server rejected resubscribe to topic: {topic}")
-
-
-class Client:
-    def __init__(self, endpoint:str, ca:str) -> None:
-        self.__mqtt:MQTT = MQTT(endpoint, ca)
-
-    def connect(self, cert:str, key:str, client_id:str=str(uuid4)) -> None:
-        self.__connection:mqtt.Connection = self.__mqtt.connect_with(cert, key, client_id)
-
-    def publish(
-        self,
-        topic:str = 'test/test',
-        payload:dict = "{'message': 'test'}",
-        QoS:int = mqtt.QoS.AT_MOST_ONCE
-    ) -> None:
-        print(f"Publishing message to topic '{topic}': {message}")
-        self.__connection.publish(topic, payload, QoS)
-        print(f"Published message to topic '{topic}': {message}")
-
-    def subscribe(
-        self,
-        topic:str,
-        callback,
-        QoS:int = mqtt.QoS.AT_MOST_ONCE,
-    ) -> None:
-        print(f"Subscribing to topic '{topic}'...")
-        subscribe_future, _ = self.__connection.subscribe(topic, QoS, callback)
-        subscribe_result = subscribe_future.result()
-        # print(f"Subscribed with QoS{subscribe_result.get('qos')}")
-        print(subscribe_result)
-
-    def disconnect(self) -> None:
-        self.__mqtt.disconnect(self.__connection)
-
-
-if __name__ == '__main__':
-    config:dict = get_config()
-    folder:str = 'certs'
-
-    client:MQTT = MQTT(
-        endpoint = config.get('endpoint'),
-        ca = f'{folder}/AmazonRootCA1.pem',
-    )
-
-    cert:str = f'{folder}/client.pem'
-    connection:mqtt.Connection = client.connect_with(
-        cert = f'{cert}.crt',
-        key = f'{cert}.key',
-    )
-
-    topic:str = 'test/test'
-
-    # Subscribe
-    # Callback when the subscribed topic receives a message
-    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
-        print(f"Received message from topic '{topic}': {payload}")
-
-    print(f"Subscribing to topic '{topic}'...")
-    subscribe_future, packet_id = connection.subscribe(
-        topic = topic,
-        qos = mqtt.QoS.AT_LEAST_ONCE,
-        callback = on_message_received,
-    )
-    subscribe_result = subscribe_future.result()
-    print(f"Subscribed with QoS{subscribe_result.get('qos')}")
-
-    from time import sleep
-    import json
-
-    publish_count:int = 1
-    while publish_count <= 10:
-        message:str = f"test [{publish_count}]"
-        print(f"Publishing message to topic '{topic}': {message}")
-        connection.publish(
-            topic = topic,
-            payload = json.dumps(message),
-            qos = mqtt.QoS.AT_LEAST_ONCE
-        )
-        sleep(1)
-        publish_count += 1
-    
-    client.disconnect(connection)
