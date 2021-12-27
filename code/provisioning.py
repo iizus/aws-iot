@@ -36,13 +36,13 @@ if __name__ == '__main__':
 
     from uuid import uuid4
     folder:str = 'certs'
-    claim:str = f'{folder}/claim.pem'
+    claim_cert:str = f'{folder}/claim.pem'
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
     thing_name:str = provisioning.provision_thing_by(
-        cert = f'{claim}.crt',
-        key = f'{claim}.key',
+        cert = f'{claim_cert}.crt',
+        key = f'{claim_cert}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
         client_id = device_ID,
         template_parameters = {"DeviceID": device_ID},

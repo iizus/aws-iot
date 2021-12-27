@@ -59,8 +59,8 @@ class MQTT:
             client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
             ca_filepath = ca,
             client_id = client_id,
-            on_connection_interrupted = self.on_connection_interrupted,
-            on_connection_resumed = self.on_connection_resumed,
+            on_connection_interrupted = self.__on_connection_interrupted,
+            on_connection_resumed = self.__on_connection_resumed,
             clean_session = False,
             keep_alive_secs = 30,
             http_proxy_options = None,
@@ -70,7 +70,7 @@ class MQTT:
 
 
     # Callback when an interrupted connection is re-established.
-    def on_connection_resumed(
+    def __on_connection_resumed(
         self,
         connection:mqtt.Connection,
         return_code,
@@ -83,10 +83,10 @@ class MQTT:
             resubscribe_future, _ = connection.resubscribe_existing_topics()
             # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
             # evaluate result with a callback instead.
-            resubscribe_future.add_done_callback(self.on_resubscribe_complete)
+            resubscribe_future.add_done_callback(self.__on_resubscribe_complete)
 
 
-    def on_resubscribe_complete(self, future:Future) -> None:
+    def __on_resubscribe_complete(self, future:Future) -> None:
         results = future.result()
         print(f"Resubscribe results: {results}")
         for topic, qos in results.get('topics'):
@@ -94,7 +94,7 @@ class MQTT:
 
 
     # Callback when connection is accidentally lost.
-    def on_connection_interrupted(self, error) -> None:
+    def __on_connection_interrupted(self, error) -> None:
         print(f"Connection interrupted. Error: {error}")
 
 
@@ -107,14 +107,14 @@ def get_config(file_path:str='config.json') -> dict:
 
 if __name__ == '__main__':
     config:dict = get_config()
-    __mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
+    client:MQTT = MQTT(endpoint=config.get('endpoint'))
 
     folder:str = 'certs'
-    claim:str = f'{folder}/client.pem'
+    cert:str = f'{folder}/client.pem'
 
-    connection:mqtt.Connection = __mqtt.connect_with(
-        cert = f'{claim}.crt',
-        key = f'{claim}.key',
+    connection:mqtt.Connection = client.connect_with(
+        cert = f'{cert}.crt',
+        key = f'{cert}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
     )
-    __mqtt.disconnect(connection)
+    client.disconnect(connection)

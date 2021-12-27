@@ -210,20 +210,20 @@ if __name__ == '__main__':
     from mqtt import MQTT, get_config
     config:dict = get_config(file_path='config.json')
 
-    mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
+    claim:MQTT = MQTT(endpoint=config.get('endpoint'))
     fleet_provisioning:FleetProvisioning = FleetProvisioning(
         template_name = config.get('template_name')
     )
 
     from uuid import uuid4
     folder:str = 'certs'
-    claim:str = f'{folder}/claim.pem'
+    claim_cert:str = f'{folder}/claim.pem'
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    connection:Connection = mqtt.connect_with(
-        cert = f'{claim}.crt',
-        key = f'{claim}.key',
+    connection:Connection = claim.connect_with(
+        cert = f'{claim_cert}.crt',
+        key = f'{claim_cert}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
         client_id = device_ID,
     )
@@ -231,4 +231,4 @@ if __name__ == '__main__':
         connection,
         template_parameters = {"DeviceID": device_ID},
     )
-    mqtt.disconnect(connection)
+    claim.disconnect(connection)
