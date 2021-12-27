@@ -25,7 +25,7 @@ class Provisioning:
 
 
 if __name__ == '__main__':
-    from mqtt import read_config
+    from client import read_config
     config:dict = read_config(file_path='config.json')
     folder:str = 'certs'
 

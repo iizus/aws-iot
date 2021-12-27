@@ -207,12 +207,11 @@ class FleetProvisioning:
 
 
 if __name__ == '__main__':
-    from mqtt import read_config
+    from client import Client, read_config
     config:dict = read_config()
     folder:str = 'certs'
     cert:str = f'{folder}/claim.pem'
 
-    from client import Client
     client:Client = Client(
         endpoint = config.get('endpoint'),
         ca = f'{folder}/AmazonRootCA1.pem',
