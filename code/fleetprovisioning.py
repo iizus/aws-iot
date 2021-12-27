@@ -206,13 +206,36 @@ class FleetProvisioning:
         return thing_name
 
 
-# if __name__ == '__main__':
-#     self.__mqtt:MQTT = MQTT(endpoint)
-#     self.__fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
+def get_config_from(file_path:str='config.json') -> dict:
+    with open(file_path) as config_file:
+        from json import load
+        config:dict = load(config_file)
+        return config
 
-#     connection:Connection = self.__mqtt.connect_with(cert, key, ca, client_id)
-#     thing_name:str = self.__fleet_provisioning.provision_thing_by(
-#         connection,
-#         template_parameters
-#     )
-#     self.__mqtt.disconnect(connection)
+
+if __name__ == '__main__':
+    config:dict = get_config_from(file_path='config.json')
+
+    from mqtt import MQTT
+    mqtt:MQTT = MQTT(endpoint=config.get('endpoint'))
+    fleet_provisioning:FleetProvisioning = FleetProvisioning(
+        template_name = config.get('template_name')
+    )
+
+    from uuid import uuid4
+    folder:str = 'certs'
+    claim:str = f'{folder}/claim.pem'
+    device_ID:str = str(uuid4())
+    print(f"Device ID: {device_ID}")
+
+    connection:Connection = mqtt.connect_with(
+        cert = f'{claim}.crt',
+        key = f'{claim}.key',
+        ca = f'{folder}/AmazonRootCA1.pem',
+        client_id = device_ID,
+    )
+    thing_name:str = fleet_provisioning.provision_thing_by(
+        connection,
+        template_parameters = {"DeviceID": device_ID},
+    )
+    mqtt.disconnect(connection)

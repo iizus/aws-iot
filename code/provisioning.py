@@ -1,5 +1,5 @@
 from mqtt import MQTT
-from fleetprovisioning import FleetProvisioning
+from fleetprovisioning import FleetProvisioning, get_config_from
 from awscrt.mqtt import Connection
 
 
@@ -25,17 +25,11 @@ class Provisioning:
         return thing_name
 
 
-def get_config_from(file_path:str) -> dict:
-    with open(file_path) as config_file:
-        from json import load
-        config:dict = load(config_file)
-        return config
-
 
 if __name__ == '__main__':
     config:dict = get_config_from(file_path='config.json')
 
-    __fp = Provisioning(
+    provisioning = Provisioning(
         endpoint = config.get('endpoint'),
         template_name = config.get('template_name')
     )
@@ -46,7 +40,7 @@ if __name__ == '__main__':
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    thing_name:str = __fp.provision_thing_by(
+    thing_name:str = provisioning.provision_thing_by(
         cert = f'{claim}.crt',
         key = f'{claim}.key',
         ca = f'{folder}/AmazonRootCA1.pem',
