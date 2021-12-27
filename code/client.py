@@ -1,8 +1,8 @@
-import sys
+from sys import exit
 from uuid import uuid4
 from concurrent.futures import Future
 from awscrt import io, mqtt
-from awsiot import mqtt_connection_builder
+from awsiot.mqtt_connection_builder import mtls_from_path
 
 
 def read_config(file_path:str='config.json') -> dict:
@@ -30,42 +30,40 @@ class Client:
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
-        connect_future.result()
-        print("Connected!")
+        connect_result:dict = connect_future.result()
+        print(f"Connected: {connect_result}")
         return self.__connection
 
-    def publish(
-        self,
-        topic:str = 'test/test',
-        payload:dict = "{'message': 'test'}",
-        QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE
-    ) -> None:
-        print(f"Publishing {payload} to {topic} by {QoS}")
-        future, _ = self.__connection.publish(topic, payload, QoS)
-        print(future)
-        print(f"Published {payload} to {topic} by {QoS}")
-
-    def subscribe(
-        self,
+    def subscribe(self,
         callback,
         topic:str = 'test/test',
         QoS:int = mqtt.QoS.AT_MOST_ONCE,
-    ) -> None:
+    ) -> dict:
         print(f"Subscribing {topic}")
         subscribe_future, _ = self.__connection.subscribe(topic, QoS, callback)
-        subscribe_result = subscribe_future.result()
-        print(f"Subscribed {topic}")
-        print(subscribe_result)
+        subscribe_result:dict = subscribe_future.result()
+        print(f"Subscribed: {subscribe_result}")
+        return subscribe_result
 
-    def disconnect(self) -> None:
+    def publish(self,
+        topic:str = 'test/test',
+        payload:dict = "{'message': 'test'}",
+        QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE
+    ) -> dict:
+        print(f"Publishing {payload} to {topic} by QoS{QoS}")
+        publish_future, _ = self.__connection.publish(topic, payload, QoS, retain=False)
+        publish_result:dict = publish_future.result()
+        print(f"Published: {publish_result}")
+        return publish_result
+
+    def disconnect(self) -> dict:
         print("Disconnecting...")
         disconnect_future:Future = self.__connection.disconnect()
-        disconnect_result = disconnect_future.result()
-        print("Disconnected!")
+        disconnect_result:dict = disconnect_future.result()
+        print(f"Disconnected: {disconnect_result}")
         return disconnect_result
 
-    def __create_connection_with(
-        self,
+    def __create_connection_with(self,
         client_id:str,
         cert:str,
         key:str,
@@ -73,7 +71,7 @@ class Client:
         event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
         host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
 
-        connection:mqtt.Connection = mqtt_connection_builder.mtls_from_path(
+        connection:mqtt.Connection = mtls_from_path(
             endpoint = self.__endpoint,
             cert_filepath = cert,
             pri_key_filepath = key,
@@ -89,8 +87,7 @@ class Client:
         return connection
 
     # Callback when an interrupted connection is re-established.
-    def __on_connection_resumed(
-        self,
+    def __on_connection_resumed(self,
         connection:mqtt.Connection,
         return_code,
         session_present
@@ -104,23 +101,16 @@ class Client:
             # evaluate result with a callback instead.
             resubscribe_future.add_done_callback(self.__on_resubscribe_complete)
 
-    def __on_resubscribe_complete(self, future:Future) -> None:
-        results = future.result()
-        print(f"Resubscribe results: {results}")
-        for topic, qos in results.get('topics'):
-            if qos is None: sys.error(f"Server rejected resubscribe to topic: {topic}")
+    def __on_resubscribe_complete(self, resubscribe_future:Future):
+        resubscribe_results = resubscribe_future.result()
+        print(f"Resubscribe: {resubscribe_results}")
+        topics = resubscribe_results.get('topics')
+        for topic, QoS in topics:
+            if QoS is None: exit(f"Server rejected resubscribe to {topic}")
 
     # Callback when connection is accidentally lost.
     def __on_connection_interrupted(self, error) -> None:
         print(f"Connection interrupted. Error: {error}")
-
-    def __on_resubscribe_complete(self, resubscribe_future:Future):
-        resubscribe_results = resubscribe_future.result()
-        print(f"Resubscribe results: {resubscribe_results}")
-        topics = resubscribe_results.get('topics')
-        for topic, QoS in topics:
-            if QoS is None:
-                sys.exit(f"Server rejected resubscribe to topic: {topic}")
 
 
 if __name__ == '__main__':
