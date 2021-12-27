@@ -209,14 +209,17 @@ class FleetProvisioning:
 if __name__ == '__main__':
     from mqtt import MQTT, get_config
     config:dict = get_config(file_path='config.json')
+    folder:str = 'certs'
 
-    claim:MQTT = MQTT(endpoint=config.get('endpoint'))
+    claim:MQTT = MQTT(
+        endpoint = config.get('endpoint'),
+        ca = f'{folder}/AmazonRootCA1.pem',
+    )
     fleet_provisioning:FleetProvisioning = FleetProvisioning(
         template_name = config.get('template_name')
     )
 
     from uuid import uuid4
-    folder:str = 'certs'
     claim_cert:str = f'{folder}/claim.pem'
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
@@ -224,7 +227,6 @@ if __name__ == '__main__':
     connection:Connection = claim.connect_with(
         cert = f'{claim_cert}.crt',
         key = f'{claim_cert}.key',
-        ca = f'{folder}/AmazonRootCA1.pem',
         client_id = device_ID,
     )
     thing_name:str = fleet_provisioning.provision_thing_by(

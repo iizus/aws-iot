@@ -6,22 +6,21 @@ from awsiot import mqtt_connection_builder
 
 
 class MQTT:
-    def __init__(self, endpoint:str) -> None:
+    def __init__(self, endpoint:str, ca:str) -> None:
         self.__endpoint:str = endpoint
+        self.__ca = ca
 
 
     def connect_with(
         self,
         cert:str,
         key:str,
-        ca:str,
         client_id:str = str(uuid4()),
     ) -> None:
         connection:mqtt.Connection = self.__create_connection_with(
             client_id,
             cert,
             key,
-            ca
         )
         future:Future = connection.connect()
         # Wait for connection to be fully established.
@@ -46,7 +45,6 @@ class MQTT:
         client_id:str,
         cert:str,
         key:str,
-        ca:str,
     ) -> mqtt.Connection:
         # Spin up resources
         event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
@@ -57,7 +55,7 @@ class MQTT:
             cert_filepath = cert,
             pri_key_filepath = key,
             client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
-            ca_filepath = ca,
+            ca_filepath = self.__ca,
             client_id = client_id,
             on_connection_interrupted = self.__on_connection_interrupted,
             on_connection_resumed = self.__on_connection_resumed,
@@ -107,14 +105,16 @@ def get_config(file_path:str='config.json') -> dict:
 
 if __name__ == '__main__':
     config:dict = get_config()
-    client:MQTT = MQTT(endpoint=config.get('endpoint'))
-
     folder:str = 'certs'
-    cert:str = f'{folder}/client.pem'
 
+    client:MQTT = MQTT(
+        endpoint = config.get('endpoint'),
+        ca = f'{folder}/AmazonRootCA1.pem',
+    )
+    
+    cert:str = f'{folder}/client.pem'
     connection:mqtt.Connection = client.connect_with(
         cert = f'{cert}.crt',
         key = f'{cert}.key',
-        ca = f'{folder}/AmazonRootCA1.pem',
     )
     client.disconnect(connection)
