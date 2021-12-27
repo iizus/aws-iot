@@ -119,7 +119,7 @@ if __name__ == '__main__':
     cert:str = f'{folder}/client.pem'
 
     from threading import Event
-    received_event = Event()
+    received_event:Event = Event()
 
     def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
         print(f"Received {payload} from {topic}")
