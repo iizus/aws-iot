@@ -1,11 +1,11 @@
-from mqtt import MQTT, get_config
+from client import Client
 from fleetprovisioning import FleetProvisioning
 from awscrt.mqtt import Connection
 
 
 class Provisioning:
     def __init__(self, endpoint:str, ca:str, template_name:str) -> None:
-        self.__mqtt:MQTT = MQTT(endpoint, ca)
+        self.__client:Client = Client(endpoint, ca)
         self.__fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
 
     def provision_thing_by(
@@ -15,18 +15,18 @@ class Provisioning:
         client_id:str,
         template_parameters:str,
     ) -> str:
-        connection:Connection = self.__mqtt.connect_with(cert, key, client_id)
+        connection:Connection = self.__client.connect(cert, key, client_id)
         thing_name:str = self.__fleet_provisioning.provision_thing_by(
             connection,
             template_parameters,
         )
-        self.__mqtt.disconnect(connection)
+        self.__client.disconnect()
         return thing_name
 
 
-
 if __name__ == '__main__':
-    config:dict = get_config(file_path='config.json')
+    from mqtt import read_config
+    config:dict = read_config(file_path='config.json')
     folder:str = 'certs'
 
     provisioning = Provisioning(
