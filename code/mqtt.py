@@ -96,22 +96,12 @@ class MQTT:
         print(f"Connection interrupted. Error: {error}")
 
 
-    # def on_resubscribe_complete(resubscribe_future):
-    #     resubscribe_results = resubscribe_future.result()
-    #     print("Resubscribe results: {}".format(resubscribe_results))
-
-    #     for topic, qos in resubscribe_results['topics']:
-    #         if qos is None:
-    #             sys.exit("Server rejected resubscribe to topic: {}".format(topic))
-
-
-    # # Callback when the subscribed topic receives a message
-    # def on_message_received(topic, payload, dup, qos, retain, **kwargs):
-    #     print("Received message from topic '{}': {}".format(topic, payload))
-    #     global received_count
-    #     received_count += 1
-    #     if received_count == args.count:
-    #         received_all_event.set()
+    def on_resubscribe_complete(self, resubscribe_future:Future):
+        resubscribe_results = resubscribe_future.result()
+        print(f"Resubscribe results: {resubscribe_results}")
+        for topic, QoS in resubscribe_results.get('topics'):
+            if QoS is None:
+                sys.exit(f"Server rejected resubscribe to topic: {topic}")
 
 
 def get_config(file_path:str='config.json') -> dict:
@@ -136,12 +126,26 @@ if __name__ == '__main__':
         key = f'{cert}.key',
     )
 
+    topic:str = 'test/test'
+
+    # Subscribe
+    # Callback when the subscribed topic receives a message
+    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs):
+        print(f"Received message from topic '{topic}': {payload}")
+
+    print(f"Subscribing to topic '{topic}'...")
+    subscribe_future, packet_id = connection.subscribe(
+        topic = topic,
+        qos = mqtt.QoS.AT_LEAST_ONCE,
+        callback = on_message_received,
+    )
+    subscribe_result = subscribe_future.result()
+    print(f"Subscribed with QoS{subscribe_result.get('qos')}")
+
     from time import sleep
     import json
 
     publish_count:int = 1
-    topic:str = 'test/test'
-    
     while publish_count <= 10:
         message:str = f"test [{publish_count}]"
         print(f"Publishing message to topic '{topic}': {message}")
