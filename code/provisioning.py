@@ -18,7 +18,7 @@ class Provisioning:
         connection:Connection = self.__mqtt.connect_with(cert, key, client_id)
         thing_name:str = self.__fleet_provisioning.provision_thing_by(
             connection,
-            template_parameters
+            template_parameters,
         )
         self.__mqtt.disconnect(connection)
         return thing_name

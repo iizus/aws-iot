@@ -96,6 +96,24 @@ class MQTT:
         print(f"Connection interrupted. Error: {error}")
 
 
+    # def on_resubscribe_complete(resubscribe_future):
+    #     resubscribe_results = resubscribe_future.result()
+    #     print("Resubscribe results: {}".format(resubscribe_results))
+
+    #     for topic, qos in resubscribe_results['topics']:
+    #         if qos is None:
+    #             sys.exit("Server rejected resubscribe to topic: {}".format(topic))
+
+
+    # # Callback when the subscribed topic receives a message
+    # def on_message_received(topic, payload, dup, qos, retain, **kwargs):
+    #     print("Received message from topic '{}': {}".format(topic, payload))
+    #     global received_count
+    #     received_count += 1
+    #     if received_count == args.count:
+    #         received_all_event.set()
+
+
 def get_config(file_path:str='config.json') -> dict:
     with open(file_path) as config_file:
         from json import load
@@ -111,10 +129,28 @@ if __name__ == '__main__':
         endpoint = config.get('endpoint'),
         ca = f'{folder}/AmazonRootCA1.pem',
     )
-    
+
     cert:str = f'{folder}/client.pem'
     connection:mqtt.Connection = client.connect_with(
         cert = f'{cert}.crt',
         key = f'{cert}.key',
     )
+
+    from time import sleep
+    import json
+
+    publish_count:int = 1
+    topic:str = 'test/test'
+    
+    while publish_count <= 10:
+        message:str = f"test [{publish_count}]"
+        print(f"Publishing message to topic '{topic}': {message}")
+        connection.publish(
+            topic = topic,
+            payload = json.dumps(message),
+            qos = mqtt.QoS.AT_LEAST_ONCE
+        )
+        sleep(1)
+        publish_count += 1
+    
     client.disconnect(connection)
