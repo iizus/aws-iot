@@ -30,7 +30,7 @@ class Client:
         self,
         topic:str = default_topic,
         payload:dict = default_payload,
-        QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE,
+        QoS = mqtt.QoS.AT_MOST_ONCE,
         retain:bool = False,
     ) -> dict:
         payload:json = json.dumps(payload)
