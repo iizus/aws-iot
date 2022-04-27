@@ -1,4 +1,4 @@
-from client import read_config, Broker
+from broker import read_config, Broker
 
 config = read_config(file_path='config.json')
 broker:Broker = Broker(config.endpoint, config.ca)
