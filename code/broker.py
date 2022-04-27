@@ -114,12 +114,14 @@ class Broker:
             # evaluate result with a callback instead.
             resubscribe_future.add_done_callback(self.__on_resubscribe_complete)
 
+
     def __on_resubscribe_complete(self, resubscribe_future:Future):
         resubscribe_results = resubscribe_future.result()
         print(f"Resubscribe: {resubscribe_results}")
         topics = resubscribe_results.get('topics')
         for topic, QoS in topics:
             if QoS is None: exit(f"Server rejected resubscribe to {topic}")
+
 
     # Callback when connection is accidentally lost.
     def __on_connection_interrupted(self, error) -> None:

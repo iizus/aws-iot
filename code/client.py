@@ -5,13 +5,18 @@ from awscrt import mqtt
 
 
 class Client:
+    default_topic:str = 'test/test'
+    default_payload:dict = {'message': 'test'}
+
     def __init__(self, connection:mqtt.Connection) -> None:
+        self.client_id = connection.client_id
         self.__connection = connection
 
 
-    def subscribe(self,
+    def subscribe(
+        self,
         callback,
-        topic:str = 'test/test',
+        topic:str = default_topic,
         QoS:int = mqtt.QoS.AT_MOST_ONCE,
     ) -> dict:
         print(f"Subscribing {topic}")
@@ -21,14 +26,16 @@ class Client:
         return subscribe_result
 
 
-    def publish(self,
-        topic:str = 'test/test',
-        payload:dict = {'message': 'test'},
-        QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE
+    def publish(
+        self,
+        topic:str = default_topic,
+        payload:dict = default_payload,
+        QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE,
+        retain:bool = False,
     ) -> dict:
         payload:json = json.dumps(payload)
         print(f"Publishing {payload} to {topic} by QoS{QoS}")
-        publish_future, _ = self.__connection.publish(topic, payload, QoS, retain=False)
+        publish_future, _ = self.__connection.publish(topic, payload, QoS, retain)
         publish_result:dict = publish_future.result()
         print(f"Published: {publish_result}")
         return publish_result
