@@ -1,5 +1,6 @@
 import json
 from sys import exit
+from dotmap import DotMap
 from concurrent.futures import Future
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
@@ -9,6 +10,7 @@ def read_config(file_path:str='config.json') -> dict:
     with open(file_path) as config_file:
         from json import load
         config:dict = load(config_file)
+        config:DotMap = DotMap(config)
         return config
 
 
