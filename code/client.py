@@ -6,6 +6,18 @@ from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
 
 
+def test() -> None:
+    from uuid import uuid4
+    config = read_config(file_path='config.json')
+    
+    connect(
+        endpoint = config.endpoint,
+        ca = config.ca,
+        client_id = str(uuid4()),
+        client_cert = config.client_cert,
+    )
+
+
 def read_config(file_path:str='config.json') -> dict:
     with open(file_path) as config_file:
         from json import load
@@ -14,7 +26,7 @@ def read_config(file_path:str='config.json') -> dict:
         return config
 
 
-def test(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
+def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
     from threading import Event
     received_event:Event = Event()
 
@@ -22,8 +34,8 @@ def test(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
         print(f"Received {payload} from {topic}")
         received_event.set()
 
-    client:Client = Client(endpoint, ca)
-    client.connect(
+    broker:Broker = Broker(endpoint, ca)
+    client:Client = broker.connect(
         cert = f'{client_cert}.crt',
         key = f'{client_cert}.key',
         client_id = client_id,
@@ -37,30 +49,31 @@ def test(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
 
 
 
-class Brocker:
+class Broker:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__endpoint:str = endpoint
         self.__ca:str = ca
 
     def connect(self, cert:str, key:str, client_id:str) -> mqtt.Connection:
         print(f"Connecting to {self.__endpoint} with client ID {client_id}")
-        self.__connection:mqtt.Connection = self.__create_connection_with(
+        connection:mqtt.Connection = self.__create_connection_with(
             client_id,
             cert,
             key,
         )
-        connect_future:Future = self.__connection.connect()
+        connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
         connect_result:dict = connect_future.result()
-        client = Client(connection=self.__connection)
+        client:Client = Client(connection)
         print(f"Connected: {connect_result}")
         return client
 
-    def __create_connection_with(self,
+    def __create_connection_with(
+        self,
         client_id:str,
         cert:str,
         key:str,
@@ -84,7 +97,8 @@ class Brocker:
         return connection
     
     # Callback when an interrupted connection is re-established.
-    def __on_connection_resumed(self,
+    def __on_connection_resumed(
+        self,
         connection:mqtt.Connection,
         return_code,
         session_present
@@ -148,12 +162,4 @@ class Client:
 
 
 if __name__ == '__main__':
-    config:dict = read_config()
-    folder:str = 'certs'
-    from uuid import uuid4
-    test(
-        endpoint = config.get('endpoint'),
-        ca = f'{folder}/AmazonRootCA1.pem',
-        client_id = str(uuid4()),
-        client_cert = f'{folder}/client.pem',
-    )
+    test()
