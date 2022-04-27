@@ -35,7 +35,9 @@ def test(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
     client.disconnect()
 
 
-class Client:
+
+
+class Brocker:
     def __init__(self, endpoint:str, ca:str) -> None:
         self.__endpoint:str = endpoint
         self.__ca:str = ca
@@ -54,8 +56,65 @@ class Client:
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
         connect_result:dict = connect_future.result()
+        client = Client(connection=self.__connection)
         print(f"Connected: {connect_result}")
-        return self.__connection
+        return client
+
+    def __create_connection_with(self,
+        client_id:str,
+        cert:str,
+        key:str,
+    ) -> mqtt.Connection:
+        event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
+        host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
+
+        connection:mqtt.Connection = mtls_from_path(
+            endpoint = self.__endpoint,
+            cert_filepath = cert,
+            pri_key_filepath = key,
+            client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
+            ca_filepath = self.__ca,
+            client_id = client_id,
+            on_connection_interrupted = self.__on_connection_interrupted,
+            on_connection_resumed = self.__on_connection_resumed,
+            clean_session = False,
+            keep_alive_secs = 30,
+            http_proxy_options = None,
+        )
+        return connection
+    
+    # Callback when an interrupted connection is re-established.
+    def __on_connection_resumed(self,
+        connection:mqtt.Connection,
+        return_code,
+        session_present
+    ) -> None:
+        print(f"Connection resumed. return code: {return_code} session present: {session_present}")
+
+        if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
+            print("Session did not persist. Resubscribing to existing topics...")
+            resubscribe_future, _ = connection.resubscribe_existing_topics()
+            # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
+            # evaluate result with a callback instead.
+            resubscribe_future.add_done_callback(self.__on_resubscribe_complete)
+
+    def __on_resubscribe_complete(self, resubscribe_future:Future):
+        resubscribe_results = resubscribe_future.result()
+        print(f"Resubscribe: {resubscribe_results}")
+        topics = resubscribe_results.get('topics')
+        for topic, QoS in topics:
+            if QoS is None: exit(f"Server rejected resubscribe to {topic}")
+
+    # Callback when connection is accidentally lost.
+    def __on_connection_interrupted(self, error) -> None:
+        print(f"Connection interrupted. Error: {error}")
+
+
+
+
+class Client:
+    def __init__(self, connection:mqtt.Connection) -> None:
+        self.__connection = connection
 
     def subscribe(self,
         callback,
@@ -86,55 +145,6 @@ class Client:
         disconnect_result:dict = disconnect_future.result()
         print(f"Disconnected: {disconnect_result}")
         return disconnect_result
-
-    def __create_connection_with(self,
-        client_id:str,
-        cert:str,
-        key:str,
-    ) -> mqtt.Connection:
-        event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
-        host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
-
-        connection:mqtt.Connection = mtls_from_path(
-            endpoint = self.__endpoint,
-            cert_filepath = cert,
-            pri_key_filepath = key,
-            client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
-            ca_filepath = self.__ca,
-            client_id = client_id,
-            on_connection_interrupted = self.__on_connection_interrupted,
-            on_connection_resumed = self.__on_connection_resumed,
-            clean_session = False,
-            keep_alive_secs = 30,
-            http_proxy_options = None,
-        )
-        return connection
-
-    # Callback when an interrupted connection is re-established.
-    def __on_connection_resumed(self,
-        connection:mqtt.Connection,
-        return_code,
-        session_present
-    ) -> None:
-        print(f"Connection resumed. return code: {return_code} session present: {session_present}")
-
-        if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
-            print("Session did not persist. Resubscribing to existing topics...")
-            resubscribe_future, _ = connection.resubscribe_existing_topics()
-            # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
-            # evaluate result with a callback instead.
-            resubscribe_future.add_done_callback(self.__on_resubscribe_complete)
-
-    def __on_resubscribe_complete(self, resubscribe_future:Future):
-        resubscribe_results = resubscribe_future.result()
-        print(f"Resubscribe: {resubscribe_results}")
-        topics = resubscribe_results.get('topics')
-        for topic, QoS in topics:
-            if QoS is None: exit(f"Server rejected resubscribe to {topic}")
-
-    # Callback when connection is accidentally lost.
-    def __on_connection_interrupted(self, error) -> None:
-        print(f"Connection interrupted. Error: {error}")
 
 
 if __name__ == '__main__':

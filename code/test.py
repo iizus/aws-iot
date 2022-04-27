@@ -1,6 +1,13 @@
-from client import read_config, test
+from client import read_config, Brocker
 
-config = read_config()
+config = read_config(file_path='config.json')
 
-test(config.endpoint, config.ca, client_id='sharing_cert1', client_cert=config.client_cert)
-test(config.endpoint, config.ca, client_id='sharing_cert2', client_cert=config.client_cert)
+broker:Brocker = Brocker(config.endpoint, config.ca)
+
+shared1 = broker.connect(
+    cert = f'{config.client_cert}.crt',
+    key = f'{config.client_cert}.key',
+    client_id = 'shared_cert1',
+)
+shared1.publish(payload={'client_id': 'shared_cert1'})
+shared1.disconnect()
