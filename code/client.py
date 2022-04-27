@@ -1,3 +1,5 @@
+from email import message
+import json
 from sys import exit
 from concurrent.futures import Future
 from awscrt import io, mqtt
@@ -26,7 +28,7 @@ def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
         client_id = client_id,
     )
     client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
-    client.publish(QoS=mqtt.QoS.AT_LEAST_ONCE)
+    client.publish(payload={'client_id': client_id}, QoS=mqtt.QoS.AT_LEAST_ONCE)
     print("Waiting for all messages to be received...")
     received_event.wait()
     client.disconnect()
@@ -67,9 +69,10 @@ class Client:
 
     def publish(self,
         topic:str = 'test/test',
-        payload:dict = "{'message': 'test'}",
+        payload:dict = {'message': 'test'},
         QoS:mqtt.QoS = mqtt.QoS.AT_MOST_ONCE
     ) -> dict:
+        payload:json = json.dumps(payload)
         print(f"Publishing {payload} to {topic} by QoS{QoS}")
         publish_future, _ = self.__connection.publish(topic, payload, QoS, retain=False)
         publish_result:dict = publish_future.result()
