@@ -1,4 +1,3 @@
-from email import message
 import json
 from sys import exit
 from concurrent.futures import Future
@@ -13,7 +12,7 @@ def read_config(file_path:str='config.json') -> dict:
         return config
 
 
-def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
+def test(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
     from threading import Event
     received_event:Event = Event()
 
@@ -140,7 +139,7 @@ if __name__ == '__main__':
     config:dict = read_config()
     folder:str = 'certs'
     from uuid import uuid4
-    connect(
+    test(
         endpoint = config.get('endpoint'),
         ca = f'{folder}/AmazonRootCA1.pem',
         client_id = str(uuid4()),
