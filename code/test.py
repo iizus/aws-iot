@@ -1,6 +1,6 @@
 from broker import read_config, Broker, mqtt
 
-config = read_config(file_path='config.json')
+config = read_config(file_path='configs/config.json')
 broker:Broker = Broker(config.endpoint, config.ca)
 
 shared1 = broker.connect(

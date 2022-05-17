@@ -8,7 +8,7 @@ from awsiot.mqtt_connection_builder import mtls_from_path
 
 def test() -> None:
     from uuid import uuid4
-    config = read_config(file_path='config.json')
+    config = read_config(file_path='configs/config.json')
     
     connect(
         endpoint = config.endpoint,
@@ -18,7 +18,7 @@ def test() -> None:
     )
 
 
-def read_config(file_path:str='config.json') -> dict:
+def read_config(file_path:str='configs/config.json') -> dict:
     with open(file_path) as config_file:
         from json import load
         config:dict = load(config_file)
