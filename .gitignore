@@ -134,4 +134,4 @@ dmypy.json
 *.key
 
 
-config.json
+configs/*.json
