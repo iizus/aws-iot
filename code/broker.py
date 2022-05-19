@@ -3,6 +3,7 @@ from sys import exit
 from concurrent.futures import Future
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
+import certs
 
 
 def test() -> None:
@@ -22,7 +23,7 @@ def connect(env_name:str, region:str, project_name:str) -> None:
         received_event.set()
 
     broker:Broker = Broker(env_name, region)
-    client = broker.connect_for(project_name)
+    client:Client = broker.connect_for(project_name)
     client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
     client.publish(payload={'project name': project_name}, QoS=mqtt.QoS.AT_LEAST_ONCE)
     print("Waiting for all messages to be received...")
@@ -34,13 +35,13 @@ def connect(env_name:str, region:str, project_name:str) -> None:
 class Broker:
     def __init__(self, env_name:str, region:str) -> None:
         self.__endpoint:str = self.__get_endpoint_from(env_name, region)
-        self.__ca:str = 'certs/AmazonRootCA1.pem'
+        self.__ca:str = certs.get_ca_path()
 
     
     def connect_for(self, project_name:str='test') -> Client:
         client:Client = self.connect(
-            cert = f'{project_name}.pem.crt',
-            key = f'{project_name}.pem.key',
+            cert = certs.get_cert_path_of(project_name),
+            key = certs.get_key_path_of(project_name),
             client_id = project_name,
         )
         return client
@@ -129,3 +130,5 @@ class Broker:
 
 if __name__ == '__main__':
     test()
+    # from doctest import testmod
+    # testmod()

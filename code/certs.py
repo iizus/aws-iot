@@ -16,23 +16,23 @@ def get_certs_path_of(project_name:str) -> List[str]:
     >>> get_certs_path_of(project_name='test')
     ('certs/test/ad1b473789e53248ecd36eb7e6a888755d17bf21318b3fb3ca8bf79cbb636055-certificate.pem.crt', 'certs/test/ad1b473789e53248ecd36eb7e6a888755d17bf21318b3fb3ca8bf79cbb636055-private.pem.key')
     '''
-    cert_path = __get_cert_path_of(project_name='test')
-    key_path = __get_key_path_of(project_name='test')
+    cert_path = get_cert_path_of(project_name='test')
+    key_path = get_key_path_of(project_name='test')
     return cert_path, key_path
 
 
-def __get_cert_path_of(project_name:str) -> str:
+def get_cert_path_of(project_name:str) -> str:
     '''
-    >>> __get_cert_path_of(project_name='test')
+    >>> get_cert_path_of(project_name='test')
     'certs/test/ad1b473789e53248ecd36eb7e6a888755d17bf21318b3fb3ca8bf79cbb636055-certificate.pem.crt'
     '''
     cert_path = __get_certs_path_of(project_name, cert_type='crt')
     return cert_path
 
 
-def __get_key_path_of(project_name:str) -> str:
+def get_key_path_of(project_name:str) -> str:
     '''
-    >>> __get_key_path_of(project_name='test')
+    >>> get_key_path_of(project_name='test')
     'certs/test/ad1b473789e53248ecd36eb7e6a888755d17bf21318b3fb3ca8bf79cbb636055-private.pem.key'
     '''
     cert_path = __get_certs_path_of(project_name, cert_type='key')
