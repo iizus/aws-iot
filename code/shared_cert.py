@@ -1,7 +1,11 @@
 from broker import read_config, Broker, mqtt
+from os import path
 
-config = read_config(file_path='configs/config.json')
-broker:Broker = Broker(config.endpoint, config.ca)
+file_name:str = path.basename(__file__)
+project_name:str = path.splitext(file_name)[0]
+
+config = read_config(file_path=f'configs/{project_name}.json')
+broker:Broker = Broker(config.endpoint)
 
 shared1 = broker.connect(
     cert = f'{config.client_cert}.crt',

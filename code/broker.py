@@ -1,32 +1,19 @@
 from client import Client
 from sys import exit
-from dotmap import DotMap
 from concurrent.futures import Future
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
 
 
 def test() -> None:
-    from uuid import uuid4
-    config = read_config(file_path='configs/config.json')
-    
     connect(
-        endpoint = config.endpoint,
-        ca = config.ca,
-        client_id = str(uuid4()),
-        client_cert = config.client_cert,
+        env_name = 'test',
+        region = 'us-east-1',
+        project_name = 'test'
     )
 
 
-def read_config(file_path:str='configs/config.json') -> dict:
-    with open(file_path) as config_file:
-        from json import load
-        config:dict = load(config_file)
-        config:DotMap = DotMap(config)
-        return config
-
-
-def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
+def connect(env_name:str, region:str, project_name:str) -> None:
     from threading import Event
     received_event:Event = Event()
 
@@ -34,14 +21,10 @@ def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
         print(f"Received {payload} from {topic}")
         received_event.set()
 
-    broker:Broker = Broker(endpoint, ca)
-    client = broker.connect(
-        cert = f'{client_cert}.crt',
-        key = f'{client_cert}.key',
-        client_id = client_id,
-    )
+    broker:Broker = Broker(env_name, region)
+    client = broker.connect_for(project_name)
     client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
-    client.publish(payload={'client_id': client_id}, QoS=mqtt.QoS.AT_LEAST_ONCE)
+    client.publish(payload={'project name': project_name}, QoS=mqtt.QoS.AT_LEAST_ONCE)
     print("Waiting for all messages to be received...")
     received_event.wait()
     client.disconnect()
@@ -49,18 +32,23 @@ def connect(endpoint:str, ca:str, client_id:str, client_cert:str) -> None:
 
 
 class Broker:
-    def __init__(self, endpoint:str, ca:str) -> None:
-        self.__endpoint:str = endpoint
-        self.__ca:str = ca
+    def __init__(self, env_name:str, region:str) -> None:
+        self.__endpoint:str = self.__get_endpoint_from(env_name, region)
+        self.__ca:str = 'certs/AmazonRootCA1.pem'
 
-
-    def connect(self, cert:str, key:str, client_id:str) -> mqtt.Connection:
-        print(f"Connecting to {self.__endpoint} with client ID {client_id}")
-        connection:mqtt.Connection = self.__create_connection_with(
-            client_id,
-            cert,
-            key,
+    
+    def connect_for(self, project_name:str='test') -> Client:
+        client:Client = self.connect(
+            cert = f'{project_name}.pem.crt',
+            key = f'{project_name}.pem.key',
+            client_id = project_name,
         )
+        return client
+
+
+    def connect(self, cert:str, key:str, client_id:str) -> Client:
+        print(f"Connecting to {self.__endpoint} with client ID {client_id}")
+        connection:mqtt.Connection = self.__create_connection_with(client_id, cert, key)
         connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
@@ -71,6 +59,16 @@ class Broker:
         client:Client = Client(connection)
         print(f"Connected: {connect_result}")
         return client
+
+
+    def __get_endpoint_from(self, env_name:str='test', region:str='us-east-1') -> str:
+        file_path:str = 'endpoint.json'
+        with open(file_path) as endpoint_file:
+            from json import load
+            endpoints:dict = load(endpoint_file)
+            endpoint:str = endpoints.get(env_name)
+            endpoint:str = f'{endpoint}-ats.iot.{region}.amazonaws.com'
+            return endpoint
 
 
     def __create_connection_with(

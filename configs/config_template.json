@@ -1,5 +1,4 @@
 {
-    "endpoint": "xxxxxxxxxxxx.iot.us-east-1.amazonaws.com",
     "template_name": "template_name",
     "template_parameters": "{}"
 }
