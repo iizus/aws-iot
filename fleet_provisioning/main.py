@@ -1,5 +1,5 @@
 from provisioning import provision
-from client import read_config, connect
+from ..client import read_config, connect
 
 config:dict = read_config()
 endpoint:str = config.get('endpoint')

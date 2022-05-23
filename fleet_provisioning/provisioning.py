@@ -1,10 +1,10 @@
 from client import Client
-from fleetprovisioning import FleetProvisioning
+from fleet_provisioning.fleetprovisioning import FleetProvisioning
 from awscrt.mqtt import Connection
 
 
 def provision(endpoint:str, ca:str, claim_cert:str, template_name:str) -> str:
-    from provisioning import Provisioning
+    from fleet_provisioning.provisioning import Provisioning
     provisioning = Provisioning(endpoint, ca, template_name)
 
     from uuid import uuid4
