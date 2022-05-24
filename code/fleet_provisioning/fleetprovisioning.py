@@ -1,4 +1,4 @@
-import fleet_provisioning.util as util
+import util
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
 from concurrent.futures import Future
@@ -207,17 +207,19 @@ class FleetProvisioning:
 
 
 if __name__ == '__main__':
-    from client import Client, read_config
-    config:dict = read_config()
-    folder:str = 'certs'
-    cert:str = f'{folder}/claim.pem'
+    from ..broker import Broker
+    from ..client import Client
+    from awscrt import mqtt
+    from fleetprovisioning import FleetProvisioning
 
-    client:Client = Client(
-        endpoint = config.get('endpoint'),
-        ca = f'{folder}/AmazonRootCA1.pem',
-    )
+    env_name:str = 'test'
+    region:str = 'us-east-1'
+    project_name:str = 'test'
+
+    broker:Broker = Broker(env_name, region)
+    client:Client = broker.connect_for(project_name)
     fleet_provisioning:FleetProvisioning = FleetProvisioning(
-        template_name = config.get('template_name')
+        template_name = 'template_name'
     )
 
     from uuid import uuid4
