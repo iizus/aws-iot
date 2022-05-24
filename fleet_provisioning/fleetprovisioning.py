@@ -1,4 +1,4 @@
-import fp
+import fleet_provisioning.util as util
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
 from concurrent.futures import Future
@@ -18,14 +18,14 @@ class FleetProvisioning:
         try:
             self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
             print(f"Certificate ID: {response.certificate_id}")
-            fp.save_certs_based_on(response)
+            util.save_certs_based_on(response)
             return
         except Exception as e:
-            fp.error(e)
+            util.error(e)
 
 
     def on_CreateKeysAndCertificate_rejected(self, response:iotidentity.ErrorResponse) -> None:
-        fp.print_rejected('CreateKeysAndCertificate', response)
+        util.print_rejected('CreateKeysAndCertificate', response)
 
 
     def on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
@@ -34,11 +34,11 @@ class FleetProvisioning:
             print(f"Thing name: {response.thing_name}")
             return
         except Exception as e:
-            fp.error(e)
+            util.error(e)
 
 
     def on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
-        fp.print_rejected('RegisterThing', response)
+        util.print_rejected('RegisterThing', response)
 
 
     def __subscribe_CreateKeysAndCertificate_topics_by(
@@ -123,7 +123,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
             if self.__createKeysAndCertificateResponse is not None: break
-            fp.wait_for('createKeysAndCertificateResponse')
+            util.wait_for('createKeysAndCertificateResponse')
             loop_count += 1
 
         if self.__createKeysAndCertificateResponse is None:
@@ -139,7 +139,7 @@ class FleetProvisioning:
             request = iotidentity.CreateKeysAndCertificateRequest(),
             qos = QoS.AT_LEAST_ONCE
         )
-        future.add_done_callback(fp.on_publish_CreateKeysAndCertificate)
+        future.add_done_callback(util.on_publish_CreateKeysAndCertificate)
 
 
     def __register_thing_by(
@@ -151,7 +151,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
             if self.__registerThingResponse is not None: break
-            fp.wait_for('registerThingResponse')
+            util.wait_for('registerThingResponse')
             loop_count += 1
 
 
@@ -170,7 +170,7 @@ class FleetProvisioning:
             request = request,
             qos = QoS.AT_LEAST_ONCE
         )
-        future.add_done_callback(fp.on_publish_RegisterThing)
+        future.add_done_callback(util.on_publish_RegisterThing)
 
 
     def __provision_by(self, connection:Connection, template_parameters:str) -> None:
@@ -182,7 +182,7 @@ class FleetProvisioning:
             self.__subscribe_and_pubrish_topics_by(client, template_parameters)
             print("Success fleet provisioning")
         except Exception as e:
-            fp.error(e)
+            util.error(e)
 
 
     def __subscribe_and_pubrish_topics_by(
