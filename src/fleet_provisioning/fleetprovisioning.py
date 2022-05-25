@@ -207,11 +207,15 @@ class FleetProvisioning:
 
 
 if __name__ == '__main__':
-    # from ..basic.client import Client
-    from ..basic.client import Client
-    from ..client.broker import Broker
-    from ..client.client import Client
-    from awscrt import mqtt
+    from os.path import dirname, abspath
+    from sys import path
+    # job_exex.pyから3つ上のディレクトリの絶対パスを取得し、sys.pathに登録する
+    parent_dir = dirname(dirname(dirname(abspath(__file__))))
+    if parent_dir not in path: path.append(parent_dir)
+
+
+    from src.basic.client import Client
+    from src.basic.broker import Broker
     from fleetprovisioning import FleetProvisioning
 
     env_name:str = 'test'
