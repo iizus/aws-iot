@@ -207,8 +207,10 @@ class FleetProvisioning:
 
 
 if __name__ == '__main__':
-    from ..broker import Broker
-    from ..client import Client
+    # from ..basic.client import Client
+    from code.basic.client import Client
+    from ..client.broker import Broker
+    from ..client.client import Client
     from awscrt import mqtt
     from fleetprovisioning import FleetProvisioning
 
