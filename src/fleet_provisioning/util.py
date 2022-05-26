@@ -1,3 +1,4 @@
+import os
 from sys import exc_info
 from traceback import print_exception
 from awsiot import iotidentity
@@ -29,11 +30,20 @@ def __callback(api:str, future:Future) -> None:
 
 def save_certs_based_on(
     response:iotidentity.CreateKeysAndCertificateResponse,
-    folder:str = 'certs'
+    dir:str = 'certs/fleet_provisioning'
 ) -> None:
-    path:str = f"{folder}/client/{response.certificate_id}.pem"
+    print(response)
+    id:str = response.certificate_id
+    dir_path:str = __create(dir, id)
+    path:str = f"{dir_path}/{id}.pem"
     __save_file(path=f'{path}.crt', content=response.certificate_pem)
     __save_file(path=f'{path}.key', content=response.private_key)
+
+
+def __create(dir:str, id:str) -> str:
+    folder:str = f'{dir}/{id}'
+    if not os.path.exists(folder): os.makedirs(folder)
+    return folder
 
 
 def __save_file(path:str, content:str) -> None:

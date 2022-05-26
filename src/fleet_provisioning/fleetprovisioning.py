@@ -244,7 +244,7 @@ if __name__ == '__main__':
     )
 
     # from uuid import uuid4
-    device_ID:str = 'conf1'
+    device_ID:str = 'fp1'
     # device_ID:str = str(uuid4())
     # print(f"Device ID: {device_ID}")
 
@@ -255,7 +255,6 @@ if __name__ == '__main__':
     fp.disconnect()
 
     from awscrt import mqtt
-
     from threading import Event
     received_event:Event = Event()
 
