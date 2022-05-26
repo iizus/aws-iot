@@ -28,14 +28,25 @@ def __callback(api:str, future:Future) -> None:
         error(e)
 
 
-def save_certs_based_on(
+def save_certs_in(
+    dir:str,
+    response:iotidentity.CreateKeysAndCertificateResponse
+) -> None:
+    path:str = __get_certs_path_based_on(response, dir)
+    __save_certs_at(path, response)
+
+
+def __get_certs_path_based_on(
     response:iotidentity.CreateKeysAndCertificateResponse,
     dir:str = 'certs/fleet_provisioning'
-) -> None:
-    print(response)
+):
     id:str = response.certificate_id
     dir_path:str = __create(dir, id)
     path:str = f"{dir_path}/{id}.pem"
+    return path
+
+
+def __save_certs_at(path:str, response:iotidentity.CreateKeysAndCertificateResponse) -> None:
     __save_file(path=f'{path}.crt', content=response.certificate_pem)
     __save_file(path=f'{path}.key', content=response.private_key)
 

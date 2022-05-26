@@ -18,7 +18,7 @@ class FleetProvisioning:
         try:
             self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
             print(f"Certificate ID: {response.certificate_id}")
-            util.save_certs_based_on(response)
+            util.save_certs_in(dir='certs/fleet_provisioning', response=response)
             return
         except Exception as e:
             util.error(e)
@@ -249,7 +249,7 @@ if __name__ == '__main__':
     # print(f"Device ID: {device_ID}")
 
     thing_name:str = fleet_provisioning.provision_thing_by(
-        fp.connection,
+        connection = fp.connection,
         template_parameters = {"DeviceID": device_ID},
     )
     fp.disconnect()
