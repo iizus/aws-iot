@@ -10,7 +10,7 @@ class Client:
 
     def __init__(self, connection:mqtt.Connection) -> None:
         self.client_id = connection.client_id
-        self.__connection = connection
+        self.connection = connection
 
 
     def subscribe(
@@ -20,7 +20,7 @@ class Client:
         QoS:int = mqtt.QoS.AT_MOST_ONCE,
     ) -> dict:
         print(f"Subscribing {topic}")
-        subscribe_future, _ = self.__connection.subscribe(topic, QoS, callback)
+        subscribe_future, _ = self.connection.subscribe(topic, QoS, callback)
         subscribe_result:dict = subscribe_future.result()
         print(f"Subscribed: {subscribe_result}")
         return subscribe_result
@@ -35,7 +35,7 @@ class Client:
     ) -> dict:
         payload:json = json.dumps(payload)
         print(f"Publishing {payload} to {topic} by QoS{QoS}")
-        publish_future, _ = self.__connection.publish(topic, payload, QoS, retain)
+        publish_future, _ = self.connection.publish(topic, payload, QoS, retain)
         publish_result:dict = publish_future.result()
         print(f"Published: {publish_result}")
         return publish_result
@@ -43,7 +43,7 @@ class Client:
 
     def disconnect(self) -> dict:
         print("Disconnecting...")
-        disconnect_future:Future = self.__connection.disconnect()
+        disconnect_future:Future = self.connection.disconnect()
         disconnect_result:dict = disconnect_future.result()
         print(f"Disconnected: {disconnect_result}")
         return disconnect_result

@@ -206,16 +206,31 @@ class FleetProvisioning:
         return thing_name
 
 
+from os.path import dirname, abspath
+from sys import path
+
+
+def get_path_of_parent_dir_of(cild_path:str, num:int) -> str:
+    num -= 1
+    if num <= 0:
+        return cild_path
+    else:
+        parent_dir:str = dirname(cild_path)
+        return get_path_of_parent_dir_of(parent_dir, num)
+
+
+def add_parent_dir_path_from(num:int) -> str:
+    this_file_path:str = abspath(__file__)
+    parent_dir:str = get_path_of_parent_dir_of(this_file_path, num)
+    path.append(parent_dir)
+    return parent_dir
+
+
 if __name__ == '__main__':
-    from os.path import dirname, abspath
-    from sys import path
-    # job_exex.pyから3つ上のディレクトリの絶対パスを取得し、sys.pathに登録する
-    parent_dir = dirname(dirname(dirname(abspath(__file__))))
-    if parent_dir not in path: path.append(parent_dir)
+    add_parent_dir_path_from(3)
 
-
-    from src.basic.client import Client
-    from src.basic.broker import Broker
+    from basic.client import Client
+    from basic.broker import Broker
     from fleetprovisioning import FleetProvisioning
 
     env_name:str = 'test'
@@ -229,17 +244,11 @@ if __name__ == '__main__':
     )
 
     from uuid import uuid4
-    claim_cert:str = f'{folder}/claim.pem'
     device_ID:str = str(uuid4())
     print(f"Device ID: {device_ID}")
 
-    connection:Connection = client.connect(
-        cert = f'{cert}.crt',
-        key = f'{cert}.key',
-        client_id = device_ID,
-    )
     thing_name:str = fleet_provisioning.provision_thing_by(
-        connection,
+        client.connection,
         template_parameters = {"DeviceID": device_ID},
     )
     client.disconnect()

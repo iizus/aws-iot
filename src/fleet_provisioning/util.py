@@ -43,11 +43,7 @@ def __save_file(path:str, content:str) -> None:
 
 
 def print_rejected(api:str, response:iotidentity.ErrorResponse) -> None:
-    error(f"""{api} request rejected with
-        code: {response.error_code}
-        message: {response.error_message}
-        status code: {response.status_code}
-    """)
+    error(f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
 
 
 # Function for gracefully quitting this sample
