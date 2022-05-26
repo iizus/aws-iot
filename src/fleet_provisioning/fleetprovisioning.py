@@ -238,17 +238,35 @@ if __name__ == '__main__':
     project_name:str = 'test'
 
     broker:Broker = Broker(env_name, region)
-    client:Client = broker.connect_for(project_name)
+    fp:Client = broker.connect_for(project_name)
     fleet_provisioning:FleetProvisioning = FleetProvisioning(
-        template_name = 'template_name'
+        template_name = 'ec2'
     )
 
-    from uuid import uuid4
-    device_ID:str = str(uuid4())
-    print(f"Device ID: {device_ID}")
+    # from uuid import uuid4
+    device_ID:str = 'conf1'
+    # device_ID:str = str(uuid4())
+    # print(f"Device ID: {device_ID}")
 
     thing_name:str = fleet_provisioning.provision_thing_by(
-        client.connection,
+        fp.connection,
         template_parameters = {"DeviceID": device_ID},
     )
+    fp.disconnect()
+
+    from awscrt import mqtt
+
+    from threading import Event
+    received_event:Event = Event()
+
+    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
+        print(f"Received {payload} from {topic}")
+        received_event.set()
+
+    project_name:str = 'client'
+    client:Client = broker.connect_for(project_name)
+    client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
+    client.publish(payload={'project name': project_name}, QoS=mqtt.QoS.AT_LEAST_ONCE)
+    print("Waiting for all messages to be received...")
+    received_event.wait()
     client.disconnect()

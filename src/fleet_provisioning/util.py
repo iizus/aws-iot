@@ -31,7 +31,7 @@ def save_certs_based_on(
     response:iotidentity.CreateKeysAndCertificateResponse,
     folder:str = 'certs'
 ) -> None:
-    path:str = f"{folder}/client.pem"
+    path:str = f"{folder}/client/{response.certificate_id}.pem"
     __save_file(path=f'{path}.crt', content=response.certificate_pem)
     __save_file(path=f'{path}.key', content=response.private_key)
 

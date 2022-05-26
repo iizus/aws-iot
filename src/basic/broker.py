@@ -22,7 +22,10 @@ class Broker:
 
 
     def connect(self, cert:str, key:str, client_id:str) -> Client:
-        print(f"Connecting to {self.__endpoint} with client ID {client_id}")
+        print(f"""Connecting to {self.__endpoint} with 
+            client ID: {client_id},
+            cert: {cert},
+            key: {key}""")
         connection:mqtt.Connection = self.__create_connection_with(client_id, cert, key)
         connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
