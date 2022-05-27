@@ -1,11 +1,8 @@
-from project import Project
+import certs
 
 
 
 class Region:
     def __init__(self, endpoint:str) -> None:
         self.endpoint:str = endpoint
-        
-
-    # def create_project(self, name:str='test') -> Project:
-    #     return Project(name)
+        self.ca = certs.get_ca_path()

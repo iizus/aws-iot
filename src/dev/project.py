@@ -11,7 +11,6 @@ class Project:
         certs_path:str = f'{self.__name}/{certs_dir}'
         
         client:Client = Client(
-            ca = certs.get_ca_path(),
             id = self.__name if certs_dir == '' else certs_dir,
             cert = certs.get_cert_path(certs_path),
             key = certs.get_key_path(certs_path),

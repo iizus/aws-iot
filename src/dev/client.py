@@ -15,14 +15,12 @@ client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __h
 class Client:
     def __init__(
         self,
-        ca:str,
         id:str,
         cert:str,
         key:str,
         proxy:dict = None,
     ) -> None:
         self.id:str = id
-        self.ca:str = ca
         self.cert:str = cert
         self.key:str = key
         self.proxy:dict = proxy
@@ -32,10 +30,11 @@ class Client:
         print(f"Connecting client ID: {self.id}")
         connection:mqtt.Connection = mtls_from_path(
             endpoint = env.endpoint,
+            ca_filepath = env.ca,
+            port = 8883,
             cert_filepath = self.cert,
             pri_key_filepath = self.key,
             client_bootstrap = client_bootstrap,
-            ca_filepath = self.ca,
             client_id = self.id,
             on_connection_interrupted = on_connection_interrupted,
             on_connection_resumed = on_connection_resumed,
