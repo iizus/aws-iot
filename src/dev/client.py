@@ -6,6 +6,12 @@ from awsiot.mqtt_connection_builder import mtls_from_path
 
 
 
+__event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
+__host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(__event_loop_group)
+client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __host_resolver)
+
+
+
 class Client:
     def __init__(
         self,
@@ -14,30 +20,30 @@ class Client:
         id:str,
         cert:str,
         key:str,
+        proxy:dict = None,
     ) -> None:
         self.endpoint:str = endpoint
         self.id:str = id
         self.ca:str = ca
         self.cert:str = cert
         self.key:str = key
+        self.proxy:dict = proxy
+
         
-
-    def connect(self) -> Connection:
-        event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
-        host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(event_loop_group)
-
+    def connect(self, keep_alive:int=30, clean_session:bool=False) -> Connection:
+        print(f"Connecting client ID: {self.id}")
         connection:mqtt.Connection = mtls_from_path(
             endpoint = self.endpoint,
             cert_filepath = self.cert,
             pri_key_filepath = self.key,
-            client_bootstrap = io.ClientBootstrap(event_loop_group, host_resolver),
+            client_bootstrap = client_bootstrap,
             ca_filepath = self.ca,
             client_id = self.id,
             on_connection_interrupted = on_connection_interrupted,
             on_connection_resumed = on_connection_resumed,
-            clean_session = False,
-            keep_alive_secs = 30,
-            http_proxy_options = None,
+            clean_session = clean_session,
+            keep_alive_secs = keep_alive,
+            http_proxy_options = self.proxy,
         )
         connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
@@ -48,6 +54,7 @@ class Client:
         connect_result:dict = connect_future.result()
         print(f"Connected client ID: {self.id} and result: {connect_result}")
         return Connection(connection)
+
 
 
 
