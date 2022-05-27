@@ -25,7 +25,7 @@ class Account:
         print(f"Account: {name}")
 
 
-    def get_endpoint(self, region:str='us-east-1') -> Endpoint:
+    def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
         endpoint:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
         region:Endpoint = Endpoint(endpoint)
         print(f"Endpoint of {region} of {self.__account_name} account: {endpoint}")
