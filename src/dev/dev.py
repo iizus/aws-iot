@@ -1,11 +1,4 @@
 from account import Account
-from region import Region
-from project import Project
-from client import Client
-# from connection import Connection
-# from topic import Topic
-
-
 
 
 # def provision_thing(self, name:str) -> Client:
@@ -21,12 +14,12 @@ from client import Client
 test:Account = Account(name='test')
 burner:Account = Account(name='burner')
 
-virginia:Region = test.use_region(name='us-east-1')
-tokyo:Region = test.use_region(name='ap-northeast-1')
+virginia = test.use_region(name='us-east-1')
+tokyo = test.use_region(name='ap-northeast-1')
 
-test1:Project = virginia.create_project(name='test')
-client1:Client = test1.create_client_using(certs_dir='')
-
+test1 = virginia.create_project(name='test')
+client1 = test1.create_client_using(certs_dir='')
+connection1 = client1.connect()
 
 
 
