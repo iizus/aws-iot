@@ -26,7 +26,7 @@ test_virginia_8883 = test_virginia.set_port(number=8883)
 
 test1:Project = Project(name='test')
 client1 = test1.create_client_using(certs_dir='')
-connection1 = client1.connect_to(test_virginia)
+connection2 = client1.connect_to(test_virginia)
 # connection1 = client1.connect_to(test_virginia_8883)
 
 

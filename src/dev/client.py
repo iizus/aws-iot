@@ -18,12 +18,10 @@ class Client:
         id:str,
         cert:str,
         key:str,
-        proxy:dict = None,
     ) -> None:
         self.id:str = id
         self.cert:str = cert
         self.key:str = key
-        self.proxy:dict = proxy
 
         
     def connect_to(self, env, keep_alive:int=30, clean_session:bool=False) -> Connection:
@@ -40,7 +38,7 @@ class Client:
             clean_session = clean_session,
             keep_alive_secs = keep_alive,
             port = env.port,
-            http_proxy_options = self.proxy,
+            http_proxy_options = env.proxy,
         )
         connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
@@ -80,5 +78,5 @@ def __on_resubscribe_complete(resubscribe_future:Future):
 
 
 # Callback when connection is accidentally lost.
-def on_connection_interrupted(self, error) -> None:
+def on_connection_interrupted(error) -> None:
     print(f"Connection interrupted. Error: {error}")
