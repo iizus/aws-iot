@@ -257,12 +257,12 @@ if __name__ == '__main__':
     from awscrt import mqtt
     from threading import Event
     received_event:Event = Event()
-
+    
     def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
         print(f"Received {payload} from {topic}")
         received_event.set()
 
-    project_name:str = 'client'
+    project_name:str = 'fleet_provisioning'
     client:Client = broker.connect_for(project_name)
     client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
     client.publish(payload={'project name': project_name}, QoS=mqtt.QoS.AT_LEAST_ONCE)
