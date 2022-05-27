@@ -39,7 +39,7 @@ class Client:
             on_connection_resumed = on_connection_resumed,
             clean_session = clean_session,
             keep_alive_secs = keep_alive,
-            port = 443,
+            port = env.port,
             http_proxy_options = self.proxy,
         )
         connect_future:Future = connection.connect()

@@ -1,19 +1,34 @@
-class Port:
-    def __init__(self, number:int=8883) -> None:
-        pass
-
-
-
 import certs
 
 class Endpoint:
     def __init__(self, endpoint:str) -> None:
         self.endpoint:str = endpoint
-        self.ca = certs.get_ca_path()
+        self.ca:str = certs.get_ca_path()
+        self.port:int = 8883
 
 
-    def set_port(number:int=8883) -> Port:
-        return Port(number)
+    def set_port(self, number:int=8883):
+        return Port(self.endpoint, self.ca, number)
+
+
+
+
+class Port:
+    def __init__(self, endpoint:str, ca:str, number:int=8883) -> None:
+        self.endpoint:str = endpoint
+        self.ca:str = ca
+        self.port:int = number
+
+
+#     def set_proxy(self, host:str, port:int=443):
+#         return Proxy(host, port)
+
+
+
+
+# class Proxy(Port):
+#     def __init__(self, host:str, port:int=443) -> None:
+#         pass
 
 
 

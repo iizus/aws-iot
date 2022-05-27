@@ -17,6 +17,8 @@ burner:Account = Account(name='burner')
 test_virginia = test.get_endpoint_of(region='us-east-1')
 test_tokyo = test.get_endpoint_of(region='ap-northeast-1')
 
+test_virginia_8883 = test_virginia.set_port(number=8883)
+
 # test1 = virginia.create_project(name='test')
 # client1 = test1.create_client_using(certs_dir='')
 # connection1 = client1.connect()
@@ -25,6 +27,7 @@ test_tokyo = test.get_endpoint_of(region='ap-northeast-1')
 test1:Project = Project(name='test')
 client1 = test1.create_client_using(certs_dir='')
 connection1 = client1.connect_to(test_virginia)
+# connection1 = client1.connect_to(test_virginia_8883)
 
 
 
