@@ -1,50 +1,11 @@
 from account import Account
-# from broker import Broker
-# from project import Project
-# from client import Client
+from region import Region
+from project import Project
+from client import Client
 # from connection import Connection
 # from topic import Topic
 
 
-class Topic:
-    def __init__(self, name:str='test/test') -> None:
-        pass
-
-    def publish(self, message:dict) -> dict:
-        return response
-
-    def subscribe(self, callback) -> dict:
-        return response
-
-    def unsubscribe(self) -> dict:
-        return response
-
-
-class Connection:
-    def __init__(self) -> None:
-        pass
-
-    def use_topic(self, name:str='test/test') -> Topic:
-        return Topic(name)
-
-    def disconnect(self) -> dict:
-        return response
-
-
-class Client:
-    def __init__(self) -> None:
-        pass
-
-    def connect(self) -> Connection:
-        return Connection()
-
-
-class Project:
-    def __init__(self, endpoint:str, name:str='test') -> None:
-        pass
-
-    def create_client_using(self, certs_dir:str='test') -> Client:
-        return Client()
 
 
 # def provision_thing(self, name:str) -> Client:
@@ -60,8 +21,15 @@ class Project:
 test:Account = Account(name='test')
 burner:Account = Account(name='burner')
 
-# virginia:Region = test.use(region='us-east-1')
-# tokyo:Region = test.use(region='ap-northeast-1')
+virginia:Region = test.use_region(name='us-east-1')
+tokyo:Region = test.use_region(name='ap-northeast-1')
+
+test1:Project = virginia.create_project(name='test')
+client1:Client = test1.create_client_using(certs_dir='')
+
+
+
+
 
 # client1:Client = virginia.provision_thing(name='client1')
 
