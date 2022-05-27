@@ -1,15 +1,12 @@
 from topic import Topic
 
-from concurrent.futures import Future
-from awscrt import io, mqtt
-from awsiot.mqtt_connection_builder import mtls_from_path
+from awscrt import mqtt
 
 
 
 class Connection:
-    def __init__(self, endpoint:str, ca:str, client_id:str, cert:str, key:str) -> None:
-        pass
-        # self.__connection:mqtt.Connection = self.__create_connection_with(client_id, cert, key)
+    def __init__(self, connection:mqtt.Connection) -> None:
+        self.__connection:mqtt.Connection = connection
 
 
     def use_topic(self, name:str='test/test') -> Topic:

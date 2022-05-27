@@ -9,9 +9,17 @@ class Project:
 
 
     def create_client_using(self, certs_dir:str='') -> Client:
+        certs_path:str = f'{self.__name}/{certs_dir}'
+        
         client:Client = Client(
             endpoint = self.__endpoint,
-            client_id = self.__name if certs_dir is None else certs_dir,
-            certs_path = f'{self.__name}/{certs_dir}',
+            ca = certs.get_ca_path(),
+            id = self.__name if certs_dir == '' else certs_dir,
+            cert = certs.get_cert_path(certs_path),
+            key = certs.get_key_path(certs_path),
         )
+        print(f"""Creating client with 
+            Client ID: {client.id}
+            Cert: {client.cert}
+            Key: {client.key}""")
         return client

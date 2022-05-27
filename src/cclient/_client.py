@@ -26,15 +26,6 @@ class Client:
 
 
     def connect(self) -> Connection:
-        '''
-        >>> broker:Broker = Broker(env_name='test', region='us-east-1')
-        >>> client:Client = broker.create_client_from()
-        Connecting to a7chvrvs7m8go-ats.iot.us-east-1.amazonaws.com with 
-                    Client ID: test,
-                    Cert: certs/test/ad1b473789e53248ecd36eb7e6a888755d17bf21318b3fb3ca8bf79cbb636055-certificate.pem.crt,
-                    Key: certs/test/ad1b473789e53248ecd36eb7e6a888755d17bf21318b3fb3ca8bf79cbb636055-private.pem.key
-        Connected: {'session_present': True}
-        '''
         connect_future:Future = self.__connection.connect()
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
