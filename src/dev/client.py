@@ -31,15 +31,15 @@ class Client:
         connection:mqtt.Connection = mtls_from_path(
             endpoint = env.endpoint,
             ca_filepath = env.ca,
-            port = 8883,
+            client_id = self.id,
             cert_filepath = self.cert,
             pri_key_filepath = self.key,
             client_bootstrap = client_bootstrap,
-            client_id = self.id,
             on_connection_interrupted = on_connection_interrupted,
             on_connection_resumed = on_connection_resumed,
             clean_session = clean_session,
             keep_alive_secs = keep_alive,
+            port = 443,
             http_proxy_options = self.proxy,
         )
         connect_future:Future = connection.connect()
