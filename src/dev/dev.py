@@ -14,8 +14,8 @@ from project import Project
 test:Account = Account(name='test')
 burner:Account = Account(name='burner')
 
-test_virginia = test.use_region(name='us-east-1')
-test_tokyo = test.use_region(name='ap-northeast-1')
+test_virginia = test.get_endpoint(region='us-east-1')
+test_tokyo = test.get_endpoint(region='ap-northeast-1')
 
 # test1 = virginia.create_project(name='test')
 # client1 = test1.create_client_using(certs_dir='')

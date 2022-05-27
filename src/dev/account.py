@@ -1,4 +1,4 @@
-from region import Region
+from endpoint import Endpoint
 
 from sys import path
 from os.path import dirname
@@ -18,8 +18,8 @@ class Account:
         print(f"Account: {name}")
 
 
-    def use_region(self, name:str='us-east-1') -> Region:
-        endpoint:str = f'{self.__endpoint_prefix}-ats.iot.{name}.amazonaws.com'
-        region:Region = Region(endpoint)
-        print(f"Endpoint of {name} of {self.__account_name} account: {endpoint}")
+    def get_endpoint(self, region:str='us-east-1') -> Endpoint:
+        endpoint:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
+        region:Endpoint = Endpoint(endpoint)
+        print(f"Endpoint of {region} of {self.__account_name} account: {endpoint}")
         return region
