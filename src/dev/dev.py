@@ -14,15 +14,20 @@ from project import Project
 test:Account = Account(name='test')
 burner:Account = Account(name='burner')
 
-virginia = test.use_region(name='us-east-1')
-tokyo = test.use_region(name='ap-northeast-1')
+test_virginia = test.use_region(name='us-east-1')
+test_tokyo = test.use_region(name='ap-northeast-1')
 
-test1 = virginia.create_project(name='test')
+# test1 = virginia.create_project(name='test')
+# client1 = test1.create_client_using(certs_dir='')
+# connection1 = client1.connect()
+
+
+test1:Project = Project(name='test')
 client1 = test1.create_client_using(certs_dir='')
-connection1 = client1.connect()
+connection1 = client1.connect_to(test_virginia)
 
 
-test1:Project = Project(name='')
+
 
 # client1:Client = virginia.provision_thing(name='client1')
 

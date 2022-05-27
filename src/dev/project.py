@@ -3,8 +3,7 @@ import certs
 
 
 class Project:
-    def __init__(self, endpoint:str, name:str='test') -> None:
-        self.__endpoint:str = endpoint
+    def __init__(self, name:str='test') -> None:
         self.__name:str = name
 
 
@@ -12,7 +11,6 @@ class Project:
         certs_path:str = f'{self.__name}/{certs_dir}'
         
         client:Client = Client(
-            endpoint = self.__endpoint,
             ca = certs.get_ca_path(),
             id = self.__name if certs_dir == '' else certs_dir,
             cert = certs.get_cert_path(certs_path),
