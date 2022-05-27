@@ -51,4 +51,5 @@ class Client:
 
 
 if __name__ == '__main__':
-    None
+    from doctest import testmod
+    testmod()

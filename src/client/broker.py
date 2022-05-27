@@ -1,16 +1,26 @@
-# from basic import certs
-# from basic.client import Client
+from sys import path
+from os.path import dirname
+current_dir:str = path[0]
+parent_dir:str = dirname(current_dir)
+path.append(parent_dir)
+
 import certs
 from client import Client
 from sys import exit
 from concurrent.futures import Future
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
+from utils.util import load_json
+
 
 
 class Broker:
     def __init__(self, env_name:str, region:str) -> None:
-        self.__endpoint:str = self.__get_endpoint_from(env_name, region)
+        self.__endpoint:str = self.__get_endpoint_from(
+            config_path = 'endpoint.json',
+            env_name = env_name,
+            region = region,
+        )
         self.__ca:str = certs.get_ca_path()
 
     
@@ -43,14 +53,11 @@ class Broker:
         return client
 
 
-    def __get_endpoint_from(self, env_name:str='test', region:str='us-east-1') -> str:
-        file_path:str = 'endpoint.json'
-        with open(file_path) as endpoint_file:
-            from json import load
-            endpoints:dict = load(endpoint_file)
-            endpoint:str = endpoints.get(env_name)
-            endpoint:str = f'{endpoint}-ats.iot.{region}.amazonaws.com'
-            return endpoint
+    def __get_endpoint_from(self, config_path:str='endpoint.json', env_name:str='test', region:str='us-east-1') -> str:
+        endpoints:dict = load_json(config_path)
+        endpoint:str = endpoints.get(env_name)
+        endpoint:str = f'{endpoint}-ats.iot.{region}.amazonaws.com'
+        return endpoint
 
 
     def __create_connection_with(
