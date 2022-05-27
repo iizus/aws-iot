@@ -1,14 +1,8 @@
 from awscrt.http import HttpProxyOptions
 
 class Proxy:
-    def __init__(
-        self,
-        endpoint:str,
-        ca:str,
-        number:int = 8883,
-        proxy:HttpProxyOptions = None,
-    ) -> None:
-        self.endpoint:str = endpoint
+    def __init__(self, name:str, ca:str, number:int=8883, proxy:HttpProxyOptions=None) -> None:
+        self.name:str = name
         self.ca:str = ca
         self.port:int = number
         self.proxy:HttpProxyOptions = proxy
@@ -16,8 +10,8 @@ class Proxy:
 
 
 class Port:
-    def __init__(self, endpoint:str, ca:str, number:int=8883) -> None:
-        self.endpoint:str = endpoint
+    def __init__(self, name:str, ca:str, number:int=8883) -> None:
+        self.name:str = name
         self.ca:str = ca
         self.port:int = number
         self.proxy:HttpProxyOptions = None
@@ -25,22 +19,23 @@ class Port:
 
     def set_proxy(self, host:str, port:int=443) -> Proxy:
         proxy:HttpProxyOptions = HttpProxyOptions(host, port)
-        return Proxy(self.endpoint, self.ca, self.port, proxy)
+        return Proxy(self.name, self.ca, self.port, proxy)
 
 
 
-import certs
+from certs import get_ca_path
+ca_path:str = get_ca_path()
 
 class Endpoint:
-    def __init__(self, endpoint:str) -> None:
-        self.endpoint:str = endpoint
-        self.ca:str = certs.get_ca_path()
+    def __init__(self, name:str) -> None:
+        self.name:str = name
+        self.ca:str = ca_path
         self.port:int = 8883
         self.proxy:HttpProxyOptions = None
 
 
     def set_port(self, number:int=8883) -> Port:
-        return Port(self.endpoint, self.ca, number)
+        return Port(self.name, self.ca, number)
 
         
 
@@ -62,7 +57,6 @@ class Account:
 
 
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
-        endpoint:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
-        region:Endpoint = Endpoint(endpoint)
-        print(f"Endpoint of {region} of {self.__account_name} account: {endpoint}")
-        return region
+        name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
+        print(f"Endpoint of {region} of {self.__account_name} account: {name}")
+        return Endpoint(name)

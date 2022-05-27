@@ -24,11 +24,11 @@ class Client:
         self.key:str = key
 
         
-    def connect_to(self, env, keep_alive:int=30, clean_session:bool=False) -> Connection:
+    def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
         print(f"Connecting client ID: {self.id}")
         connection:mqtt.Connection = mtls_from_path(
-            endpoint = env.endpoint,
-            ca_filepath = env.ca,
+            endpoint = endpoint.name,
+            ca_filepath = endpoint.ca,
             client_id = self.id,
             cert_filepath = self.cert,
             pri_key_filepath = self.key,
@@ -37,8 +37,8 @@ class Client:
             on_connection_resumed = on_connection_resumed,
             clean_session = clean_session,
             keep_alive_secs = keep_alive,
-            port = env.port,
-            http_proxy_options = env.proxy,
+            port = endpoint.port,
+            http_proxy_options = endpoint.proxy,
         )
         connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
