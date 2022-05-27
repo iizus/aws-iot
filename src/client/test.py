@@ -37,16 +37,32 @@ from client import Client
 from connection import Connection
 from topic import Topic
 
-test:Account = Account('test')
-burner:Account = Account('burner')
+from fleetprovisioning import FleetProvisionning
+
+
+def provision_thing(self, fp_project:Project) -> Client:
+    claim:Client = self.create_client_using(certs_dir='claim')
+    provisioning_connection:Connection = claim.connect()
+    
+    thing_name:str = response.thing_name
+    individual:Client = self.create_client_using(certs_dir=f'individual/{thing_name}')
+    return individual
+
+
+test:Account = Account(name='test')
+burner:Account = Account(name='burner')
 
 virginia:Broker = test.use(region='us-east-1')
 tokyo:Broker = test.use(region='ap-northeast-1')
 
-fp:Project = virginia.create(project_name='fleet_provisioning')
-claim:Client = fp.create_client_using(certs_dir='claim')
+fp:Project = virginia.create_project(name='fleet_provisioning')
+client1:Client = fp.provision_thing(name='client1')
 
-provisioning_connection:Connection = claim.connect()
+client1_connection:Connection = client1.connect()
+response:dict = client1_connection.disconnect()
+
+
+
 
 topic_aaa:Topic = provisioning_connection.use_topic(name='aaa')
 topic_bbb:Topic = provisioning_connection.use_topic(name='bbb')
@@ -56,7 +72,3 @@ response:dict = topic_aaa.sub(callback)
 response:dict = topic_aaa.unsub()
 
 response:dict = provisioning_connection.disconnect()
-
-individual:Client = fp.create_client_using(certs_dir='individual')
-individual_connection:Connection = individual.connect()
-response:dict = individual_connection.disconnect()
