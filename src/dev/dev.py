@@ -29,6 +29,7 @@ connection1 = client1.connect_to(test_virginia)
 
 
 
+
 # client1:Client = virginia.provision_thing(name='client1')
 
 # client1_connection:Connection = client1.connect()
