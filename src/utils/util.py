@@ -3,6 +3,7 @@ from os.path import dirname, abspath
 from sys import path
 
 
+
 def load_json(json_path:str) -> dict:
     with open(json_path) as json_file:
         contents:dict = load(json_file)
@@ -23,6 +24,7 @@ def add_parent_dir_path_from(num:int) -> str:
     parent_dir:str = get_path_of_parent_dir_of(this_file_path, num)
     path.append(parent_dir)
     return parent_dir
+
 
 
 if __name__ == '__main__':
