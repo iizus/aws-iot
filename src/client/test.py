@@ -1,5 +1,5 @@
 from broker import Broker
-from client import Client
+from pubsub.pubsub import Client
 from awscrt import mqtt
 
 
