@@ -1,4 +1,4 @@
-from dev import Project
+from project import Project
 
 
 
