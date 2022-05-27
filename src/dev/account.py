@@ -1,9 +1,19 @@
+class Port:
+    def __init__(self, number:int=8883) -> None:
+        pass
+
+
+
 import certs
 
 class Endpoint:
     def __init__(self, endpoint:str) -> None:
         self.endpoint:str = endpoint
         self.ca = certs.get_ca_path()
+
+
+    def set_port(number:int=8883) -> Port:
+        return Port(number)
 
 
 
@@ -14,8 +24,6 @@ parent_dir:str = dirname(current_dir)
 path.append(parent_dir)
 
 from utils.util import load_json
-
-
 
 class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:
