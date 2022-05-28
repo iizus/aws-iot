@@ -39,6 +39,7 @@ class Topic:
     ) -> None:
         self.__topic:str = name
         self.__connection:mqtt.Connection = connection
+        self.__endpoint:str = f"{connection.host_name}:{connection.port}/{name}"
         self.client_id:str = connection.client_id
         self.__QoS:Literal = QoS
         self.__retain:bool = retain
@@ -46,15 +47,26 @@ class Topic:
 
     def publish(self, message:dict) -> dict:
         payload:str = json.dumps(message)
-        print(f"Publishing... {payload} to {self.__topic} by QoS{self.__QoS}, retain: {self.__retain}")
+        print(f"""Client ID: {self.client_id}
+            publishing...
+            Message: {payload} to
+            Endpoint: {self.__endpoint}
+            by QoS{self.__QoS}
+            Retain: {self.__retain}""")
         publish_future, _ = self.__connection.publish(
             self.__topic,
             payload,
             self.__QoS,
-            self.__retain
+            self.__retain,
         )
         publish_result:dict = publish_future.result()
-        print(f"Published {payload} to {self.__topic} by QoS{self.__QoS}, retain: {self.__retain} and result: {publish_result}")
+        print(f"""Client ID: {self.client_id}
+            published
+            Message: {payload} to
+            Endpoint: {self.__endpoint}
+            by QoS{self.__QoS}
+            Retain: {self.__retain}
+            Result: {publish_result}""")
         return publish_result
 
 
