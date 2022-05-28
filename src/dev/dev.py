@@ -29,13 +29,13 @@ test1:Project = Project(name='test')
 test1_client = test1.create_client_using(certs_dir='')
 test1_client_connection = test1_client.connect_to(test_virginia_443)
 
-topic_aaa = test1_client_connection.use_topic(name='aaa')
-topic_bbb = test1_client_connection.use_topic(name='bbb')
+client1_topic1 = test1_client_connection.use_topic(name='aaa')
+client1_topic2 = test1_client_connection.use_topic(name='bbb')
 
 message = {
-    'client ID': topic_aaa.client_id,
+    'client ID': client1_topic1.client_id,
 }
-topic_aaa.publish(message)
+client1_topic1.publish(message)
 
 test1_client_connection.disconnect()
 
