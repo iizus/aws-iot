@@ -52,7 +52,6 @@ from utils.util import load_json
 
 class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:
-        self.__account_name = name
         endpoints:dict = load_json(config_path)
         self.__endpoint_prefix:str = endpoints.get(name)
         print(f"Account: {name}")
