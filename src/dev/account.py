@@ -23,13 +23,13 @@ class Port:
 
 
 
-from certs import get_ca_path
-ca_path:str = get_ca_path()
-
 class Endpoint:
+    from certs import get_ca_path
+    ca_path:str = get_ca_path()
+
     def __init__(self, name:str) -> None:
         self.name:str = name
-        self.ca:str = ca_path
+        self.ca:str = self.ca_path
         self.port:int = 8883
         self.proxy:HttpProxyOptions = None
 
@@ -38,7 +38,6 @@ class Endpoint:
         return Port(self.name, self.ca, number)
 
         
-
 
 from sys import path
 from os.path import dirname

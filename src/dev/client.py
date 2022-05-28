@@ -6,19 +6,12 @@ from awsiot.mqtt_connection_builder import mtls_from_path
 
 
 
-__event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
-__host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(__event_loop_group)
-client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __host_resolver)
-
-
-
 class Client:
-    def __init__(
-        self,
-        id:str,
-        cert:str,
-        key:str,
-    ) -> None:
+    __event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
+    __host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(__event_loop_group)
+    client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __host_resolver)
+
+    def __init__(self, id:str, cert:str, key:str) -> None:
         self.id:str = id
         self.cert:str = cert
         self.key:str = key
@@ -32,7 +25,7 @@ class Client:
             client_id = self.id,
             cert_filepath = self.cert,
             pri_key_filepath = self.key,
-            client_bootstrap = client_bootstrap,
+            client_bootstrap = self.client_bootstrap,
             on_connection_interrupted = on_connection_interrupted,
             on_connection_resumed = on_connection_resumed,
             clean_session = clean_session,
