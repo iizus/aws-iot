@@ -1,4 +1,5 @@
-from account import Account
+from account import Account, Endpoint, Port, Proxy
+# import account
 from project import Project
 
 # def provision_thing(self, name:str) -> Client:
@@ -14,10 +15,11 @@ from project import Project
 test:Account = Account(name='test')
 burner:Account = Account(name='burner')
 
-test_virginia = test.get_endpoint_of(region='us-east-1')
-test_tokyo = test.get_endpoint_of(region='ap-northeast-1')
+test_virginia:Endpoint = test.get_endpoint_of(region='us-east-1')
+test_tokyo:Endpoint = test.get_endpoint_of(region='ap-northeast-1')
 
-test_virginia_8883 = test_virginia.set_port(number=8883)
+test_virginia_8883:Port = test_virginia.set_port(number=8883)
+test_virginia_8883_proxy:Proxy = test_virginia_8883.set_proxy(host='0.0.0.0', port=443)
 
 # test1 = virginia.create_project(name='test')
 # client1 = test1.create_client_using(certs_dir='')
@@ -26,8 +28,8 @@ test_virginia_8883 = test_virginia.set_port(number=8883)
 
 test1:Project = Project(name='test')
 client1 = test1.create_client_using(certs_dir='')
-connection2 = client1.connect_to(test_virginia)
-# connection1 = client1.connect_to(test_virginia_8883)
+# connection2 = client1.connect_to(test_virginia)
+connection1 = client1.connect_to(test_virginia_8883)
 
 
 

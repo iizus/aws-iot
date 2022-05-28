@@ -15,10 +15,12 @@ class Port:
         self.ca:str = ca
         self.port:int = number
         self.proxy:HttpProxyOptions = None
+        print(f"Endpoint: {self.name}:{self.port}")
 
 
     def set_proxy(self, host:str, port:int=443) -> Proxy:
         proxy:HttpProxyOptions = HttpProxyOptions(host, port)
+        print(f"Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
         return Proxy(self.name, self.ca, self.port, proxy)
 
 
@@ -32,6 +34,7 @@ class Endpoint:
         self.ca:str = self.ca_path
         self.port:int = 8883
         self.proxy:HttpProxyOptions = None
+        print(f"Endpoint: {self.name}:{self.port}")
 
 
     def set_port(self, number:int=8883) -> Port:
@@ -57,5 +60,4 @@ class Account:
 
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
-        print(f"Endpoint of {region} of {self.__account_name} account: {name}")
         return Endpoint(name)
