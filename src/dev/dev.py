@@ -32,6 +32,11 @@ test1_client_connection = test1_client.connect_to(test_virginia_443)
 topic_aaa = test1_client_connection.use_topic(name='aaa')
 topic_bbb = test1_client_connection.use_topic(name='bbb')
 
+message = {
+    'client ID': topic_aaa.client_id,
+}
+topic_aaa.publish(message)
+
 test1_client_connection.disconnect()
 
 # client1:Client = virginia.provision_thing(name='client1')
