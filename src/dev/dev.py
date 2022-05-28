@@ -29,7 +29,7 @@ test1:Project = Project(name='test')
 test1_client = test1.create_client_using(certs_dir='')
 test1_client_connection = test1_client.connect_to(test_virginia_443)
 
-client1_topic1 = test1_client_connection.use_topic(name=f'aaa')
+client1_topic1 = test1_client_connection.use_topic()
 client1_topic2 = test1_client_connection.use_topic(name=f'bbb')
 
 message = {

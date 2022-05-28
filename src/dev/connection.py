@@ -6,17 +6,18 @@ from awscrt import mqtt
 
 
 class Connection:
-    def __init__(self, connection:mqtt.Connection) -> None:
+    def __init__(self, project_name:str, connection:mqtt.Connection) -> None:
+        self.__project_name:str = project_name
         self.__connection:mqtt.Connection = connection
 
 
     def use_topic(
         self,
-        name:str = 'test/test',
+        name:str = None,
         QoS:Literal = mqtt.QoS.AT_MOST_ONCE,
         retain:bool = False
     ):
-        return Topic(name, self.__connection, QoS, retain)
+        return Topic(self.__project_name, self.__connection, name, QoS, retain)
 
 
     def disconnect(self) -> dict:
@@ -32,20 +33,21 @@ import json
 class Topic:
     def __init__(
         self,
-        name:str,
+        project_name:str,
         connection:mqtt.Connection,
+        name:str = None,
         QoS:Literal = mqtt.QoS.AT_MOST_ONCE,
         retain:bool = False
     ) -> None:
-        self.__topic:str = name
-        self.__connection:mqtt.Connection = connection
-        self.__endpoint:str = f"{connection.host_name}:{connection.port}/{name}"
         self.client_id:str = connection.client_id
+        self.__topic:str = f"{project_name}/{self.client_id}" if name is None else name
+        self.__connection:mqtt.Connection = connection
+        self.__endpoint:str = f"{connection.host_name}:{connection.port}/{self.__topic}"
         self.__QoS:Literal = QoS
         self.__retain:bool = retain
 
 
-    def publish(self, message:dict) -> dict:
+    def publish(self, message:dict={'message': 'test'}) -> dict:
         payload:str = json.dumps(message)
         print(f"""Client ID: {self.client_id}
             publishing...

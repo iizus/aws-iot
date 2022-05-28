@@ -10,7 +10,8 @@ class Client:
     __host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(__event_loop_group)
     client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __host_resolver)
 
-    def __init__(self, id:str, cert:str, key:str) -> None:
+    def __init__(self, project_name:str, id:str, cert:str, key:str) -> None:
+        self.__project_name:str = project_name
         self.id:str = id
         self.cert:str = cert
         self.key:str = key
@@ -39,7 +40,7 @@ class Client:
         # fails or succeeds.
         connect_result:dict = connection.connect().result()
         print(f"Connected client ID: {self.id} and result: {connect_result}")
-        return Connection(connection)
+        return Connection(self.__project_name, connection)
 
 
 
