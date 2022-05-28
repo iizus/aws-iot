@@ -1,5 +1,4 @@
 from account import Account, Endpoint, Port, Proxy
-# import account
 from project import Project
 
 # def provision_thing(self, name:str) -> Client:
@@ -27,13 +26,14 @@ test_virginia_443_proxy:Proxy = test_virginia_443.set_proxy(host='0.0.0.0', port
 
 
 test1:Project = Project(name='test')
-client1 = test1.create_client_using(certs_dir='')
+test1_client = test1.create_client_using(certs_dir='')
 # connection2 = client1.connect_to(test_virginia)
-connection1 = client1.connect_to(test_virginia_443)
+test1_client_connection = test1_client.connect_to(test_virginia_443)
 
+# topic_aaa:Topic = test1_client_connection.use_topic(name='aaa')
+# topic_bbb:Topic = test1_client_connection.use_topic(name='bbb')
 
-
-
+test1_client_connection.disconnect()
 
 # client1:Client = virginia.provision_thing(name='client1')
 

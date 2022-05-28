@@ -1,7 +1,7 @@
 from topic import Topic
 
 from awscrt import mqtt
-
+from concurrent.futures import Future
 
 
 class Connection:
@@ -14,4 +14,9 @@ class Connection:
 
 
     def disconnect(self) -> dict:
-        return response
+        client_id:str = self.__connection.client_id
+        print(f"Disconnecting... client ID: {client_id}")
+        disconnect_future:Future = self.__connection.disconnect()
+        disconnect_result:dict = disconnect_future.result()
+        print(f"Disconnected client ID: {client_id} and result: {disconnect_result}")
+        return disconnect_result

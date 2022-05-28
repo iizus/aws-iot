@@ -18,7 +18,7 @@ class Client:
 
         
     def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
-        print(f"Connecting client ID: {self.id}")
+        print(f"Connecting... client ID: {self.id}")
         connection:mqtt.Connection = mtls_from_path(
             endpoint = endpoint.name,
             ca_filepath = endpoint.ca,
