@@ -27,11 +27,10 @@ test_virginia_443_proxy:Proxy = test_virginia_443.set_proxy(host='0.0.0.0', port
 
 test1:Project = Project(name='test')
 test1_client = test1.create_client_using(certs_dir='')
-# connection2 = client1.connect_to(test_virginia)
 test1_client_connection = test1_client.connect_to(test_virginia_443)
 
-# topic_aaa:Topic = test1_client_connection.use_topic(name='aaa')
-# topic_bbb:Topic = test1_client_connection.use_topic(name='bbb')
+topic_aaa = test1_client_connection.use_topic(name='aaa')
+topic_bbb = test1_client_connection.use_topic(name='bbb')
 
 test1_client_connection.disconnect()
 

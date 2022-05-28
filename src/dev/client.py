@@ -1,6 +1,5 @@
 from connection import Connection
 
-from concurrent.futures import Future
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
 
@@ -33,18 +32,18 @@ class Client:
             port = endpoint.port,
             http_proxy_options = endpoint.proxy,
         )
-        connect_future:Future = connection.connect()
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
-        connect_result:dict = connect_future.result()
+        connect_result:dict = connection.connect().result()
         print(f"Connected client ID: {self.id} and result: {connect_result}")
         return Connection(connection)
 
 
 
+from concurrent.futures import Future
 
 # Callback when an interrupted connection is re-established.
 def on_connection_resumed(
