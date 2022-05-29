@@ -12,6 +12,8 @@ from project import Project
 
 
 
+from time import sleep
+
 def subscribe_callback(topic:str, payload:str) -> None:
     print(topic)
     print(payload)
@@ -51,6 +53,10 @@ message = {
 }
 client1_topic2.publish(message)
 
+sleep(1)
+
+client1_topic1.unsubscribe()
+client1_topic2.unsubscribe()
 
 test1_client_connection.disconnect()
 
