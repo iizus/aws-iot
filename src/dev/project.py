@@ -7,7 +7,7 @@ class Project:
         self.__name:str = name
 
 
-    def create_client_using(self, client_id:str='') -> Client:
+    def create_client(self, client_id:str='test') -> Client:
         certs_dir:str = f'{self.__name}/{client_id}'
         
         client:Client = Client(

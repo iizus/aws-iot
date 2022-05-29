@@ -35,11 +35,15 @@ test_virginia_443:Port = test_virginia.set_port(number=443)
 
 
 test1:Project = Project(name='test')
-test1_client = test1.create_client_using(client_id='client1')
-test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
 
-client1_topic1 = test1_client_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
-client1_topic2 = test1_client_connection.use_topic(QoS=QoS.AT_MOST_ONCE)
+test1_client1 = test1.create_client(client_id='client1')
+test1_client2 = test1.create_client(client_id='client2')
+
+test1_client1_connection = test1_client1.connect_to(test_virginia_443, clean_session=True)
+test1_client2_connection = test1_client2.connect_to(test_virginia_443, clean_session=True)
+
+client1_topic1 = test1_client1_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
+client1_topic2 = test1_client1_connection.use_topic(QoS=QoS.AT_MOST_ONCE)
 
 client1_topic2.subscribe(subscribe_callback)
 
@@ -53,7 +57,9 @@ sleep(1)
 # client1_topic2.unsubscribe()
 
 
-test1_client_connection.disconnect()
+test1_client1_connection.disconnect()
+test1_client2_connection.disconnect()
+
 # sleep(3)
 # # test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
 # client1_topic1.publish(message={'client ID': client1_topic1.client_id})
