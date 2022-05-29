@@ -43,20 +43,23 @@ test1_client1_connection = test1_client1.connect_to(test_virginia_443, clean_ses
 test1_client2_connection = test1_client2.connect_to(test_virginia_443, clean_session=True)
 
 client1_topic1 = test1_client1_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
-client1_topic2 = test1_client1_connection.use_topic(QoS=QoS.AT_MOST_ONCE)
+# client1_topic2 = test1_client1_connection.use_topic(QoS=QoS.AT_MOST_ONCE)
 
-client1_topic2.subscribe(subscribe_callback)
+# client1_topic2.subscribe(subscribe_callback)
 
 
-client1_topic1.publish(message={'client ID': client1_topic1.client_id})
-client1_topic2.publish(message={'client ID': client1_topic2.client_id})
+# client1_topic1.publish(message={'client ID': client1_topic1.client_id})
+# client1_topic2.publish(message={'client ID': client1_topic2.client_id})
 
+client2_topic1 = test1_client2_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
+client1_topic1.subscribe(callback=subscribe_callback)
 sleep(1)
+client2_topic1.publish(message={'client ID': client2_topic1.client_id})
 
 # client1_topic1.unsubscribe()
 # client1_topic2.unsubscribe()
 
-
+sleep(3)
 test1_client1_connection.disconnect()
 test1_client2_connection.disconnect()
 

@@ -39,7 +39,8 @@ class Client:
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
         connect_result:dict = connection.connect().result()
-        print(f"Connected client ID: {self.id} and result: {connect_result}")
+        session_present:bool = connect_result.get('session_present')
+        print(f"Connected client ID: {self.id} and session present: {session_present}")
         return Connection(self.__project_name, connection)
 
 
