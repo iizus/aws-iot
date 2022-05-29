@@ -31,14 +31,15 @@ class Connection:
 
     
     def resubscribe_all_topics(self):
-        # print(f"""Client ID: {self.client_id}
-        #     resubscribing...
-        #     Endpoint: {self.__endpoint}""")
-        self.__connection.resubscribe_existing_topics()
-        # print(f"""Client ID: {self.client_id}
-        #     unsubscribed
-        #     Endpoint: {self.__endpoint}
-        #     Packet ID: {packet_id}""")
+        print(f"""Client ID: {self.client_id}
+            resubscribing...
+            Endpoint: {self.__endpoint}""")
+        resubscribe_future, packet_id = self.__connection.resubscribe_existing_topics()
+        print(f"""Client ID: {self.client_id}
+            resubscribed
+            Endpoint: {self.__endpoint}
+            Packet ID: {packet_id}""")
+        print(resubscribe_future)
 
 
 

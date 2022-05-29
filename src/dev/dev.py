@@ -44,20 +44,23 @@ client1_topic2 = test1_client_connection.use_topic(QoS=QoS.AT_MOST_ONCE)
 client1_topic2.subscribe(subscribe_callback)
 
 
-message = {'client ID': client1_topic1.client_id}
-client1_topic1.publish(message)
-
-message = {'client ID': client1_topic2.client_id}
-client1_topic2.publish(message)
+client1_topic1.publish(message={'client ID': client1_topic1.client_id})
+client1_topic2.publish(message={'client ID': client1_topic2.client_id})
 
 sleep(1)
 
-client1_topic1.unsubscribe()
-client1_topic2.unsubscribe()
+# client1_topic1.unsubscribe()
+# client1_topic2.unsubscribe()
 
-# test1_client_connection.resubscribe_all_topics()
-# sleep(3)
+
 test1_client_connection.disconnect()
+sleep(3)
+# test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
+client1_topic1.publish(message={'client ID': client1_topic1.client_id})
+client1_topic2.publish(message={'client ID': client1_topic2.client_id})
+sleep(3)
+test1_client_connection.resubscribe_all_topics()
+
 
 
 
