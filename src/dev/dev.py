@@ -13,6 +13,7 @@ from project import Project
 
 
 from time import sleep
+from awscrt.mqtt import QoS
 
 def subscribe_callback(topic:str, payload:str) -> None:
     print(topic)
@@ -35,22 +36,18 @@ test_virginia_443_proxy:Proxy = test_virginia_443.set_proxy(host='0.0.0.0', port
 
 test1:Project = Project(name='test')
 test1_client = test1.create_client_using(certs_dir='')
-test1_client_connection = test1_client.connect_to(test_virginia_443)
+test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
 
-client1_topic1 = test1_client_connection.use_topic('bbb')
-client1_topic2 = test1_client_connection.use_topic()
+client1_topic1 = test1_client_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
+client1_topic2 = test1_client_connection.use_topic(QoS=QoS.AT_MOST_ONCE)
 
 client1_topic2.subscribe(subscribe_callback)
 
 
-message = {
-    'client ID': client1_topic1.client_id,
-}
+message = {'client ID': client1_topic1.client_id}
 client1_topic1.publish(message)
 
-message = {
-    'client ID': client1_topic2.client_id,
-}
+message = {'client ID': client1_topic2.client_id}
 client1_topic2.publish(message)
 
 sleep(1)
@@ -58,6 +55,8 @@ sleep(1)
 client1_topic1.unsubscribe()
 client1_topic2.unsubscribe()
 
+# test1_client_connection.resubscribe_all_topics()
+# sleep(3)
 test1_client_connection.disconnect()
 
 

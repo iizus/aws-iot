@@ -9,6 +9,8 @@ class Connection:
     def __init__(self, project_name:str, connection:mqtt.Connection) -> None:
         self.__project_name:str = project_name
         self.__connection:mqtt.Connection = connection
+        self.client_id:str = connection.client_id
+        self.__endpoint:str = f"{connection.host_name}:{connection.port}"
 
 
     def use_topic(
@@ -26,6 +28,18 @@ class Connection:
         disconnect_result:dict = self.__connection.disconnect().result()
         print(f"Disconnected client ID: {client_id} and result: {disconnect_result}")
         return disconnect_result
+
+    
+    def resubscribe_all_topics(self):
+        # print(f"""Client ID: {self.client_id}
+        #     resubscribing...
+        #     Endpoint: {self.__endpoint}""")
+        self.__connection.resubscribe_existing_topics()
+        # print(f"""Client ID: {self.client_id}
+        #     unsubscribed
+        #     Endpoint: {self.__endpoint}
+        #     Packet ID: {packet_id}""")
+
 
 
 import json
@@ -98,4 +112,3 @@ class Topic:
             Endpoint: {self.__endpoint}
             Packet ID: {packet_id}""")
         return packet_id
-        # self.__connection.resubscribe_existing_topics()
