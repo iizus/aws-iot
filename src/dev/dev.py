@@ -11,6 +11,12 @@ from project import Project
 #     return individual
 
 
+
+def subscribe_callback(topic:str, payload:str) -> None:
+    print(topic)
+    print(payload)
+
+
 test:Account = Account(name='test')
 burner:Account = Account(name='burner')
 
@@ -29,17 +35,29 @@ test1:Project = Project(name='test')
 test1_client = test1.create_client_using(certs_dir='')
 test1_client_connection = test1_client.connect_to(test_virginia_443)
 
-client1_topic1 = test1_client_connection.use_topic()
-client1_topic2 = test1_client_connection.use_topic(name=f'bbb')
+client1_topic1 = test1_client_connection.use_topic('bbb')
+client1_topic2 = test1_client_connection.use_topic()
+
+client1_topic2.subscribe(subscribe_callback)
+
 
 message = {
     'client ID': client1_topic1.client_id,
 }
 client1_topic1.publish(message)
 
+message = {
+    'client ID': client1_topic2.client_id,
+}
+client1_topic2.publish(message)
+
+
 test1_client_connection.disconnect()
 
+
+
 # client1:Client = virginia.provision_thing(name='client1')
+
 
 # client1_connection:Connection = client1.connect()
 

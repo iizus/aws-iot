@@ -54,7 +54,7 @@ class Topic:
             Message: {payload} to
             Endpoint: {self.__endpoint}
             by QoS{self.__QoS}
-            Retain: {self.__retain}""")
+            Retain message: {self.__retain}""")
         publish_future, _ = self.__connection.publish(
             self.__topic,
             payload,
@@ -67,14 +67,27 @@ class Topic:
             Message: {payload} to
             Endpoint: {self.__endpoint}
             by QoS{self.__QoS}
-            Retain: {self.__retain}
-            Result: {publish_result}""")
+            Retain message: {self.__retain}
+            Packet ID: {publish_result.get('packet_id')}""")
         return publish_result
 
 
     def subscribe(self, callback) -> dict:
-        # return response
-        pass
+        print(f"""Client ID: {self.client_id}
+            subscribing...
+            Endpoint: {self.__endpoint}
+            by QoS{self.__QoS}
+            Callback: {callback.__name__}""")
+        subscribe_future, _ = self.__connection.subscribe(self.__topic, self.__QoS, callback)
+        subscribe_result:dict = subscribe_future.result()
+        print(f"""Client ID: {self.client_id}
+            subscribed
+            Endpoint: {self.__endpoint}
+            Topic: {subscribe_result.get('topic')}
+            by QoS{subscribe_result.get('qos')}
+            Callback: {callback.__name__}
+            Packet ID: {subscribe_result.get('packet_id')}""")
+        return subscribe_result
 
 
     def unsubscribe(self) -> dict:
