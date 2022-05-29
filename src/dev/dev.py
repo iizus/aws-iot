@@ -27,7 +27,7 @@ test_virginia:Endpoint = test.get_endpoint_of(region='us-east-1')
 test_tokyo:Endpoint = test.get_endpoint_of(region='ap-northeast-1')
 
 test_virginia_443:Port = test_virginia.set_port(number=443)
-test_virginia_443_proxy:Proxy = test_virginia_443.set_proxy(host='0.0.0.0', port=443)
+# test_virginia_443_proxy:Proxy = test_virginia_443.set_proxy(host='0.0.0.0', port=443)
 
 # test1 = virginia.create_project(name='test')
 # client1 = test1.create_client_using(certs_dir='')
@@ -35,7 +35,7 @@ test_virginia_443_proxy:Proxy = test_virginia_443.set_proxy(host='0.0.0.0', port
 
 
 test1:Project = Project(name='test')
-test1_client = test1.create_client_using(certs_dir='')
+test1_client = test1.create_client_using(client_id='client1')
 test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
 
 client1_topic1 = test1_client_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
@@ -54,12 +54,12 @@ sleep(1)
 
 
 test1_client_connection.disconnect()
-sleep(3)
-# test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
-client1_topic1.publish(message={'client ID': client1_topic1.client_id})
-client1_topic2.publish(message={'client ID': client1_topic2.client_id})
-sleep(3)
-test1_client_connection.resubscribe_all_topics()
+# sleep(3)
+# # test1_client_connection = test1_client.connect_to(test_virginia_443, clean_session=True)
+# client1_topic1.publish(message={'client ID': client1_topic1.client_id})
+# client1_topic2.publish(message={'client ID': client1_topic2.client_id})
+# sleep(3)
+# test1_client_connection.resubscribe_all_topics()
 
 
 
