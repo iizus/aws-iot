@@ -27,20 +27,18 @@ class Connection:
 
 
 
-def print_recieved_message(topic:str, payload:str, dup:bool, qos:mqtt.QoS, retain:bool, **kwargs:dict) -> None:
-    print(topic)
-    print(payload)
-    print(dup)
-    print(qos)
-    print(retain)
-    print(kwargs)
-    print(f"[] ")
+
 
 
 
 import json
 
 class Topic:
+    def print_recieved_message(topic:str, payload:str, dup:bool, qos:mqtt.QoS, retain:bool, **kwargs:dict) -> None:
+        message:dict = json.loads(payload)
+        print(f"[{topic}] Recieved {message} by QoS{qos}, DUP: {dup} and Retain: {retain}")
+
+
     def __init__(
         self,
         project_name:str,
