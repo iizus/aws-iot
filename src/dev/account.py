@@ -15,12 +15,12 @@ class Port:
         self.ca:str = ca
         self.port:int = number
         self.proxy:HttpProxyOptions = None
-        print(f"Endpoint: {self.name}:{self.port}")
+        print(f"[Endpoint] Set to {self.name}:{self.port}")
 
 
     def set_proxy(self, host:str, port:int=443) -> Proxy:
         proxy:HttpProxyOptions = HttpProxyOptions(host, port)
-        print(f"Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
+        print(f"[Endpoint ]Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
         return Proxy(self.name, self.ca, self.port, proxy)
 
 
@@ -34,7 +34,7 @@ class Endpoint:
         self.ca:str = self.ca_path
         self.port:int = 8883
         self.proxy:HttpProxyOptions = None
-        print(f"Endpoint: {self.name}:{self.port}")
+        print(f"[Endpoint] Set to {self.name}:{self.port}")
 
 
     def set_port(self, number:int=8883) -> Port:
@@ -54,7 +54,7 @@ class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:
         endpoints:dict = load_json(config_path)
         self.__endpoint_prefix:str = endpoints.get(name)
-        print(f"Account: {name}")
+        print(f"[Account] Set to {name}")
 
 
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:

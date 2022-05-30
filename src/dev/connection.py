@@ -24,22 +24,10 @@ class Connection:
 
     def disconnect(self) -> dict:
         client_id:str = self.__connection.client_id
-        print(f"Disconnecting... client ID: {client_id}")
+        print(f"[{client_id}] Disconnecting...")
         disconnect_result:dict = self.__connection.disconnect().result()
-        print(f"Disconnected client ID: {client_id} and result: {disconnect_result}")
+        print(f"[{client_id}] Disconnected and Result: {disconnect_result}")
         return disconnect_result
-
-    
-    def resubscribe_all_topics(self):
-        print(f"""Client ID: {self.client_id}
-            resubscribing...
-            Endpoint: {self.__endpoint}""")
-        resubscribe_future, packet_id = self.__connection.resubscribe_existing_topics()
-        print(f"""Client ID: {self.client_id}
-            resubscribed
-            Endpoint: {self.__endpoint}
-            Packet ID: {packet_id}""")
-        print(resubscribe_future.result())
 
 
 
@@ -64,52 +52,28 @@ class Topic:
 
     def publish(self, message:dict={'message': 'test'}) -> int:
         payload:str = json.dumps(message)
-        print(f"""Client ID: {self.client_id}
-            publishing...
-            Message: {payload} to
-            Endpoint: {self.__endpoint}
-            by QoS{self.__QoS}
-            Retain message: {self.__retain}""")
+        print(f"[{self.client_id}] Publishing... {payload} to {self.__endpoint} by QoS{self.__QoS} and Retain message: {self.__retain}")
         _, packet_id = self.__connection.publish(self.__topic, payload, self.__QoS, self.__retain)
-        print(f"""Client ID: {self.client_id}
-            published
-            Message: {payload} to
-            Endpoint: {self.__endpoint}
-            by QoS{self.__QoS}
-            Retain message: {self.__retain}
-            Packet ID: {packet_id}""")
+        print(f"[{self.client_id}] Published {payload} to {self.__endpoint} by QoS{self.__QoS}, Retain message: {self.__retain} and Packet ID: {packet_id}")
         return packet_id
 
 
     def subscribe(self, callback) -> dict:
-        print(f"""Client ID: {self.client_id}
-            subscribing...
-            Endpoint: {self.__endpoint}
-            by QoS{self.__QoS}
-            Callback: {callback.__name__}""")
+        print(f"[{self.client_id}] Subscribing... {self.__endpoint} by QoS{self.__QoS} and Callback: {callback.__name__}")
         subscribe_future, packet_id = self.__connection.subscribe(
             self.__topic,
             self.__QoS,
             callback
         )
         subscribe_result:dict = subscribe_future.result()
-        print(f"""Client ID: {self.client_id}
-            subscribed
-            Endpoint: {self.__endpoint}
-            Topic: {subscribe_result.get('topic')}
-            by QoS{subscribe_result.get('qos')}
-            Callback: {callback.__name__}
-            Packet ID: {packet_id}""")
+        topic:str = subscribe_result.get('topic')
+        QoS:int = subscribe_result.get('qos')
+        print(f"[{self.client_id}] Subscribed {self.__endpoint} Topic: {topic} by QoS{QoS}, Callback: {callback.__name__} and Packet ID: {packet_id}")
         return subscribe_result
 
 
     def unsubscribe(self) -> int:
-        print(f"""Client ID: {self.client_id}
-            unsubscribing...
-            Endpoint: {self.__endpoint}""")
+        print(f"[{self.client_id}] Unsubscribing... {self.__endpoint}")
         _, packet_id = self.__connection.unsubscribe(self.__topic)
-        print(f"""Client ID: {self.client_id}
-            unsubscribed
-            Endpoint: {self.__endpoint}
-            Packet ID: {packet_id}""")
+        print(f"[{self.client_id}] Unsubscribed {self.__endpoint} and Packet ID: {packet_id}")
         return packet_id

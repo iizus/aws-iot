@@ -16,8 +16,5 @@ class Project:
             cert = certs.get_cert_path(certs_dir),
             key = certs.get_key_path(certs_dir),
         )
-        print(f"""Creating client with 
-            Client ID: {client.id}
-            Cert: {client.cert}
-            Key: {client.key}""")
+        print(f"[{client.id}] Created client with Cert: {client.cert} and Key: {client.key}")
         return client

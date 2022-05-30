@@ -18,7 +18,7 @@ class Client:
 
         
     def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
-        print(f"Connecting... client ID: {self.id}")
+        print(f"[{self.id}] Connecting... to {endpoint.name}:{endpoint.port}, Keep alive: {keep_alive} and Clean session: {clean_session}")
         connection:mqtt.Connection = mtls_from_path(
             endpoint = endpoint.name,
             ca_filepath = endpoint.ca,
@@ -40,11 +40,12 @@ class Client:
         # fails or succeeds.
         connect_result:dict = connection.connect().result()
         session_present:bool = connect_result.get('session_present')
-        print(f"Connected client ID: {self.id} and session present: {session_present}")
+        print(f"[{self.id}] Connected to {endpoint.name}:{endpoint.port}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}")
         return Connection(self.__project_name, connection)
 
 
 
+from typing import List
 from concurrent.futures import Future
 
 # Callback when an interrupted connection is re-established.
@@ -53,20 +54,28 @@ def on_connection_resumed(
     return_code,
     session_present
 ) -> None:
-    print(f"Connection resumed. return code: {return_code} session present: {session_present}")
-
+    print(f"[{connection.client_id}] Resumed connection with {connection.host_name}, Return code: {return_code} and Session present: {session_present}")
     if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
-        print("Session did not persist. Resubscribing to existing topics...")
-        resubscribe_future, _ = connection.resubscribe_existing_topics()
-        # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
-        # evaluate result with a callback instead.
-        resubscribe_future.add_done_callback(__on_resubscribe_complete)
+        packet_id:int = __resubscribe(connection)
+        
+
+def __resubscribe(connection:mqtt.Connection) -> int:
+    client_id:str = connection.client_id
+    endpoint:str = connection.host_name
+    print("Session did not persist. Resubscribing to existing topics...")
+    print(f"[{client_id}] Resubscribing... Endpoint: {endpoint}")
+    resubscribe_future, packet_id = connection.resubscribe_existing_topics()
+    # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
+    # evaluate result with a callback instead.
+    resubscribe_future.add_done_callback(__on_resubscribe_complete)
+    print(f"[{client_id}] Resubscribed Endpoint: {endpoint} Packet ID: {packet_id}")
+    return packet_id
 
 
-def __on_resubscribe_complete(resubscribe_future:Future):
+def __on_resubscribe_complete(resubscribe_future:Future) -> None:
     resubscribe_results = resubscribe_future.result()
     print(f"Resubscribe: {resubscribe_results}")
-    topics = resubscribe_results.get('topics')
+    topics:List[str] = resubscribe_results.get('topics')
     for topic, QoS in topics:
         if QoS is None: exit(f"Server rejected resubscribe to {topic}")
 
