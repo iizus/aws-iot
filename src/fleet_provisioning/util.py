@@ -30,19 +30,20 @@ def __callback(api:str, future:Future) -> None:
 
 def save_certs_in(
     dir:str,
-    response:iotidentity.CreateKeysAndCertificateResponse
+    response:iotidentity.CreateKeysAndCertificateResponse,
+    thing_name:str,
 ) -> None:
-    path:str = __get_certs_path_based_on(response, dir)
+    path:str = __get_certs_path_based_on(thing_name, response, dir)
     __save_certs_at(path, response)
 
 
 def __get_certs_path_based_on(
+    thing_name:str,
     response:iotidentity.CreateKeysAndCertificateResponse,
-    dir:str = 'certs/fleet_provisioning'
+    dir:str = 'certs/fleet_provisioning/individual'
 ):
-    id:str = response.certificate_id
-    dir_path:str = __create(dir, id)
-    path:str = f"{dir_path}/{id}.pem"
+    dir_path:str = __create(dir, thing_name)
+    path:str = f"{dir_path}/{response.certificate_id}.pem"
     return path
 
 

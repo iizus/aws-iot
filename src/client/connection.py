@@ -1,6 +1,8 @@
 from typing import Literal
 from awscrt import mqtt
 
+from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
+
 class Connection:
     def __init__(self, project_name:str, connection:mqtt.Connection) -> None:
         self.__project_name:str = project_name
@@ -23,6 +25,18 @@ class Connection:
         disconnect_result:dict = self.__connection.disconnect().result()
         print(f"[{client_id}] Disconnected and Result: {disconnect_result}")
         return disconnect_result
+
+
+    def provision_thing(self, name:str) -> str:
+        fleet_provisioning:FleetProvisioning = FleetProvisioning(
+            template_name = 'ec2'
+        )
+        thing_name:str = fleet_provisioning.provision_thing_by(
+            connection = self.__connection,
+            template_parameters = {"DeviceID": name},
+            thing_name = name,
+        )
+        return thing_name
 
 
 

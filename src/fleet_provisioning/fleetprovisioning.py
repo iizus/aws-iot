@@ -1,4 +1,4 @@
-import util
+import src.fleet_provisioning.util as util
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
 from concurrent.futures import Future
@@ -9,6 +9,7 @@ class FleetProvisioning:
         self.__template_name:str = template_name
         self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
         self.__registerThingResponse:iotidentity.RegisterThingResponse = None
+        self.__thing_name:str = None
 
 
     def on_CreateKeysAndCertificate_accepted(
@@ -18,7 +19,7 @@ class FleetProvisioning:
         try:
             self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
             print(f"Certificate ID: {response.certificate_id}")
-            util.save_certs_in(dir='certs/fleet_provisioning', response=response)
+            util.save_certs_in(dir='certs/fleet_provisioning/individual', response=response, thing_name=self.__thing_name)
             return
         except Exception as e:
             util.error(e)
@@ -200,9 +201,12 @@ class FleetProvisioning:
         self,
         connection:Connection,
         template_parameters:str,
+        thing_name:str,
     ) -> str:
+        self.__thing_name:str = thing_name
         self.__provision_by(connection, template_parameters)
         thing_name:str = self.__registerThingResponse.thing_name
+        connection.disconnect()
         return thing_name
 
 

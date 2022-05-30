@@ -25,6 +25,8 @@ class Port:
 
 
 
+from src.client.client import Project, Client
+
 class Endpoint:
     from src.client.certs import get_ca_path
     ca_path:str = get_ca_path()
@@ -40,13 +42,16 @@ class Endpoint:
     def set_port(self, number:int=8883) -> Port:
         return Port(self.name, self.ca, number)
 
-        
 
-# from sys import path
-# from os.path import dirname
-# current_dir:str = path[0]
-# parent_dir:str = dirname(current_dir)
-# path.append(parent_dir)
+    def provision_thing(self, name:str) -> Client:
+        fp:Project = Project(name='fleet_provisioning')
+        fp_claim:Client = fp.create_client(client_id='claim')
+        provisioning_connection = fp_claim.connect_to(self)
+        thing_name:str = provisioning_connection.provision_thing(name)
+        individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
+        return individual
+
+        
 
 from src.utils.util import load_json
 
