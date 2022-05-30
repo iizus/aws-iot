@@ -1,16 +1,11 @@
-# from topic import Topic
-
 from typing import Literal
 from awscrt import mqtt
-
-
 
 class Connection:
     def __init__(self, project_name:str, connection:mqtt.Connection) -> None:
         self.__project_name:str = project_name
         self.__connection:mqtt.Connection = connection
         self.client_id:str = connection.client_id
-        self.__endpoint:str = f"{connection.host_name}:{connection.port}"
 
 
     def use_topic(
