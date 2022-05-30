@@ -90,8 +90,8 @@ class Project:
         self.__name:str = name
 
 
-    def create_client(self, client_id:str='client1') -> Client:
-        cert:Cert = Cert(dir=f'{self.__name}/{client_id}')
+    def create_client(self, client_id:str='client1', cert_dir:str='') -> Client:
+        cert:Cert = Cert(dir=f'{self.__name}/{cert_dir}{client_id}')
         return Client(
             project_name = self.__name,
             id = self.__name if client_id == '' else client_id,

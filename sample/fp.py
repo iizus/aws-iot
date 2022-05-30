@@ -10,20 +10,19 @@ from time import sleep
 
 
 
-# def provision_thing(self, name:str) -> Client:
-#     fp:Project = self.create_project(name='fleet_provisioning')
-#     claim:Client = fp.create_client_using(certs_dir='claim')
-#     provisioning_connection:Connection = claim.connect()
-#     thing_name:str = provisioning_connection.provision_thing(name)
-#     client:Project = self.create_project(name=thing_name)
-#     individual:Client = client.create_client_using(certs_dir=f'individual/{thing_name}')
-#     return individual
+def provision_thing(env:Endpoint, name:str) -> Client:
+    fp:Project = Project(name='fleet_provisioning')
+    fp_claim:Client = fp.create_client(client_id='claim')
+    provisioning_connection = fp_claim.connect_to(env)
+    thing_name:str = provisioning_connection.provision_thing(name)
+    client:Project = Project(name=thing_name)
+    individual:Client = client.create_client(client_id=thing_name, cert_dir='individual/')
+    return individual
 
 
 
 
 test_env:Account = Account(name='test')
-burner_env:Account = Account(name='burner')
 
 test_virginia:Endpoint = test_env.get_endpoint_of(region='us-east-1')
 test_tokyo:Endpoint = test_env.get_endpoint_of(region='ap-northeast-1')

@@ -1,4 +1,3 @@
-from symtable import Function
 from typing import Literal
 from awscrt import mqtt
 
@@ -60,7 +59,7 @@ class Topic:
         return packet_id
 
 
-    def subscribe(self, callback:Function=print_recieved_message) -> dict:
+    def subscribe(self, callback=print_recieved_message) -> dict:
         print(f"[{self.client_id}] Subscribing... {self.__endpoint} by QoS{self.__QoS} and Callback: {callback.__name__}")
         subscribe_future, packet_id = self.__connection.subscribe(
             self.__topic,
