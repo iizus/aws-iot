@@ -1,20 +1,19 @@
+from src.client.certs import Cert
 from src.client.connection import Connection
-
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
-
-
 
 class Client:
     __event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
     __host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(__event_loop_group)
     client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __host_resolver)
 
-    def __init__(self, project_name:str, id:str, cert:str, key:str) -> None:
+    def __init__(self, project_name:str, id:str, cert:Cert) -> None:
         self.__project_name:str = project_name
         self.id:str = id
-        self.cert:str = cert
-        self.key:str = key
+        self.cert:str = cert.get_cert_path()
+        self.key:str = cert.get_key_path()
+        print(f"[{self.id}] Created client with Cert: {self.cert} and Key: {self.key}")
 
         
     def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
@@ -83,3 +82,18 @@ def __on_resubscribe_complete(resubscribe_future:Future) -> None:
 # Callback when connection is accidentally lost.
 def on_connection_interrupted(error) -> None:
     print(f"Connection interrupted. Error: {error}")
+
+
+
+class Project:
+    def __init__(self, name:str='test') -> None:
+        self.__name:str = name
+
+
+    def create_client(self, client_id:str='client1') -> Client:
+        cert:Cert = Cert(dir=f'{self.__name}/{client_id}')
+        return Client(
+            project_name = self.__name,
+            id = self.__name if client_id == '' else client_id,
+            cert = cert
+        )

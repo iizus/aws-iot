@@ -1,5 +1,5 @@
 from account import Account, Endpoint
-from project import Project
+from client.client import Project
 
 # def provision_thing(self, name:str) -> Client:
 #     fp:Project = self.create_project(name='fleet_provisioning')

@@ -5,7 +5,7 @@ parent_dir:str = dirname(current_dir)
 path.append(parent_dir)
 
 from src.client.account import Account, Endpoint
-from src.client.project import Project
+from src.client.client import Project, Client
 from time import sleep
 
 
@@ -18,8 +18,8 @@ test_tokyo:Endpoint = test_env.get_endpoint_of(region='ap-northeast-1')
 
 test:Project = Project(name='test')
 
-test_subscriber = test.create_client(client_id='client1')
-test_publisher = test.create_client(client_id='client2')
+test_subscriber:Client = test.create_client(client_id='client1')
+test_publisher:Client = test.create_client(client_id='client2')
 
 test_subscriber_connection = test_subscriber.connect_to(test_virginia)
 test_publisher_connection = test_publisher.connect_to(test_virginia)
