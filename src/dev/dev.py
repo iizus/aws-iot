@@ -1,5 +1,4 @@
-from ast import keyword
-from account import Account, Endpoint, Port, Proxy
+from account import Account, Endpoint
 from project import Project
 
 # def provision_thing(self, name:str) -> Client:
@@ -14,15 +13,9 @@ from project import Project
 
 
 from time import sleep
-from awscrt.mqtt import QoS
+# from awscrt.mqtt import QoS
 
-def subscribe_callback(topic:str, payload:str, dup, qos, retain, **kwargs) -> None:
-    print(topic)
-    print(payload)
-    print(dup)
-    print(qos)
-    print(retain)
-    print(kwargs)
+
 
 
 test_env:Account = Account(name='test')
@@ -41,13 +34,14 @@ test_publisher = test.create_client(client_id='client2')
 test_subscriber_connection = test_subscriber.connect_to(test_virginia)
 test_publisher_connection = test_publisher.connect_to(test_virginia)
 
-subscriber_topic1 = test_subscriber_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
-publisher_topic1 = test_publisher_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
+topic:str = 'test/test'
+subscriber_topic_test = test_subscriber_connection.use_topic(topic)
+publisher_topic_test = test_publisher_connection.use_topic(topic)
 
-subscriber_topic1.subscribe(callback=subscribe_callback)
-publisher_topic1.publish(message={'client ID': publisher_topic1.client_id})
+subscriber_topic_test.subscribe()
+publisher_topic_test.publish()
 sleep(2)
-subscriber_topic1.unsubscribe()
+subscriber_topic_test.unsubscribe()
 sleep(2)
 test_subscriber_connection.disconnect()
 test_publisher_connection.disconnect()

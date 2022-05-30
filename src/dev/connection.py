@@ -1,3 +1,4 @@
+from symtable import Function
 from typing import Literal
 from awscrt import mqtt
 
@@ -26,6 +27,17 @@ class Connection:
 
 
 
+def print_recieved_message(topic:str, payload:str, dup:bool, qos:mqtt.QoS, retain:bool, **kwargs:dict) -> None:
+    print(topic)
+    print(payload)
+    print(dup)
+    print(qos)
+    print(retain)
+    print(kwargs)
+    print(f"[] ")
+
+
+
 import json
 
 class Topic:
@@ -43,6 +55,7 @@ class Topic:
         self.__endpoint:str = f"{connection.host_name}:{connection.port}/{self.__topic}"
         self.__QoS:Literal = QoS
         self.__retain:bool = retain
+        print(f"[{self.client_id}] Set topic as {self.__topic} by QoS{self.__QoS} and Retain message: {self.__retain}")
 
 
     def publish(self, message:dict={'message': 'test'}) -> int:
@@ -53,12 +66,12 @@ class Topic:
         return packet_id
 
 
-    def subscribe(self, callback) -> dict:
+    def subscribe(self, callback:Function=print_recieved_message) -> dict:
         print(f"[{self.client_id}] Subscribing... {self.__endpoint} by QoS{self.__QoS} and Callback: {callback.__name__}")
         subscribe_future, packet_id = self.__connection.subscribe(
             self.__topic,
             self.__QoS,
-            callback
+            callback,
         )
         subscribe_result:dict = subscribe_future.result()
         topic:str = subscribe_result.get('topic')
