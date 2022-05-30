@@ -15,7 +15,7 @@ from project import Project
 from time import sleep
 from awscrt.mqtt import QoS
 
-def subscribe_callback(topic:str, payload:str) -> None:
+def subscribe_callback(topic:str, payload:str, dup, qos, retain, **kwargs) -> None:
     print(topic)
     print(payload)
 
@@ -53,14 +53,20 @@ client1_topic1 = test1_client1_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
 
 client2_topic1 = test1_client2_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
 client1_topic1.subscribe(callback=subscribe_callback)
+test1_client1_connection.disconnect()
 sleep(1)
 client2_topic1.publish(message={'client ID': client2_topic1.client_id})
-
+sleep(1)
+test1_client1_connection = test1_client1.connect_to(test_virginia_443, clean_session=False)
+client1_topic1 = test1_client1_connection.use_topic('bbb', QoS=QoS.AT_MOST_ONCE)
+client1_topic1.subscribe(callback=subscribe_callback)
+# test1_client1_connection.resubscribe_all_topics()
+# client2_topic1.publish(message={'client ID': client2_topic1.client_id})
 # client1_topic1.unsubscribe()
 # client1_topic2.unsubscribe()
 
 sleep(3)
-test1_client1_connection.disconnect()
+# test1_client1_connection.disconnect()
 test1_client2_connection.disconnect()
 
 # sleep(3)

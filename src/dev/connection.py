@@ -39,7 +39,7 @@ class Connection:
             resubscribed
             Endpoint: {self.__endpoint}
             Packet ID: {packet_id}""")
-        print(resubscribe_future)
+        print(resubscribe_future.result())
 
 
 
