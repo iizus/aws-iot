@@ -26,6 +26,7 @@ class Port:
 
 
 from src.client.client import Project, Client
+from time import sleep
 
 class Endpoint:
     from src.client.certs import get_ca_path
@@ -41,6 +42,23 @@ class Endpoint:
 
     def set_port(self, number:int=8883) -> Port:
         return Port(self.name, self.ca, number)
+
+
+    def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
+        subscriber_connection = subscriber.connect_to(self)
+        publisher_connection = publisher.connect_to(self)
+
+        topic:str = 'test/test'
+        subscriber_topic = subscriber_connection.use_topic(topic)
+        publisher_topic = publisher_connection.use_topic(topic)
+
+        subscriber_topic.subscribe()
+        publisher_topic.publish()
+        sleep(2)
+        subscriber_topic.unsubscribe()
+        sleep(2)
+        subscriber_connection.disconnect()
+        publisher_connection.disconnect()
 
 
     def provision_thing(self, name:str) -> Client:
