@@ -26,7 +26,7 @@ class Port:
 
 
 class Endpoint:
-    from certs import get_ca_path
+    from src.client.certs import get_ca_path
     ca_path:str = get_ca_path()
 
     def __init__(self, name:str) -> None:
@@ -42,13 +42,13 @@ class Endpoint:
 
         
 
-from sys import path
-from os.path import dirname
-current_dir:str = path[0]
-parent_dir:str = dirname(current_dir)
-path.append(parent_dir)
+# from sys import path
+# from os.path import dirname
+# current_dir:str = path[0]
+# parent_dir:str = dirname(current_dir)
+# path.append(parent_dir)
 
-from utils.util import load_json
+from src.utils.util import load_json
 
 class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:

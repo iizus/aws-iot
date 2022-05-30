@@ -1,4 +1,4 @@
-from connection import Connection
+from src.client.connection import Connection
 
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path

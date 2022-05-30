@@ -1,5 +1,5 @@
-from client import Client
-import certs
+from src.client.client import Client
+import src.client.certs as certs
 
 
 class Project:
