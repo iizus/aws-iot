@@ -4,6 +4,7 @@ from traceback import print_exception
 from awsiot import iotidentity
 from concurrent.futures import Future
 from time import sleep
+from shutil import rmtree
 
 
 def on_publish_CreateKeysAndCertificate(future:Future) -> None:
@@ -28,22 +29,15 @@ def __callback(api:str, future:Future) -> None:
         error(e)
 
 
-def save_certs_in(
-    dir:str,
-    response:iotidentity.CreateKeysAndCertificateResponse,
-    thing_name:str,
-) -> None:
-    path:str = __get_certs_path_based_on(thing_name, response, dir)
+def save_certs_in(dir:str, response:iotidentity.CreateKeysAndCertificateResponse, thing_name:str) -> None:
+    path:str = __get_certs_path_based_on(thing_name, response.certificate_id, dir)
     __save_certs_at(path, response)
 
 
-def __get_certs_path_based_on(
-    thing_name:str,
-    response:iotidentity.CreateKeysAndCertificateResponse,
-    dir:str = 'certs/fleet_provisioning/individual'
-):
-    dir_path:str = __create(dir, thing_name)
-    path:str = f"{dir_path}/{response.certificate_id}.pem"
+def __get_certs_path_based_on(thing_name:str, certificate_id:str, dir:str='certs/fleet_provisioning/individual') -> str:
+    folder:str = f'{dir}/{thing_name}'
+    dir_path:str = __create(folder)
+    path:str = f"{dir_path}/{certificate_id}.pem"
     return path
 
 
@@ -52,9 +46,9 @@ def __save_certs_at(path:str, response:iotidentity.CreateKeysAndCertificateRespo
     __save_file(path=f'{path}.key', content=response.private_key)
 
 
-def __create(dir:str, id:str) -> str:
-    folder:str = f'{dir}/{id}'
-    if not os.path.exists(folder): os.makedirs(folder)
+def __create(folder:str) -> str:
+    if os.path.exists(folder): rmtree(folder)
+    os.makedirs(folder)
     return folder
 
 

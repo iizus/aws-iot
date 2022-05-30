@@ -92,7 +92,6 @@ class Project:
 
     def create_client(self, client_id:str='client1', cert_dir:str='') -> Client:
         cert_dir:str = f'{self.__name}/{cert_dir}{client_id}'
-        print(cert_dir)
         return Client(
             project_name = self.__name,
             id = self.__name if client_id == '' else client_id,
