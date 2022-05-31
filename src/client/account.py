@@ -50,7 +50,7 @@ class Endpoint:
         subscriber_connection = subscriber.connect_to(self)
         publisher_connection = publisher.connect_to(self)
 
-        topic:str = 'test/test'
+        topic:str = 'check/communication'
         subscriber_topic = subscriber_connection.use_topic(topic)
         publisher_topic = publisher_connection.use_topic(topic)
 
@@ -99,3 +99,10 @@ def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint
     env:Account = Account(account_name)
     endpoint:Endpoint = env.get_endpoint_of(region)
     return endpoint
+
+
+def check_fp_on(account_name:str) -> None:
+    fp_virginia:Endpoint = get_endpoint_of(account_name)
+    fp_publisher:Client = fp_virginia.provision_thing(name=f'{account_name}_publisher')
+    fp_subscriber:Client = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
+    fp_virginia.check_communication_between(publisher=fp_publisher, subscriber=fp_subscriber)
