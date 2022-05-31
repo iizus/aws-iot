@@ -26,9 +26,11 @@ class Port:
 
 
 from src.client.client import Project, Client
-from time import sleep
+from threading import Event
+from src.client.connection import Topic
 
 class Endpoint:
+    from awscrt import mqtt
     from src.client.certs import get_ca_path
     ca_path:str = get_ca_path()
 
@@ -52,13 +54,20 @@ class Endpoint:
         subscriber_topic = subscriber_connection.use_topic(topic)
         publisher_topic = publisher_connection.use_topic(topic)
 
-        subscriber_topic.subscribe()
+        self.__received_event:Event = Event()
+        subscriber_topic.subscribe(callback=self.__on_message_received)
         publisher_topic.publish()
-        sleep(2)
+        print(f"[{subscriber_connection.client_id}] Waiting... for all messages to be received")
+        self.__received_event.wait()
         subscriber_topic.unsubscribe()
-        sleep(2)
+
         subscriber_connection.disconnect()
         publisher_connection.disconnect()
+
+
+    def __on_message_received(self, topic:str, payload:str, dup:bool, qos:mqtt.QoS, retain:bool, **kwargs:dict) -> None:
+        Topic.print_recieved_message(topic, payload, dup, qos, retain, **kwargs)
+        self.__received_event.set()
 
 
     def provision_thing(self, name:str) -> Client:

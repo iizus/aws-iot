@@ -103,7 +103,7 @@ class Topic:
         self.__print_pubsub_log(verb, message, packet_id)
 
 
-    def __print_subscribe_log(self, verb:str, QoS:mqtt.QoS, callback_name:str, packet_id:int=None) -> None:
+    def __print_subscribe_log(self, verb:str, QoS:Literal, callback_name:str, packet_id:int=None) -> None:
         self.__print_pubsub_log(verb=verb, message=f"{self.__endpoint} by QoS{QoS}, Callback: {callback_name}", packet_id=packet_id)
 
 
