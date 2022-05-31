@@ -210,66 +210,21 @@ class FleetProvisioning:
         return thing_name
 
 
-from os.path import dirname, abspath
-from sys import path
+# from os.path import dirname, abspath
+# from sys import path
 
 
-def get_path_of_parent_dir_of(cild_path:str, num:int) -> str:
-    num -= 1
-    if num <= 0:
-        return cild_path
-    else:
-        parent_dir:str = dirname(cild_path)
-        return get_path_of_parent_dir_of(parent_dir, num)
+# def get_path_of_parent_dir_of(cild_path:str, num:int) -> str:
+#     num -= 1
+#     if num <= 0:
+#         return cild_path
+#     else:
+#         parent_dir:str = dirname(cild_path)
+#         return get_path_of_parent_dir_of(parent_dir, num)
 
 
-def add_parent_dir_path_from(num:int) -> str:
-    this_file_path:str = abspath(__file__)
-    parent_dir:str = get_path_of_parent_dir_of(this_file_path, num)
-    path.append(parent_dir)
-    return parent_dir
-
-
-if __name__ == '__main__':
-    add_parent_dir_path_from(3)
-
-    from basic.client import Client
-    from basic.broker import Broker
-    from fleetprovisioning import FleetProvisioning
-
-    env_name:str = 'test'
-    region:str = 'us-east-1'
-    project_name:str = 'test'
-
-    broker:Broker = Broker(env_name, region)
-    fp:Client = broker.connect_for(project_name)
-    fleet_provisioning:FleetProvisioning = FleetProvisioning(
-        template_name = 'ec2'
-    )
-
-    # from uuid import uuid4
-    device_ID:str = 'fp1'
-    # device_ID:str = str(uuid4())
-    # print(f"Device ID: {device_ID}")
-
-    thing_name:str = fleet_provisioning.provision_thing_by(
-        connection = fp.connection,
-        template_parameters = {"DeviceID": device_ID},
-    )
-    fp.disconnect()
-
-    from awscrt import mqtt
-    from threading import Event
-    received_event:Event = Event()
-    
-    def on_message_received(topic:str, payload:dict, dup, qos, retain, **kwargs) -> None:
-        print(f"Received {payload} from {topic}")
-        received_event.set()
-
-    project_name:str = 'fleet_provisioning'
-    client:Client = broker.connect_for(project_name)
-    client.subscribe(callback=on_message_received, QoS=mqtt.QoS.AT_LEAST_ONCE)
-    client.publish(payload={'project name': project_name}, QoS=mqtt.QoS.AT_LEAST_ONCE)
-    print("Waiting for all messages to be received...")
-    received_event.wait()
-    client.disconnect()
+# def add_parent_dir_path_from(num:int) -> str:
+#     this_file_path:str = abspath(__file__)
+#     parent_dir:str = get_path_of_parent_dir_of(this_file_path, num)
+#     path.append(parent_dir)
+#     return parent_dir

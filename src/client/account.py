@@ -92,3 +92,10 @@ class Account:
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
         return Endpoint(name)
+
+
+
+def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint:
+    env:Account = Account(account_name)
+    endpoint:Endpoint = env.get_endpoint_of(region)
+    return endpoint
