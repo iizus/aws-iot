@@ -69,7 +69,7 @@ class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:
         endpoints:dict = util.load_json(config_path)
         self.__endpoint_prefix:str = endpoints.get(name)
-        print(f"[Account] Set to {name}")
+        util.print_log(subject='Account', verb='Set', message=f"to {name}")
 
 
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
