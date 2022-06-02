@@ -1,10 +1,7 @@
 from typing import Literal
 from awscrt import mqtt
-
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
-
-def print_log(subject:str, message:str) -> None:
-    print(f"[{subject}] {message}")
+from src.utils import util
 
 
 class Connection:
@@ -25,9 +22,9 @@ class Connection:
 
     def disconnect(self) -> dict:
         client_id:str = self.__connection.client_id
-        print_log(subject=client_id, message="Disconnecting...")
+        util.print_log(subject=client_id, message="Disconnecting...")
         disconnect_result:dict = self.__connection.disconnect().result()
-        print_log(subject=client_id, message=f"Disconnected and Result: {disconnect_result}")
+        util.print_log(subject=client_id, message=f"Disconnected and Result: {disconnect_result}")
         return disconnect_result
 
 
@@ -66,7 +63,10 @@ class Topic:
         self.__endpoint:str = f"{connection.host_name}:{connection.port}/{self.__topic}"
         self.__QoS:Literal = QoS
         self.__retain:bool = retain
-        print_log(subject=self.client_id, message=f"Set topic as {self.__topic} by QoS{self.__QoS} and Retain message: {self.__retain}")
+        util.print_log(
+            subject = self.client_id,
+            message = f"Set topic as {self.__topic} by QoS{self.__QoS} and Retain message: {self.__retain}"
+        )
 
 
     def publish(self, message:dict={'message': 'test'}) -> int:
@@ -116,4 +116,4 @@ class Topic:
 
 
     def __print_log(self, verb:str, message:str) -> None:
-        print_log(subject=self.client_id, message=f"{verb} {message}")
+        util.print_log(subject=self.client_id, message=f"{verb} {message}")

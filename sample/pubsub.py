@@ -5,7 +5,7 @@ parent_dir:str = dirname(current_dir)
 path.append(parent_dir)
 
 
-from src.client.account import Account, Endpoint, Port
+from src.client.account import Account, Endpoint
 from src.client.client import Project, Client
 
 

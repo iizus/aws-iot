@@ -1,3 +1,4 @@
+from http import client
 from threading import Event
 from awscrt.http import HttpProxyOptions
 from src.client.client import Project, Client
@@ -33,7 +34,8 @@ class Endpoint:
         self.__received_event:Event = Event()
         subscriber_topic.subscribe(callback=self.__on_message_received)
         publisher_topic.publish()
-        print(f"[{subscriber_connection.client_id}] Waiting... for all messages to be received")
+        client_id:str = subscriber_connection.client_id
+        print(f"[{client_id}] Waiting... for all messages to be received")
         self.__received_event.wait()
         subscriber_topic.unsubscribe()
 
@@ -82,7 +84,7 @@ class Port(Endpoint):
 
     def set_proxy(self, host:str, port:int=443):
         proxy:HttpProxyOptions = HttpProxyOptions(host, port)
-        print(f"[Endpoint ]Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
+        print(f"[Endpoint] Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
         return Proxy(self.name, self.ca, self.port, proxy)
 
 
