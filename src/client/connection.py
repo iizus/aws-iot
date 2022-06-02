@@ -5,6 +5,8 @@ from src.utils import util
 
 
 class Connection:
+    from uuid import uuid4
+
     def __init__(self, project_name:str, connection:mqtt.Connection) -> None:
         self.__project_name:str = project_name
         self.__connection:mqtt.Connection = connection
@@ -28,12 +30,12 @@ class Connection:
         return disconnect_result
 
 
-    def provision_thing(self, name:str, template_name:str) -> str:
+    def provision_thing(self, template_name:str, name:str=str(uuid4())) -> str:
         fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
         thing_name:str = fleet_provisioning.provision_thing(
-            thing_name = name,
             connection = self.__connection,
             template_parameters = {"DeviceID": name},
+            thing_name = name,
         )
         return thing_name
 

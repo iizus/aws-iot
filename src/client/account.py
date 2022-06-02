@@ -7,6 +7,7 @@ from src.client.certs import get_ca_path
 
 class Endpoint:
     from awscrt import mqtt
+    from uuid import uuid4
 
     def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None) -> None:
         self.name:str = name
@@ -55,11 +56,12 @@ class Endpoint:
         self.__received_event.set()
 
 
-    def provision_thing(self, name:str, template_name:str) -> Client:
+    def provision_thing(self, template_name:str, name:str=str(uuid4())) -> Client:
         fp:Project = Project(name='fleet_provisioning')
         fp_claim:Client = fp.create_client(client_id='claim')
         provisioning_connection = fp_claim.connect_to(self)
-        thing_name:str = provisioning_connection.provision_thing(name, template_name)
+        thing_name:str = provisioning_connection.provision_thing(template_name=template_name, name=name)
+        print(thing_name)
         individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
         return individual
 

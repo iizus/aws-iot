@@ -5,6 +5,8 @@ from concurrent.futures import Future
 
 
 class FleetProvisioning:
+    from uuid import uuid4
+    
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
         self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
@@ -199,12 +201,12 @@ class FleetProvisioning:
 
     def provision_thing(
         self,
-        thing_name:str,
         connection:Connection,
         template_parameters:str,
+        thing_name:str=str(uuid4()),
     ) -> str:
         self.__thing_name:str = thing_name
         self.__provision_by(connection, template_parameters)
-        thing_name:str = self.__registerThingResponse.thing_name
+        self.__thing_name:str = self.__registerThingResponse.thing_name
         connection.disconnect()
-        return thing_name
+        return self.__thing_name
