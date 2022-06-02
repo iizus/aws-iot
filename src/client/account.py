@@ -65,11 +65,9 @@ class Endpoint:
 
         
 
-from src.utils.util import load_json
-
 class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:
-        endpoints:dict = load_json(config_path)
+        endpoints:dict = util.load_json(config_path)
         self.__endpoint_prefix:str = endpoints.get(name)
         print(f"[Account] Set to {name}")
 
@@ -77,40 +75,6 @@ class Account:
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
         return Endpoint(name)
-
-
-# class CA:
-#     def __init__(self, name:str='test') -> None:
-#         pass
-
-
-#     def set_port(self, number:int=8883):
-#         return Port(self.name, self.ca, number)
-
-
-
-# class Port:
-#     def __init__(self, name:str, number:int=8883) -> None:
-#         self.name:str = name
-#         self.port:int = number
-#         self.proxy:HttpProxyOptions = None
-#         # print(f"[Endpoint] Set to {self.name}:{self.port}")
-#         # super().__init__(name)
-#         # super().print_port_log()
-
-
-#     def set_proxy(self, host:str, port:int=443):
-#         proxy:HttpProxyOptions = HttpProxyOptions(host, port)
-#         print(f"[Endpoint] Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
-#         return Proxy(self.name, self.port, proxy)
-
-
-
-# class Proxy:
-#     def __init__(self, name:str, number:int=8883, proxy:HttpProxyOptions=None) -> None:
-#         self.name:str = name
-#         self.port:int = number
-#         self.proxy:HttpProxyOptions = proxy
 
 
 
