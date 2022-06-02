@@ -2,7 +2,7 @@ from threading import Event
 from awscrt.http import HttpProxyOptions
 from src.client.client import Project, Client
 from src.client.connection import Topic
-from src.client.port import Port
+# from src.client.port import Port
 
 
 
@@ -19,7 +19,7 @@ class Endpoint:
         print(f"[Endpoint] Set to {self.name}:{self.port}")
 
 
-    def set_port(self, number:int=8883) -> Port:
+    def set_port(self, number:int=8883):
         return Port(self.name, self.ca, number)
 
 
@@ -69,6 +69,34 @@ class Account:
     def get_endpoint_of(self, region:str='us-east-1') -> Endpoint:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
         return Endpoint(name)
+
+
+from awscrt.http import HttpProxyOptions
+# from src.client.account import Endpoint
+
+
+class Port(Endpoint):
+    def __init__(self, name:str, ca:str, number:int=8883) -> None:
+        self.name:str = name
+        self.ca:str = ca
+        self.port:int = number
+        self.proxy:HttpProxyOptions = None
+        print(f"[Endpoint] Set to {self.name}:{self.port}")
+
+
+    def set_proxy(self, host:str, port:int=443):
+        proxy:HttpProxyOptions = HttpProxyOptions(host, port)
+        print(f"[Endpoint ]Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
+        return Proxy(self.name, self.ca, self.port, proxy)
+
+
+
+class Proxy(Port):
+    def __init__(self, name:str, ca:str, number:int=8883, proxy:HttpProxyOptions=None) -> None:
+        self.name:str = name
+        self.ca:str = ca
+        self.port:int = number
+        self.proxy:HttpProxyOptions = proxy
 
 
 
