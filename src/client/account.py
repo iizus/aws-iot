@@ -55,11 +55,11 @@ class Endpoint:
         self.__received_event.set()
 
 
-    def provision_thing(self, name:str) -> Client:
+    def provision_thing(self, name:str, template_name:str) -> Client:
         fp:Project = Project(name='fleet_provisioning')
         fp_claim:Client = fp.create_client(client_id='claim')
         provisioning_connection = fp_claim.connect_to(self)
-        thing_name:str = provisioning_connection.provision_thing(name)
+        thing_name:str = provisioning_connection.provision_thing(name, template_name)
         individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
         return individual
 

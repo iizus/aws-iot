@@ -12,6 +12,6 @@ test_virginia:Endpoint = get_endpoint_of(account_name='test')
 
 test:Project = Project(name='test')
 test_subscriber:Client = test.create_client(client_id='client1')
-test_publisher:Client = test_virginia.provision_thing(name='publisher')
+test_publisher:Client = test_virginia.provision_thing(name='publisher', template_name='ec2')
 
 test_virginia.check_communication_between(publisher=test_publisher, subscriber=test_subscriber)
