@@ -67,6 +67,8 @@ class Endpoint:
 
 class Account:
     def __init__(self, name:str='test', config_path:str='endpoint.json') -> None:
+        import awsiot
+        print(awsiot.__version__)
         endpoints:dict = util.load_json(config_path)
         self.__endpoint_prefix:str = endpoints.get(name)
         util.print_log(subject='Account', verb='Set', message=f"to {name}")
