@@ -4,9 +4,9 @@ from sys import path
 
 
 
-def print_log(subject:str, message:str) -> None:
-    print(f"[{subject}] {message}")
-    
+def print_log(subject:str, verb:str, message:str='') -> None:
+    print(f"[{subject}] {verb} {message}")
+
 
 def load_json(json_path:str) -> dict:
     with open(json_path) as json_file:

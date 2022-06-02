@@ -22,9 +22,9 @@ class Connection:
 
     def disconnect(self) -> dict:
         client_id:str = self.__connection.client_id
-        util.print_log(subject=client_id, message="Disconnecting...")
+        util.print_log(subject=client_id, verb="Disconnecting...")
         disconnect_result:dict = self.__connection.disconnect().result()
-        util.print_log(subject=client_id, message=f"Disconnected and Result: {disconnect_result}")
+        util.print_log(subject=client_id, verb='Disconnected', message=f"Result: {disconnect_result}")
         return disconnect_result
 
 
@@ -65,7 +65,8 @@ class Topic:
         self.__retain:bool = retain
         util.print_log(
             subject = self.client_id,
-            message = f"Set topic as {self.__topic} by QoS{self.__QoS} and Retain message: {self.__retain}"
+            verb = 'Set',
+            message = f"topic as {self.__topic} by QoS{self.__QoS} and Retain message: {self.__retain}"
         )
 
 
@@ -116,4 +117,4 @@ class Topic:
 
 
     def __print_log(self, verb:str, message:str) -> None:
-        util.print_log(subject=self.client_id, message=f"{verb} {message}")
+        util.print_log(subject=self.client_id, verb=verb, message=message)
