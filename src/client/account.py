@@ -2,7 +2,6 @@ from threading import Event
 from awscrt.http import HttpProxyOptions
 from src.client.client import Project, Client
 from src.client.connection import Topic
-# from src.client.port import Port
 
 
 
@@ -70,9 +69,6 @@ class Account:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
         return Endpoint(name)
 
-
-from awscrt.http import HttpProxyOptions
-# from src.client.account import Endpoint
 
 
 class Port(Endpoint):
