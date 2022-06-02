@@ -7,5 +7,5 @@ path.append(parent_dir)
 
 from src.client.account import check_fp_on
 
-check_fp_on(account_name='test')
-check_fp_on(account_name='multi')
+check_fp_on(account_name='test', template_name='ec2')
+check_fp_on(account_name='multi', template_name='ec2')

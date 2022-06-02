@@ -36,6 +36,7 @@ class Connection:
             template_parameters = {"DeviceID": name},
             thing_name = name,
         )
+        self.disconnect()
         return thing_name
 
 
