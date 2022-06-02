@@ -16,13 +16,15 @@ burner_env:Account = Account(name='burner')
 test_virginia:Endpoint = test_env.get_endpoint_of(region='us-east-1')
 test_tokyo:Endpoint = test_env.get_endpoint_of(region='ap-northeast-1')
 
+test_virginia_443 = test_virginia.set_port(443)
+
 test:Project = Project(name='test')
 
 test_subscriber:Client = test.create_client(client_id='client1')
 test_publisher:Client = test.create_client(client_id='client2')
 
-test_subscriber_connection = test_subscriber.connect_to(test_virginia)
-test_publisher_connection = test_publisher.connect_to(test_virginia)
+test_subscriber_connection = test_subscriber.connect_to(test_virginia_443)
+test_publisher_connection = test_publisher.connect_to(test_virginia_443)
 
 topic:str = 'test/test'
 subscriber_topic_test = test_subscriber_connection.use_topic(topic)
