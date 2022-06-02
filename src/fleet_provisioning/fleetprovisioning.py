@@ -14,6 +14,19 @@ class FleetProvisioning:
         self.__thing_name:str = None
 
 
+    def provision_thing(
+        self,
+        connection:Connection,
+        template_parameters:str,
+        thing_name:str=str(uuid4()),
+    ) -> str:
+        self.__thing_name:str = thing_name
+        self.__provision_by(connection, template_parameters)
+        self.__thing_name:str = self.__registerThingResponse.thing_name
+        connection.disconnect()
+        return self.__thing_name
+
+
     def on_CreateKeysAndCertificate_accepted(
         self,
         response:iotidentity.CreateKeysAndCertificateResponse
@@ -197,16 +210,3 @@ class FleetProvisioning:
         self.__subscribe_RegisterThing_topics_by(client)
         self.__create_keys_and_certificate_by(client)
         self.__register_thing_by(client, template_parameters)
-
-
-    def provision_thing(
-        self,
-        connection:Connection,
-        template_parameters:str,
-        thing_name:str=str(uuid4()),
-    ) -> str:
-        self.__thing_name:str = thing_name
-        self.__provision_by(connection, template_parameters)
-        self.__thing_name:str = self.__registerThingResponse.thing_name
-        connection.disconnect()
-        return self.__thing_name
