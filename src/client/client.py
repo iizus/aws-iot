@@ -18,11 +18,10 @@ class Client:
 
         
     def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
-        port:str = f"{endpoint.name}:{endpoint.port}"
-        self.__print_log(verb='Connecting...', message=f"to {port}, Keep alive: {keep_alive} and Clean session: {clean_session}")
+        self.__print_log(verb='Connecting...', message=f"to {endpoint.endpoint}, Keep alive: {keep_alive} and Clean session: {clean_session}")
         connection:mqtt.Connection = mtls_from_path(
             endpoint = endpoint.name,
-            ca_filepath = endpoint.ca,
+            ca_filepath = endpoint.ca_path,
             client_id = self.id,
             cert_filepath = self.cert,
             pri_key_filepath = self.key,
@@ -41,7 +40,7 @@ class Client:
         # fails or succeeds.
         connect_result:dict = connection.connect().result()
         session_present:bool = connect_result.get('session_present')
-        self.__print_log(verb='Connected', message=f"to {port}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}")
+        self.__print_log(verb='Connected', message=f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}")
         return Connection(self.__project_name, connection)
 
 

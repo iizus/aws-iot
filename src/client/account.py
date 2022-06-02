@@ -3,25 +3,31 @@ from awscrt.http import HttpProxyOptions
 from src.utils import util
 from src.client.client import Project, Client
 from src.client.connection import Topic
-
-
+from src.client.certs import get_ca_path
 
 class Endpoint:
     from awscrt import mqtt
-    from src.client.certs import get_ca_path
-    ca_path:str = get_ca_path()
 
-    def __init__(self, name:str) -> None:
+    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None) -> None:
         self.name:str = name
-        self.ca:str = self.ca_path
-        self.port:int = 8883
-        self.proxy:HttpProxyOptions = None
+        self.ca:str = ca
+        self.ca_path:str = get_ca_path(type=ca)
+        self.port:int = port
+        self.proxy:HttpProxyOptions = proxy
         self.endpoint:str = f"{self.name}:{self.port}"
-        self.print_port_log()
+        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint} and CA path: {self.ca_path}")
+
+
+    def set_ca(self, type:str='RSA2048'):
+        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy)
 
 
     def set_port(self, number:int=8883):
-        return Port(self.name, self.ca, number)
+        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy)
+
+
+    def set_proxy(self, options:HttpProxyOptions=None):
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options)
 
 
     def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
@@ -57,18 +63,6 @@ class Endpoint:
         individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
         return individual
 
-
-    def print_port_log(self) -> None:
-        self.__print_endpoint_log(message=f"to {self.endpoint}")
-
-
-    def __print_endpoint_log(self, message:str) -> None:
-        self.__print_setting_log(subject='Endpoint', message=message)
-
-
-    def __print_setting_log(self, subject:str, message:str) -> None:
-        util.print_log(subject=subject, verb='set', message=message)
-
         
 
 from src.utils.util import load_json
@@ -85,31 +79,38 @@ class Account:
         return Endpoint(name)
 
 
-
-class Port(Endpoint):
-    def __init__(self, name:str, ca:str, number:int=8883) -> None:
-        self.name:str = name
-        self.ca:str = ca
-        self.port:int = number
-        self.proxy:HttpProxyOptions = None
-        # print(f"[Endpoint] Set to {self.name}:{self.port}")
-        super().__init__(name)
-        super().print_port_log()
+# class CA:
+#     def __init__(self, name:str='test') -> None:
+#         pass
 
 
-    def set_proxy(self, host:str, port:int=443):
-        proxy:HttpProxyOptions = HttpProxyOptions(host, port)
-        print(f"[Endpoint] Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
-        return Proxy(self.name, self.ca, self.port, proxy)
+#     def set_port(self, number:int=8883):
+#         return Port(self.name, self.ca, number)
 
 
 
-class Proxy(Port):
-    def __init__(self, name:str, ca:str, number:int=8883, proxy:HttpProxyOptions=None) -> None:
-        self.name:str = name
-        self.ca:str = ca
-        self.port:int = number
-        self.proxy:HttpProxyOptions = proxy
+# class Port:
+#     def __init__(self, name:str, number:int=8883) -> None:
+#         self.name:str = name
+#         self.port:int = number
+#         self.proxy:HttpProxyOptions = None
+#         # print(f"[Endpoint] Set to {self.name}:{self.port}")
+#         # super().__init__(name)
+#         # super().print_port_log()
+
+
+#     def set_proxy(self, host:str, port:int=443):
+#         proxy:HttpProxyOptions = HttpProxyOptions(host, port)
+#         print(f"[Endpoint] Set HTTP proxy as {host}:{port} for {self.name}:{self.port}")
+#         return Proxy(self.name, self.port, proxy)
+
+
+
+# class Proxy:
+#     def __init__(self, name:str, number:int=8883, proxy:HttpProxyOptions=None) -> None:
+#         self.name:str = name
+#         self.port:int = number
+#         self.proxy:HttpProxyOptions = proxy
 
 
 
@@ -120,7 +121,7 @@ def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint
 
 
 def check_fp_on(account_name:str) -> None:
-    fp_virginia:Endpoint = get_endpoint_of(account_name)
+    fp_virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
     fp_publisher:Client = fp_virginia.provision_thing(name=f'{account_name}_publisher')
     fp_subscriber:Client = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
     fp_virginia.check_communication_between(publisher=fp_publisher, subscriber=fp_subscriber)
