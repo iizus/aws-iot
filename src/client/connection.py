@@ -30,9 +30,8 @@ class Connection:
         return disconnect_result
 
 
-    def provision_thing(self, template_name:str, name:str=str(uuid4())) -> str:
-        fleet_provisioning:FleetProvisioning = FleetProvisioning(template_name)
-        thing_name:str = fleet_provisioning.provision_thing(
+    def provision_thing_by(self, fp:FleetProvisioning, name:str=str(uuid4())) -> str:
+        thing_name:str = fp.provision_thing(
             connection = self.__connection,
             template_parameters = {"DeviceID": name},
             thing_name = name,

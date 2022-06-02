@@ -2,7 +2,7 @@ from threading import Event
 from awscrt.http import HttpProxyOptions
 from src.utils import util
 from src.client.client import Project, Client
-from src.client.connection import Topic
+from src.client.connection import Topic, Connection
 from src.client.certs import get_ca_path
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
@@ -17,6 +17,7 @@ class Endpoint:
         self.port:int = port
         self.proxy:HttpProxyOptions = proxy
         self.__fp:FleetProvisioning = fp
+        self.__fp_Project:Project = Project(name='fleet_provisioning')
         self.endpoint:str = f"{self.name}:{self.port}"
         util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint} and CA path: {self.ca_path}")
 
@@ -36,6 +37,14 @@ class Endpoint:
     def set_FP(self, template_name:str):
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
         return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=self.proxy, fp=self.__fp)
+
+
+    def provision_thing(self, name:str=str(uuid4())) -> Client:
+        fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
+        provisioning_connection:Connection = fp_claim.connect_to(self)
+        thing_name:str = provisioning_connection.provision_thing_by(self.__fp, name)
+        fp_thing:Client = self.__fp_Project.create_client(client_id=thing_name, cert_dir='individual/')
+        return fp_thing
 
 
     def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
@@ -63,29 +72,6 @@ class Endpoint:
         self.__received_event.set()
 
 
-    def provision_thing(self, name:str=str(uuid4())) -> Client:
-        fp:Project = Project(name='fleet_provisioning')
-        fp_claim:Client = fp.create_client(client_id='claim')
-        provisioning_connection = fp_claim.connect_to(self)
-        # thing_name:str = provisioning_connection.provision_thing(template_name=template_name, name=name)
-        thing_name:str = self.__fp.provision_thing(
-            connection = provisioning_connection.__connection,
-            template_parameters = {"DeviceID": name},
-            thing_name = name,
-        )
-        individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
-        return individual
-
-
-    def __provision_thing(self, template_name:str, name:str=str(uuid4())) -> Client:
-        fp:Project = Project(name='fleet_provisioning')
-        fp_claim:Client = fp.create_client(client_id='claim')
-        provisioning_connection = fp_claim.connect_to(self)
-        thing_name:str = provisioning_connection.provision_thing(template_name=template_name, name=name)
-        individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
-        return individual
-
-
 
 import awsiot
 print(f"Version of AWS IoT Device SDK for Python v2: {awsiot.__version__}")
@@ -109,8 +95,10 @@ def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint
     return endpoint
 
 
-def check_fp_on(account_name:str) -> None:
-    fp_virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
+def check_fp_on(account_name:str, template_name:str) -> None:
+    virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
+    fp_virginia:Endpoint = virginia.set_FP(template_name)
     fp_publisher:Client = fp_virginia.provision_thing(name=f'{account_name}_publisher')
+    print('!!!!!!!!')
     fp_subscriber:Client = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
     fp_virginia.check_communication_between(publisher=fp_publisher, subscriber=fp_subscriber)
