@@ -1,6 +1,6 @@
-from http import client
 from threading import Event
 from awscrt.http import HttpProxyOptions
+from src.utils import util
 from src.client.client import Project, Client
 from src.client.connection import Topic
 
@@ -16,7 +16,8 @@ class Endpoint:
         self.ca:str = self.ca_path
         self.port:int = 8883
         self.proxy:HttpProxyOptions = None
-        print(f"[Endpoint] Set to {self.name}:{self.port}")
+        self.endpoint:str = f"{self.name}:{self.port}"
+        self.print_port_log()
 
 
     def set_port(self, number:int=8883):
@@ -35,7 +36,7 @@ class Endpoint:
         subscriber_topic.subscribe(callback=self.__on_message_received)
         publisher_topic.publish()
         client_id:str = subscriber_connection.client_id
-        print(f"[{client_id}] Waiting... for all messages to be received")
+        util.print_log(subject=client_id, verb='Waiting...', message="for all messages to be received")
         self.__received_event.wait()
         subscriber_topic.unsubscribe()
 
@@ -55,6 +56,18 @@ class Endpoint:
         thing_name:str = provisioning_connection.provision_thing(name)
         individual:Client = fp.create_client(client_id=thing_name, cert_dir='individual/')
         return individual
+
+
+    def print_port_log(self) -> None:
+        self.__print_endpoint_log(message=f"to {self.endpoint}")
+
+
+    def __print_endpoint_log(self, message:str) -> None:
+        self.__print_setting_log(subject='Endpoint', message=message)
+
+
+    def __print_setting_log(self, subject:str, message:str) -> None:
+        util.print_log(subject=subject, verb='set', message=message)
 
         
 
@@ -79,7 +92,9 @@ class Port(Endpoint):
         self.ca:str = ca
         self.port:int = number
         self.proxy:HttpProxyOptions = None
-        print(f"[Endpoint] Set to {self.name}:{self.port}")
+        # print(f"[Endpoint] Set to {self.name}:{self.port}")
+        super().__init__(name)
+        super().print_port_log()
 
 
     def set_proxy(self, host:str, port:int=443):
