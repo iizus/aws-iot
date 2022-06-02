@@ -10,7 +10,7 @@ class Endpoint:
     from awscrt import mqtt
     from uuid import uuid4
 
-    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, fp:FleetProvisioning=None) -> None:
+    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, fp:FleetProvisioning=None, claim:Client=None) -> None:
         self.name:str = name
         self.ca:str = ca
         self.ca_path:str = get_ca_path(type=ca)
@@ -18,30 +18,31 @@ class Endpoint:
         self.proxy:HttpProxyOptions = proxy
         self.__fp:FleetProvisioning = fp
         self.__fp_Project:Project = Project(name='fleet_provisioning')
+        self.__fp_claim:Client = claim
         self.endpoint:str = f"{self.name}:{self.port}"
-        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint} and CA path: {self.ca_path}")
+        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {fp}")
 
 
     def set_ca(self, type:str='RSA2048'):
-        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy, fp=self.__fp)
+        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy, fp=self.__fp, claim=self.__fp_claim)
 
 
     def set_port(self, number:int=8883):
-        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy, fp=self.__fp)
+        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy, fp=self.__fp, claim=self.__fp_claim)
 
 
     def set_proxy(self, options:HttpProxyOptions=None):
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, fp=self.__fp)
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, fp=self.__fp, claim=self.__fp_claim)
 
 
     def set_FP(self, template_name:str):
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=self.proxy, fp=self.__fp)
+        self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=self.proxy, fp=self.__fp, claim=self.__fp_claim)
 
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
-        fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
-        provisioning_connection:Connection = fp_claim.connect_to(self)
+        provisioning_connection:Connection = self.__fp_claim.connect_to(self)
         thing_name:str = provisioning_connection.provision_thing_by(self.__fp, name)
         fp_thing:Client = self.__fp_Project.create_client(client_id=thing_name, cert_dir='individual/')
         return fp_thing
@@ -98,7 +99,7 @@ def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint
 def check_fp_on(account_name:str, template_name:str) -> None:
     virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
     fp_virginia:Endpoint = virginia.set_FP(template_name)
-    fp_publisher:Client = fp_virginia.provision_thing(name=f'{account_name}_publisher')
-    print('!!!!!!!!')
-    fp_subscriber:Client = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
-    fp_virginia.check_communication_between(publisher=fp_publisher, subscriber=fp_subscriber)
+    fp_virginia.check_communication_between(
+        publisher = fp_virginia.provision_thing(name=f'{account_name}_publisher'),
+        subscriber = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
+    )
