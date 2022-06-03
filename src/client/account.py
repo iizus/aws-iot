@@ -18,7 +18,8 @@ class Endpoint:
         self.endpoint:str = f"{self.name}:{self.port}"
         # self.__is_set_fp:bool = False
         self.__provision:Provisioning = provision
-        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {self.__provision}")
+        is_set_fp:bool = False if provision is None else True
+        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {is_set_fp}")
 
 
     def set_ca(self, type:str='RSA2048'):
@@ -103,6 +104,7 @@ class Provisioning:
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
         self.__fp_Project:Project = Project(name='fleet_provisioning')
         self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
+        # self.project_name:str = self.__fp_Project.__name
     
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
