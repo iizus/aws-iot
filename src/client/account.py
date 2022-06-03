@@ -1,10 +1,10 @@
+from uuid import uuid4
 from threading import Event
 from awscrt.http import HttpProxyOptions
 from src.utils import util
 from src.client.client import Project, Client
 from src.client.connection import Topic, Connection
 from src.client.certs import get_ca_path
-from uuid import uuid4
 
 class Endpoint:
     from awscrt import mqtt
@@ -98,14 +98,14 @@ class Provisioning:
     def __init__(self, endpoint:Endpoint, template_name:str) -> None:
         self.__endpoint:Endpoint = endpoint
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
-        self.__fp_Project:Project = Project(name='fleet_provisioning')
-        self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
+        self.__project:Project = Project(name='fleet_provisioning')
+        self.__claim:Client = self.__project.create_client(client_id='claim')
 
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
-        provisioning_connection:Connection = self.__fp_claim.connect_to(self.__endpoint)
-        thing_name:str = provisioning_connection.provision_thing_by(self.__fp, name)
-        provisioned_thing:Client = self.__fp_Project.create_client(client_id=thing_name, cert_dir='individual/')
+        connection:Connection = self.__claim.connect_to(self.__endpoint)
+        thing_name:str = connection.provision_thing_by(self.__fp, name)
+        provisioned_thing:Client = self.__project.create_client(client_id=thing_name, cert_dir='individual/')
         return provisioned_thing
 
 
