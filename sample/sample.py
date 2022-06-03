@@ -6,7 +6,14 @@ path.append(parent_dir)
 
 
 
-from src.client.account import Account, Endpoint
+from src.client.account import Account, Endpoint, Project
+from src.client.connection import Topic
+
+
+def publish_10_messages(topic:Topic) -> None:
+    for i in range(3):
+        topic.publish(message={'client': topic.client_id, 'times': i})
+
 
 test_env:Account = Account(name='test')
 burner_env:Account = Account(name='burner')
@@ -18,8 +25,9 @@ test_virginia_443:Endpoint = test_virginia.set_port(443)
 test_virginia_443_ca:Endpoint = test_virginia_443.set_ca(type='RSA2048')
 fp:Endpoint = test_virginia.set_FP(template_name='ec2')
 
-test_virginia_443.check_communication_on(
-    project_name = 'test',
-    publisher_name = 'client1',
-    subscriber_name = 'client2',
+test_project:Project = Project(name='test')
+test_virginia.setup_connection(
+    client = test_project.create_client(),
+    callback = publish_10_messages,
+    topic = 'test/test',
 )

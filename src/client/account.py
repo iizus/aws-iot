@@ -51,6 +51,13 @@ class Endpoint:
         )
 
 
+    def setup_connection(self, client:Client, callback, topic:str='test/test') -> None:
+        connection:Connection = client.connect_to(self)
+        client_topic:Topic = connection.use_topic(topic)
+        callback(client_topic)
+        connection.disconnect()
+
+
     def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
         subscriber_connection = subscriber.connect_to(self)
         publisher_connection = publisher.connect_to(self)
