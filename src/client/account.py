@@ -51,7 +51,7 @@ class Endpoint:
         )
 
 
-    def setup_connection(self, client:Client, callback, topic:str='test/test') -> None:
+    def excute_callback_on(self, client:Client, callback, topic:str='test/test') -> None:
         connection:Connection = client.connect_to(self)
         client_topic:Topic = connection.use_topic(topic)
         callback(client_topic)

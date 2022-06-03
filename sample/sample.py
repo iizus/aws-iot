@@ -10,7 +10,7 @@ from src.client.account import Account, Endpoint, Project
 from src.client.connection import Topic
 
 
-def publish_10_messages(topic:Topic) -> None:
+def publish_messages(topic:Topic) -> None:
     for i in range(3):
         topic.publish(message={'client': topic.client_id, 'times': i})
 
@@ -26,8 +26,14 @@ test_virginia_443_ca:Endpoint = test_virginia_443.set_ca(type='RSA2048')
 fp:Endpoint = test_virginia.set_FP(template_name='ec2')
 
 test_project:Project = Project(name='test')
-test_virginia.setup_connection(
-    client = test_project.create_client(),
-    callback = publish_10_messages,
-    topic = 'test/test',
+
+test_virginia.excute_callback_on(
+    client = test_project.create_client(client_id='client1'),
+    callback = publish_messages,
+    topic = 'test/test1',
+)
+test_virginia.excute_callback_on(
+    client = test_project.create_client(client_id='client2'),
+    callback = publish_messages,
+    topic = 'test/test2',
 )
