@@ -24,9 +24,9 @@ class FleetProvisioning:
         thing_name:str = str(uuid4()),
     ) -> str:
         self.__thing_name:str = thing_name
-        thing_name:str = self.__provision_by(connection, template_parameters)
-        self.__print_log(verb='Success', message=f"fleet provisioning of {thing_name}")
-        return thing_name
+        provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
+        self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
+        return provisioned_thing_name
 
 
     def __provision_by(self, connection:Connection, template_parameters:str) -> str:

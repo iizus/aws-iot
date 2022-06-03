@@ -34,8 +34,8 @@ class Endpoint:
 
 
     def set_FP(self, template_name:str):
-        self.__provisioning:Provisioning = Provisioning(endpoint=self, template_name=template_name)
-        return Endpoint(name=self.name, ca=self.ca, port = self.port, proxy=self.proxy, provisioning=self.__provisioning)
+        provisioning:Provisioning = Provisioning(endpoint=self, template_name=template_name)
+        return Endpoint(name=self.name, ca=self.ca, port = self.port, proxy=self.proxy, provisioning=provisioning)
 
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
@@ -130,6 +130,12 @@ class Provisioning:
 def check_fp_on(account_name:str, template_name:str) -> None:
     virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
     fp_virginia:Endpoint = virginia.set_FP(template_name)
+    # publisher = fp_virginia.provision_thing(name=f'{account_name}_publisher')
+    # subscriber = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
+    # fp_virginia.check_communication_between(
+    #     publisher,
+    #     subscriber
+    # )
     fp_virginia.check_communication_between(
         publisher = fp_virginia.provision_thing(name=f'{account_name}_publisher'),
         subscriber = fp_virginia.provision_thing(name=f'{account_name}_subscriber')

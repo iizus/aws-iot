@@ -33,7 +33,7 @@ class Connection:
     def provision_thing_by(self, fp:FleetProvisioning, name:str=str(uuid4())) -> str:
         thing_name:str = fp.provision_thing(
             connection = self.__connection,
-            template_parameters = {"DeviceID": name},
+            template_parameters = {'DeviceID': name},
             thing_name = name,
         )
         self.disconnect()
