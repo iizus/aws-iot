@@ -38,9 +38,9 @@ class Endpoint:
         return Endpoint(name=self.name, ca=self.ca, port = self.port, proxy=self.proxy, provisioning=provisioning)
 
 
-    def provision_thing(self, name:str=str(uuid4())) -> Client:
+    def provision_thing(self, template_parameters:dict, name:str=str(uuid4())) -> Client:
         util.print_log(subject=name, verb='Provisioning...')
-        provisioned_thing:Client = self.__provisioning.provision_thing(name)
+        provisioned_thing:Client = self.__provisioning.provision_thing(template_parameters, name)
         util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
 
@@ -119,9 +119,9 @@ class Provisioning:
         self.__claim:Client = self.__project.create_client(client_id='claim')
 
 
-    def provision_thing(self, name:str=str(uuid4())) -> Client:
+    def provision_thing(self, template_parameters:dict, name:str=str(uuid4())) -> Client:
         connection:Connection = self.__claim.connect_to(self.__endpoint)
-        thing_name:str = connection.provision_thing_by(self.__fp, name)
+        thing_name:str = connection.provision_thing_by(self.__fp, template_parameters, name)
         provisioned_thing:Client = self.__project.create_client(client_id=thing_name, cert_dir='individual/')
         return provisioned_thing
 

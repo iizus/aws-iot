@@ -13,7 +13,10 @@ test_virginia:Endpoint = get_endpoint_of(account_name='test')
 fp:Endpoint = test_virginia.set_FP(template_name='ec2')
 test:Project = Project(name='test')
 
+provisioning_thing_name:str = 'provisioned_thing'
+template_parameters:dict = {'DeviceID': provisioning_thing_name}
+
 test_virginia.check_communication_between(
     publisher = test.create_client(client_id='client1'),
-    subscriber = fp.provision_thing('provisioned_thing'),
+    subscriber = fp.provision_thing(template_parameters, provisioning_thing_name),
 )
