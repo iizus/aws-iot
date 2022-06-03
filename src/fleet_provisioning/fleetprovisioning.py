@@ -47,15 +47,21 @@ class FleetProvisioning:
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
     ) -> str:
-        self.__get_keys_and_certificate_by(client)
+        response:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
+        self.__print_log(verb='Saving...', message=f"Certificate ID: {response.certificate_id}")
+        self.__print_log(
+            verb = 'Saved',
+            message = util.save_certs_in(dir='certs/fleet_provisioning/individual', response=response, thing_name=self.__thing_name),
+        )
         thing_name:str = self.__register_thing_by(client, template_parameters)
         return thing_name
 
 
-    def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> None:
+    def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> iotidentity.CreateKeysAndCertificateResponse:
         self.__subscribe_CreateKeysAndCertificate_topics_by(client)
         self.__subscribe_RegisterThing_topics_by(client)
         self.__create_keys_and_certificate_by(client)
+        return self.__createKeysAndCertificateResponse
 
 
     def __on_CreateKeysAndCertificate_accepted(
@@ -64,11 +70,11 @@ class FleetProvisioning:
     ) -> None:
         try:
             self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
-            self.__print_log(verb='Saving...', message=f"Certificate ID: {response.certificate_id}")
-            self.__print_log(
-                verb = 'Saved',
-                message = util.save_certs_in(dir='certs/fleet_provisioning/individual', response=response, thing_name=self.__thing_name),
-            )
+            # self.__print_log(verb='Saving...', message=f"Certificate ID: {response.certificate_id}")
+            # self.__print_log(
+            #     verb = 'Saved',
+            #     message = util.save_certs_in(dir='certs/fleet_provisioning/individual', response=response, thing_name=self.__thing_name),
+            # )
         except Exception as e:
             util.error(e)
 
