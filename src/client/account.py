@@ -39,7 +39,9 @@ class Endpoint:
 
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
+        util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__provisioning.provision_thing(name)
+        util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
 
 

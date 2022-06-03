@@ -26,6 +26,33 @@ class FleetProvisioning:
         return self.__thing_name
 
 
+    def __provision_by(self, connection:Connection, template_parameters:str) -> None:
+        try:
+            # Subscribe to necessary topics.
+            # Note that is **is** important to wait for "accepted/rejected" subscriptions
+            # to succeed before publishing the corresponding "request".
+            client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
+            self.__subscribe_and_pubrish_topics_by(client, template_parameters)
+            print("Success fleet provisioning")
+        except Exception as e:
+            util.error(e)
+
+
+    def __subscribe_and_pubrish_topics_by(
+        self,
+        client:iotidentity.IotIdentityClient,
+        template_parameters:dict
+    ) -> None:
+        self.__get_keys_and_certificate_by(client)
+        self.__register_thing_by(client, template_parameters)
+
+
+    def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> None:
+        self.__subscribe_CreateKeysAndCertificate_topics_by(client)
+        self.__subscribe_RegisterThing_topics_by(client)
+        self.__create_keys_and_certificate_by(client)
+
+
     def on_CreateKeysAndCertificate_accepted(
         self,
         response:iotidentity.CreateKeysAndCertificateResponse
@@ -47,7 +74,6 @@ class FleetProvisioning:
         try:
             self.__registerThingResponse:iotidentity.RegisterThingResponse = response
             print(f"Thing name: {response.thing_name}")
-            return
         except Exception as e:
             util.error(e)
 
@@ -186,26 +212,3 @@ class FleetProvisioning:
             qos = QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(util.on_publish_RegisterThing)
-
-
-    def __provision_by(self, connection:Connection, template_parameters:str) -> None:
-        try:
-            # Subscribe to necessary topics.
-            # Note that is **is** important to wait for "accepted/rejected" subscriptions
-            # to succeed before publishing the corresponding "request".
-            client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
-            self.__subscribe_and_pubrish_topics_by(client, template_parameters)
-            print("Success fleet provisioning")
-        except Exception as e:
-            util.error(e)
-
-
-    def __subscribe_and_pubrish_topics_by(
-        self,
-        client:iotidentity.IotIdentityClient,
-        template_parameters:dict
-    ) -> None:
-        self.__subscribe_CreateKeysAndCertificate_topics_by(client)
-        self.__subscribe_RegisterThing_topics_by(client)
-        self.__create_keys_and_certificate_by(client)
-        self.__register_thing_by(client, template_parameters)
