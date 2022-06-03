@@ -70,7 +70,7 @@ class Endpoint:
 
         self.__received_event:Event = Event()
         subscriber_topic.subscribe(callback=self.__on_message_received)
-        publisher_topic.publish()
+        publisher_topic.publish({'from': publisher_topic.client_id})
         client_id:str = subscriber_connection.client_id
         util.print_log(subject=client_id, verb='Waiting...', message="for all messages to be received")
         self.__received_event.wait()
