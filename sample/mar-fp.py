@@ -7,6 +7,7 @@ path.append(parent_dir)
 
 
 from src.client.account import Endpoint, get_endpoint_of
+from src.client.client import Client
 
 def check_fp_on(account_name:str) -> None:
     virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
@@ -15,11 +16,11 @@ def check_fp_on(account_name:str) -> None:
     publisher_name:str = f'{account_name}_publisher'
     subscriber_name:str = f'{account_name}_subscriber'
 
-    publisher = fp_virginia.provision_thing(
+    publisher:Client = fp_virginia.provision_thing(
         name = publisher_name,
         template_parameters = {'DeviceID': publisher_name},
     )
-    subscriber = fp_virginia.provision_thing(
+    subscriber:Client = fp_virginia.provision_thing(
         name = subscriber_name,
         template_parameters = {'DeviceID': subscriber_name},
     )

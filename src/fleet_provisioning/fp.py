@@ -266,7 +266,8 @@ class FP:
 
     
     def __print_rejected(self, api:str, response:iotidentity.ErrorResponse) -> None:
-        util.error(f"[{self.__claim}] Eroor: {api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
+        # util.error(f"[{self.__claim}] Eroor: {api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
+        self.__print_log(verb='Error', message=f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
 
 
     def __print_log(self, verb:str, message:str) -> None:
