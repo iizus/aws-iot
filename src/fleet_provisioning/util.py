@@ -5,6 +5,7 @@ from awsiot import iotidentity
 from concurrent.futures import Future
 from time import sleep
 from shutil import rmtree
+from src.utils.util import print_log
 
 
 def on_publish_CreateKeysAndCertificate(future:Future) -> None:
@@ -13,11 +14,6 @@ def on_publish_CreateKeysAndCertificate(future:Future) -> None:
 
 def on_publish_RegisterThing(future:Future) -> None:
     __callback('RegisterThing', future)
-
-
-def wait_for(response:str) -> None:
-    print(f'Waiting... {response}')
-    sleep(1)
 
 
 def __callback(api:str, future:Future) -> None:

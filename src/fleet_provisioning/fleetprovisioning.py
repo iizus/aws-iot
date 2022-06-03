@@ -2,6 +2,9 @@ from src.fleet_provisioning import util
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
 from concurrent.futures import Future
+from src.utils.util import print_log
+from time import sleep
+
 
 
 class FleetProvisioning:
@@ -27,6 +30,7 @@ class FleetProvisioning:
 
 
     def __provision_by(self, connection:Connection, template_parameters:str) -> None:
+        self.__claim:str = connection.client_id
         try:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
@@ -101,7 +105,7 @@ class FleetProvisioning:
             qos = QoS.AT_LEAST_ONCE,
             callback = self.on_CreateKeysAndCertificate_accepted
         )
-        print(f"Subscribed {topic}")
+        self.print_subscribed(topic)
         future.result() # Wait for subscription to succeed
 
 
@@ -115,7 +119,7 @@ class FleetProvisioning:
             qos = QoS.AT_LEAST_ONCE,
             callback = self.on_CreateKeysAndCertificate_rejected
         )
-        print(f"Subscribed {topic}")
+        self.print_subscribed(topic)
         future.result() # Wait for subscription to succeed
 
 
@@ -137,7 +141,7 @@ class FleetProvisioning:
             qos = QoS.AT_LEAST_ONCE,
             callback = self.on_RegisterThing_accepted
         )
-        print(f"Subscribed {topic}")
+        self.print_subscribed(topic)
         future.result() # Wait for subscription to succeed
 
 
@@ -152,7 +156,7 @@ class FleetProvisioning:
             qos = QoS.AT_LEAST_ONCE,
             callback = self.on_RegisterThing_rejected
         )
-        print(f"Subscribed {topic}")
+        self.print_subscribed(topic)
         future.result() # Wait for subscription to succeed
 
 
@@ -164,7 +168,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
             if self.__createKeysAndCertificateResponse is not None: break
-            util.wait_for('createKeysAndCertificateResponse')
+            self.wait_for('createKeysAndCertificateResponse')
             loop_count += 1
 
         if self.__createKeysAndCertificateResponse is None:
@@ -175,7 +179,7 @@ class FleetProvisioning:
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
-        print("Publishing to CreateKeysAndCertificate...")
+        self.print_publishing('CreateKeysAndCertificate')
         future:Future = client.publish_create_keys_and_certificate(
             request = iotidentity.CreateKeysAndCertificateRequest(),
             qos = QoS.AT_LEAST_ONCE
@@ -192,7 +196,7 @@ class FleetProvisioning:
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
             if self.__registerThingResponse is not None: break
-            util.wait_for('registerThingResponse')
+            self.wait_for('registerThingResponse')
             loop_count += 1
 
 
@@ -206,9 +210,25 @@ class FleetProvisioning:
             certificate_ownership_token = self.__createKeysAndCertificateResponse.certificate_ownership_token,
             parameters = template_parameters,
         )
-        print("Publishing to RegisterThing topic...")
+        self.print_publishing('RegisterThing')
         future:Future = client.publish_register_thing(
             request = request,
             qos = QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(util.on_publish_RegisterThing)
+
+
+    def print_publishing(self, topic:str) -> None:
+        self.__print_log(verb='Publishing...', message=f'{topic} topic')
+
+
+    def print_subscribed(self, topic:str) -> None:
+        self.__print_log(verb='Subscribed', message=topic)
+
+
+    def wait_for(self, response:str) -> None:
+        self.__print_log(verb='Waiting...', message=response)
+        sleep(1)
+
+    def __print_log(self, verb:str, message:str) -> None:
+        print_log(subject=self.__claim, verb=verb, message=message)
