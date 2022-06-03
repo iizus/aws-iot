@@ -46,7 +46,7 @@ import json
 class Topic:
     def print_recieved_message(topic:str, payload:str, dup:bool, qos:mqtt.QoS, retain:bool, **kwargs:dict) -> None:
         message:dict = json.loads(payload)
-        print(f"[{topic}] Recieved {message} by QoS{qos}, DUP: {dup} and Retain message: {retain}")
+        util.print_log(subject=topic, verb='Recieved', message=f"{message} by QoS{qos}, DUP: {dup} and Retain message: {retain}")
 
 
     def __init__(

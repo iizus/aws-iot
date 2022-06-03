@@ -5,7 +5,7 @@ from sys import path
 
 
 def print_log(subject:str, verb:str, message:str='') -> None:
-    print(f"[{subject}] {verb} {message}")
+    print(f"[ {subject} ] {verb} {message}")
 
 
 def load_json(json_path:str) -> dict:
