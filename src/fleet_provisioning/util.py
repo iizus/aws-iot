@@ -25,9 +25,10 @@ def __callback(api:str, future:Future) -> None:
         error(e)
 
 
-def save_certs_in(dir:str, response:iotidentity.CreateKeysAndCertificateResponse, thing_name:str) -> None:
+def save_certs_in(dir:str, response:iotidentity.CreateKeysAndCertificateResponse, thing_name:str) -> str:
     path:str = __get_certs_path_based_on(thing_name, response.certificate_id, dir)
     __save_certs_at(path, response)
+    return path
 
 
 def __get_certs_path_based_on(thing_name:str, certificate_id:str, dir:str='certs/fleet_provisioning/individual') -> str:
@@ -51,16 +52,11 @@ def __create(folder:str) -> str:
 def __save_file(path:str, content:str) -> None:
     with open(path, mode='w') as file:
         file.write(content)
-        print(f'Saved {path}')
-
-
-def print_rejected(api:str, response:iotidentity.ErrorResponse) -> None:
-    error(f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
+        # print(f'Saved {path}')
 
 
 # Function for gracefully quitting this sample
 def error(msg_or_exception:Exception) -> None:
-    print("Exiting Sample due to exception")
     print_exception(
         msg_or_exception.__class__,
         msg_or_exception,
