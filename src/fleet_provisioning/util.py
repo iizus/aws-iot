@@ -2,27 +2,8 @@ import os
 from sys import exc_info
 from traceback import print_exception
 from awsiot import iotidentity
-from concurrent.futures import Future
-from time import sleep
 from shutil import rmtree
-from src.utils.util import print_log
 
-
-def on_publish_CreateKeysAndCertificate(future:Future) -> None:
-    __callback('CreateKeysAndCertificate', future)
-
-
-def on_publish_RegisterThing(future:Future) -> None:
-    __callback('RegisterThing', future)
-
-
-def __callback(api:str, future:Future) -> None:
-    try:
-        future.result() # raises exception if publish failed
-        print(f"Published {api} request")
-    except Exception as e:
-        print(f"Failed to publish {api} request")
-        error(e)
 
 
 def save_certs_in(dir:str, response:iotidentity.CreateKeysAndCertificateResponse, thing_name:str) -> str:
@@ -52,7 +33,6 @@ def __create(folder:str) -> str:
 def __save_file(path:str, content:str) -> None:
     with open(path, mode='w') as file:
         file.write(content)
-        # print(f'Saved {path}')
 
 
 # Function for gracefully quitting this sample

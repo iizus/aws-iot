@@ -1,9 +1,9 @@
-from src.fleet_provisioning import util
+from time import sleep
+from concurrent.futures import Future
 from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
-from concurrent.futures import Future
 from src.utils.util import print_log
-from time import sleep
+from src.fleet_provisioning import util
 
 
 
@@ -37,7 +37,7 @@ class FleetProvisioning:
             # to succeed before publishing the corresponding "request".
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
             self.__subscribe_and_pubrish_topics_by(client, template_parameters)
-            self.__print_log(verb='Success', message='fleet provisioning')
+            self.__print_log(verb='Success', message=f"fleet provisioning of {self.__thing_name}")
         except Exception as e:
             util.error(e)
 
@@ -79,7 +79,6 @@ class FleetProvisioning:
     def on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
         try:
             self.__registerThingResponse:iotidentity.RegisterThingResponse = response
-            print(f"Thing name: {response.thing_name}")
         except Exception as e:
             util.error(e)
 
@@ -189,7 +188,7 @@ class FleetProvisioning:
             request = iotidentity.CreateKeysAndCertificateRequest(),
             qos = QoS.AT_LEAST_ONCE
         )
-        future.add_done_callback(util.on_publish_CreateKeysAndCertificate)
+        future.add_done_callback(self.__on_publish_CreateKeysAndCertificate)
 
 
     def __register_thing_by(
@@ -220,11 +219,28 @@ class FleetProvisioning:
             request = request,
             qos = QoS.AT_LEAST_ONCE
         )
-        future.add_done_callback(util.on_publish_RegisterThing)
+        future.add_done_callback(self.__on_publish_RegisterThing)
+
+
+    def __on_publish_CreateKeysAndCertificate(self, future:Future) -> None:
+        self.__print_published('CreateKeysAndCertificate', future)
+
+
+    def __on_publish_RegisterThing(self, future:Future) -> None:
+        self.__print_published('RegisterThing', future)
 
 
     def __print_publishing(self, topic:str) -> None:
         self.__print_log(verb='Publishing...', message=f'{topic} topic')
+
+
+    def __print_published(self, api:str, future:Future) -> None:
+        try:
+            future.result() # raises exception if publish failed
+            self.__print_log(verb='Published', message=f'{api} request')
+        except Exception as e:
+            self.__print_log(verb='Failed', message=f'to publish {api} request')
+            util.error(e)
 
 
     def __print_subscribing_accepted(self, topic:str) -> None:
