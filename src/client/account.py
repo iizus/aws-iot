@@ -43,6 +43,14 @@ class Endpoint:
         return provisioned_thing
 
 
+    def check_communication_on(self, project_name:str, publisher_name:str, subscriber_name:str) -> None:
+        project:Project = Project(project_name)
+        self.check_communication_between(
+            publisher = project.create_client(publisher_name),
+            subscriber = project.create_client(subscriber_name),
+        )
+
+
     def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
         subscriber_connection = subscriber.connect_to(self)
         publisher_connection = publisher.connect_to(self)
