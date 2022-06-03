@@ -9,41 +9,37 @@ from uuid import uuid4
 class Endpoint:
     from awscrt import mqtt
 
-    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, provision=None) -> None:
+    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, provisioning=None) -> None:
         self.name:str = name
         self.ca:str = ca
         self.ca_path:str = get_ca_path(type=ca)
         self.port:int = port
         self.proxy:HttpProxyOptions = proxy
         self.endpoint:str = f"{self.name}:{self.port}"
-        # self.__is_set_fp:bool = False
-        self.__provision:Provisioning = provision
-        is_set_fp:bool = False if provision is None else True
+        self.__provisioning:Provisioning = provisioning
+        is_set_fp:bool = False if provisioning is None else True
         util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {is_set_fp}")
 
 
     def set_ca(self, type:str='RSA2048'):
-        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy)
+        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy, provisioning=self.__provisioning)
 
 
     def set_port(self, number:int=8883):
-        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy)
+        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy, provisioning=self.__provisioning)
 
 
     def set_proxy(self, options:HttpProxyOptions=None):
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options)
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, provisioning=self.__provisioning)
 
 
     def set_FP(self, template_name:str):
-        # self.__fp:FleetProvisioning = FleetProvisioning(template_name)
-        # self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
-        # self.__is_set_fp:bool = True
-        self.__provisio:Provisioning = Provisioning(endpoint=self, template_name=template_name)
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=self.proxy, provision=self.__provisio)
+        self.__provisioning:Provisioning = Provisioning(endpoint=self, template_name=template_name)
+        return Endpoint(name=self.name, ca=self.ca, port = self.port, proxy=self.proxy, provisioning=self.__provisioning)
 
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
-        provisioned_thing:Client = self.__provision.provision_thing(name)
+        provisioned_thing:Client = self.__provisioning.provision_thing(name)
         return provisioned_thing
 
 
@@ -104,8 +100,7 @@ class Provisioning:
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
         self.__fp_Project:Project = Project(name='fleet_provisioning')
         self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
-        # self.project_name:str = self.__fp_Project.__name
-    
+
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
         provisioning_connection:Connection = self.__fp_claim.connect_to(self.__endpoint)
