@@ -124,13 +124,3 @@ class Provisioning:
         thing_name:str = connection.provision_thing_by(self.__fp, template_parameters, name)
         provisioned_thing:Client = self.__project.create_client(client_id=thing_name, cert_dir='individual/')
         return provisioned_thing
-
-
-
-def check_fp_on(account_name:str, template_name:str) -> None:
-    virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
-    fp_virginia:Endpoint = virginia.set_FP(template_name)
-    fp_virginia.check_communication_between(
-        publisher = fp_virginia.provision_thing(name=f'{account_name}_publisher'),
-        subscriber = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
-    )

@@ -11,8 +11,8 @@ from src.client.client import Project
 
 test_virginia:Endpoint = get_endpoint_of(account_name='test')
 fp:Endpoint = test_virginia.set_FP(template_name='ec2')
-test:Project = Project(name='test')
 
+test:Project = Project(name='test')
 provisioning_thing_name:str = 'provisioned_thing'
 template_parameters:dict = {'DeviceID': provisioning_thing_name}
 
