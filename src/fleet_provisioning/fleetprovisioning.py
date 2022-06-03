@@ -24,20 +24,20 @@ class FleetProvisioning:
         thing_name:str = str(uuid4()),
     ) -> str:
         self.__thing_name:str = thing_name
-        self.__provision_by(connection, template_parameters)
-        self.__thing_name:str = self.__registerThingResponse.thing_name
-        return self.__thing_name
+        thing_name:str = self.__provision_by(connection, template_parameters)
+        self.__print_log(verb='Success', message=f"fleet provisioning of {thing_name}")
+        return thing_name
 
 
-    def __provision_by(self, connection:Connection, template_parameters:str) -> None:
+    def __provision_by(self, connection:Connection, template_parameters:str) -> str:
         self.__claim:str = connection.client_id
         try:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
             # to succeed before publishing the corresponding "request".
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
-            self.__subscribe_and_pubrish_topics_by(client, template_parameters)
-            self.__print_log(verb='Success', message=f"fleet provisioning of {self.__thing_name}")
+            thing_name:str = self.__subscribe_and_pubrish_topics_by(client, template_parameters)
+            return thing_name
         except Exception as e:
             util.error(e)
 
@@ -46,9 +46,10 @@ class FleetProvisioning:
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
-    ) -> None:
+    ) -> str:
         self.__get_keys_and_certificate_by(client)
-        self.__register_thing_by(client, template_parameters)
+        thing_name:str = self.__register_thing_by(client, template_parameters)
+        return thing_name
 
 
     def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> None:
@@ -57,7 +58,7 @@ class FleetProvisioning:
         self.__create_keys_and_certificate_by(client)
 
 
-    def on_CreateKeysAndCertificate_accepted(
+    def __on_CreateKeysAndCertificate_accepted(
         self,
         response:iotidentity.CreateKeysAndCertificateResponse
     ) -> None:
@@ -72,18 +73,18 @@ class FleetProvisioning:
             util.error(e)
 
 
-    def on_CreateKeysAndCertificate_rejected(self, response:iotidentity.ErrorResponse) -> None:
+    def __on_CreateKeysAndCertificate_rejected(self, response:iotidentity.ErrorResponse) -> None:
         self.__print_rejected('CreateKeysAndCertificate', response)
 
 
-    def on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
+    def __on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
         try:
             self.__registerThingResponse:iotidentity.RegisterThingResponse = response
         except Exception as e:
             util.error(e)
 
 
-    def on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
+    def __on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
         self.__print_rejected('RegisterThing', response)
 
 
@@ -105,7 +106,7 @@ class FleetProvisioning:
         future, topic = client.subscribe_to_create_keys_and_certificate_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
-            callback = self.on_CreateKeysAndCertificate_accepted
+            callback = self.__on_CreateKeysAndCertificate_accepted
         )
         self.__print_subscribed(topic)
         future.result() # Wait for subscription to succeed
@@ -120,7 +121,7 @@ class FleetProvisioning:
         future, topic = client.subscribe_to_create_keys_and_certificate_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
-            callback = self.on_CreateKeysAndCertificate_rejected
+            callback = self.__on_CreateKeysAndCertificate_rejected
         )
         self.__print_subscribed(topic)
         future.result() # Wait for subscription to succeed
@@ -143,7 +144,7 @@ class FleetProvisioning:
         future, topic = client.subscribe_to_register_thing_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
-            callback = self.on_RegisterThing_accepted
+            callback = self.__on_RegisterThing_accepted
         )
         self.__print_subscribed(topic)
         future.result() # Wait for subscription to succeed
@@ -158,7 +159,7 @@ class FleetProvisioning:
         future, topic = client.subscribe_to_register_thing_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
-            callback = self.on_RegisterThing_rejected
+            callback = self.__on_RegisterThing_rejected
         )
         self.__print_subscribed(topic)
         future.result() # Wait for subscription to succeed
@@ -195,13 +196,14 @@ class FleetProvisioning:
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
-    ) -> None:
+    ) -> str:
         self.__publish_RegisterThing_topic_by(client, template_parameters)
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
             if self.__registerThingResponse is not None: break
             self.__wait_for('RegisterThingResponse')
             loop_count += 1
+        return self.__registerThingResponse.thing_name
 
 
     def __publish_RegisterThing_topic_by(

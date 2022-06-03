@@ -15,5 +15,5 @@ test:Project = Project(name='test')
 
 test_virginia.check_communication_between(
     publisher = test.create_client(client_id='client1'),
-    subscriber = fp.provision_thing(),
+    subscriber = fp.provision_thing('provisioned_thing'),
 )
