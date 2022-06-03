@@ -70,11 +70,6 @@ class FleetProvisioning:
     ) -> None:
         try:
             self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
-            # self.__print_log(verb='Saving...', message=f"Certificate ID: {response.certificate_id}")
-            # self.__print_log(
-            #     verb = 'Saved',
-            #     message = util.save_certs_in(dir='certs/fleet_provisioning/individual', response=response, thing_name=self.__thing_name),
-            # )
         except Exception as e:
             util.error(e)
 
