@@ -130,12 +130,6 @@ class Provisioning:
 def check_fp_on(account_name:str, template_name:str) -> None:
     virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
     fp_virginia:Endpoint = virginia.set_FP(template_name)
-    # publisher = fp_virginia.provision_thing(name=f'{account_name}_publisher')
-    # subscriber = fp_virginia.provision_thing(name=f'{account_name}_subscriber')
-    # fp_virginia.check_communication_between(
-    #     publisher,
-    #     subscriber
-    # )
     fp_virginia.check_communication_between(
         publisher = fp_virginia.provision_thing(name=f'{account_name}_publisher'),
         subscriber = fp_virginia.provision_thing(name=f'{account_name}_subscriber')

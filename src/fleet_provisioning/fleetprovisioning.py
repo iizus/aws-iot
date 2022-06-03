@@ -4,15 +4,12 @@ from awsiot import iotidentity
 from awscrt.mqtt import Connection, QoS
 from src.utils.util import print_log
 from src.fleet_provisioning import util
+from uuid import uuid4
 
 
-
-class FleetProvisioning:
-    from uuid import uuid4
-    
+class FleetProvisioning:    
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
-        self.__clear_members()
 
 
     def provision_thing(
@@ -21,17 +18,31 @@ class FleetProvisioning:
         template_parameters:str,
         thing_name:str = str(uuid4()),
     ) -> str:
-        self.__clear_members()
+        fp:FP = FP(self.__template_name)
+        provisioned_thing_name:str = fp.provision_thing(connection, template_parameters, thing_name)
+        return fp.provision_thing(connection, template_parameters, thing_name)
+
+
+
+
+class FP:    
+    def __init__(self, template_name:str) -> None:
+        self.__template_name:str = template_name
+        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
+        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
+        self.__thing_name:str = None
+
+
+    def provision_thing(
+        self,
+        connection:Connection,
+        template_parameters:str,
+        thing_name:str = str(uuid4()),
+    ) -> str:
         self.__thing_name:str = thing_name
         provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
         self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
         return provisioned_thing_name
-
-
-    def __clear_members(self) -> None:
-        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
-        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
-        self.__thing_name:str = None
 
 
     def __provision_by(self, connection:Connection, template_parameters:str) -> str:
