@@ -4,48 +4,46 @@ from src.utils import util
 from src.client.client import Project, Client
 from src.client.connection import Topic, Connection
 from src.client.certs import get_ca_path
-from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
+from uuid import uuid4
 
 class Endpoint:
     from awscrt import mqtt
-    from uuid import uuid4
 
-    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, fp:FleetProvisioning=None, claim:Client=None) -> None:
+    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, provision=None) -> None:
         self.name:str = name
         self.ca:str = ca
         self.ca_path:str = get_ca_path(type=ca)
         self.port:int = port
         self.proxy:HttpProxyOptions = proxy
-        self.__fp:FleetProvisioning = fp
-        self.__fp_Project:Project = Project(name='fleet_provisioning')
-        self.__fp_claim:Client = claim
         self.endpoint:str = f"{self.name}:{self.port}"
-        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {fp}")
+        # self.__is_set_fp:bool = False
+        self.__provision:Provisioning = provision
+        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {self.__provision}")
 
 
     def set_ca(self, type:str='RSA2048'):
-        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy, fp=self.__fp, claim=self.__fp_claim)
+        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy)
 
 
     def set_port(self, number:int=8883):
-        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy, fp=self.__fp, claim=self.__fp_claim)
+        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy)
 
 
     def set_proxy(self, options:HttpProxyOptions=None):
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, fp=self.__fp, claim=self.__fp_claim)
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options)
 
 
     def set_FP(self, template_name:str):
-        self.__fp:FleetProvisioning = FleetProvisioning(template_name)
-        self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=self.proxy, fp=self.__fp, claim=self.__fp_claim)
+        # self.__fp:FleetProvisioning = FleetProvisioning(template_name)
+        # self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
+        # self.__is_set_fp:bool = True
+        self.__provisio:Provisioning = Provisioning(endpoint=self, template_name=template_name)
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=self.proxy, provision=self.__provisio)
 
 
     def provision_thing(self, name:str=str(uuid4())) -> Client:
-        provisioning_connection:Connection = self.__fp_claim.connect_to(self)
-        thing_name:str = provisioning_connection.provision_thing_by(self.__fp, name)
-        fp_thing:Client = self.__fp_Project.create_client(client_id=thing_name, cert_dir='individual/')
-        return fp_thing
+        provisioned_thing:Client = self.__provision.provision_thing(name)
+        return provisioned_thing
 
 
     def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
@@ -94,6 +92,25 @@ def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint
     env:Account = Account(account_name)
     endpoint:Endpoint = env.get_endpoint_of(region)
     return endpoint
+
+
+
+from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
+
+class Provisioning:
+    def __init__(self, endpoint:Endpoint, template_name:str) -> None:
+        self.__endpoint:Endpoint = endpoint
+        self.__fp:FleetProvisioning = FleetProvisioning(template_name)
+        self.__fp_Project:Project = Project(name='fleet_provisioning')
+        self.__fp_claim:Client = self.__fp_Project.create_client(client_id='claim')
+    
+
+    def provision_thing(self, name:str=str(uuid4())) -> Client:
+        provisioning_connection:Connection = self.__fp_claim.connect_to(self.__endpoint)
+        thing_name:str = provisioning_connection.provision_thing_by(self.__fp, name)
+        provisioned_thing:Client = self.__fp_Project.create_client(client_id=thing_name, cert_dir='individual/')
+        return provisioned_thing
+
 
 
 def check_fp_on(account_name:str, template_name:str) -> None:
