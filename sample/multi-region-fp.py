@@ -12,7 +12,7 @@ from src.client.client import Client
 def chech_fp_on(region:str):
     test_env:Account = Account(name='test')
     endpoint:Endpoint = test_env.get_endpoint_of(region)
-    fp_endpoint:Endpoint = endpoint.set_FP('ec2')
+    fp_endpoint:Endpoint = endpoint.set_FP('simple')
 
     publisher_name:str = f'{region}_publisher'
     subscriber_name:str = f'{region}_subscriber'

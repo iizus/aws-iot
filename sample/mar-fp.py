@@ -11,7 +11,7 @@ from src.client.client import Client
 
 def check_fp_on(account_name:str) -> None:
     virginia:Endpoint = get_endpoint_of(account_name, region='us-east-1')
-    fp_virginia:Endpoint = virginia.set_FP('ec2')
+    fp_virginia:Endpoint = virginia.set_FP('simple')
 
     publisher_name:str = f'{account_name}_publisher'
     subscriber_name:str = f'{account_name}_subscriber'
