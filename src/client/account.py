@@ -17,8 +17,8 @@ class Endpoint:
         self.proxy:HttpProxyOptions = proxy
         self.endpoint:str = f"{self.name}:{self.port}"
         self.__provisioning:Provisioning = provisioning
-        is_set_fp:bool = False if provisioning is None else True
-        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP: {is_set_fp}")
+        fp_template_name:str = 'None' if provisioning is None else provisioning.template_name
+        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP template: {fp_template_name}")
 
 
     def set_ca(self, type:str='RSA2048'):
@@ -113,6 +113,7 @@ from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
 class Provisioning:
     def __init__(self, endpoint:Endpoint, template_name:str) -> None:
+        self.template_name:str = template_name
         self.__endpoint:Endpoint = endpoint
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
         self.__project:Project = Project(name='fleet_provisioning')
