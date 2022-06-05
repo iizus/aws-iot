@@ -10,10 +10,7 @@
 			"Properties": {
 				"ThingName": {
 					"Ref": "DeviceID"
-				},
-				"ThingGroups": [
-					"EC2"
-				]
+				}
 			}
 		},
 		"certificate": {
