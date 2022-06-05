@@ -22,7 +22,7 @@
 	],
 		
 	"mounts": [
-		"source=/home/ec2-user/aws-iot/certs,target=/workspace/aws-iot/certs,type=bind"
+		"source=/home/ec2-user/aws-iot/certs,target=/workspaces/aws-iot/certs,type=bind"
 	]
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
