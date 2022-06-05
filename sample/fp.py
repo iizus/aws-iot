@@ -10,7 +10,7 @@ from src.client.account import Endpoint, get_endpoint_of
 from src.client.client import Project
 
 test_virginia:Endpoint = get_endpoint_of(account_name='test')
-fp:Endpoint = test_virginia.set_FP(template_name='ec2')
+fp:Endpoint = test_virginia.set_FP(template_name='simple')
 
 test:Project = Project(name='test')
 provisioning_thing_name:str = 'provisioned_thing'

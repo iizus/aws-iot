@@ -1,0 +1,35 @@
+{
+	"Parameters": {
+		"DeviceID": {
+			"Type": "String"
+		}
+	},
+	"Resources": {
+		"thing": {
+			"Type": "AWS::IoT::Thing",
+			"Properties": {
+				"ThingName": {
+					"Ref": "DeviceID"
+				},
+				"ThingGroups": [
+					"EC2"
+				]
+			}
+		},
+		"certificate": {
+			"Type": "AWS::IoT::Certificate",
+			"Properties": {
+				"CertificateId": {
+					"Ref": "AWS::IoT::Certificate::Id"
+				},
+				"Status": "Active"
+			}
+		},
+		"policy": {
+			"Type": "AWS::IoT::Policy",
+			"Properties": {
+				"PolicyName": "Full-Access-Policy"
+			}
+		}
+	}
+}
