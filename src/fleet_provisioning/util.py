@@ -2,7 +2,7 @@ import os
 from sys import exc_info
 from traceback import print_exception
 from awsiot import iotidentity
-from shutil import rmtree
+from src.utils.util import remove
 
 
 
@@ -25,7 +25,7 @@ def __save_certs_at(path:str, response:iotidentity.CreateKeysAndCertificateRespo
 
 
 def __create(folder:str) -> str:
-    if os.path.exists(folder): rmtree(folder)
+    remove(folder)
     os.makedirs(folder)
     return folder
 

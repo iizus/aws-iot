@@ -1,7 +1,12 @@
 from json import load
-from os.path import dirname, abspath
+from os.path import dirname, abspath, exists
 from sys import path
+from shutil import rmtree
 
+
+
+def remove(dir:str):
+    if exists(dir): rmtree(dir)
 
 
 def print_log(subject:str, verb:str, message:str='') -> None:

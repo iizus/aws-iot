@@ -13,7 +13,7 @@ test_virginia:Endpoint = get_endpoint_of(account_name='test')
 fp:Endpoint = test_virginia.set_FP(template_name='simple')
 
 test:Project = Project(name='test')
-provisioning_thing_name:str = 'provisioned_thing'
+provisioning_thing_name:str = 'before_provisioned_thing'
 template_parameters:dict = {'DeviceID': provisioning_thing_name}
 
 test_virginia.check_communication_between(

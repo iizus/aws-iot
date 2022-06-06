@@ -1,3 +1,4 @@
+from importlib.metadata import packages_distributions
 from time import sleep
 from concurrent.futures import Future
 from awsiot import iotidentity

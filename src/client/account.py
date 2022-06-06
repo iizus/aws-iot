@@ -122,6 +122,9 @@ class Provisioning:
 
     def provision_thing(self, template_parameters:dict, name:str=str(uuid4())) -> Client:
         connection:Connection = self.__claim.connect_to(self.__endpoint)
-        thing_name:str = connection.provision_thing_by(self.__fp, template_parameters, name)
-        provisioned_thing:Client = self.__project.create_client(client_id=thing_name, cert_dir='individual/')
+        provisioned_thing_name:str = connection.provision_thing_by(self.__fp, template_parameters, name)
+        provisioned_thing:Client = self.__project.create_client(
+            client_id = provisioned_thing_name,
+            cert_dir = 'individual/'
+        )
         return provisioned_thing
