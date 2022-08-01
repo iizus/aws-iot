@@ -28,9 +28,12 @@ class Endpoint:
     def set_port(self, number:int=8883):
         return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy, provisioning=self.__provisioning)
 
-
-    def set_proxy(self, options:HttpProxyOptions=None):
+    def set_proxy(self, host:str, port:int):
+        options:HttpProxyOptions = HttpProxyOptions(host_name=host, port=port)
         return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, provisioning=self.__provisioning)
+
+    # def set_proxy(self, options:HttpProxyOptions=None):
+        # return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, provisioning=self.__provisioning)
 
 
     def set_FP(self, template_name:str):

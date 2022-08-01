@@ -18,7 +18,12 @@ class Client:
 
         
     def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
-        self.__print_log(verb='Connecting...', message=f"to {endpoint.endpoint}, Keep alive: {keep_alive} and Clean session: {clean_session}")
+        proxy = endpoint.proxy
+        self.__print_log(
+            verb = 'Connecting...',
+            message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session}"
+        )
+
         connection:mqtt.Connection = mtls_from_path(
             endpoint = endpoint.name,
             ca_filepath = endpoint.ca_path,
@@ -31,15 +36,17 @@ class Client:
             clean_session = clean_session,
             keep_alive_secs = keep_alive,
             port = endpoint.port,
-            http_proxy_options = endpoint.proxy,
+            http_proxy_options = proxy,
         )
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
-        connect_result:dict = connection.connect().result()
-        session_present:bool = connect_result.get('session_present')
+        __connect = connection.connect()
+        connect_result:dict = __connect.result()
+        # session_present:bool = connect_result.get('session_present')
+        session_present = ''
         self.__print_log(verb='Connected', message=f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}")
         return Connection(self.__project_name, connection)
 
