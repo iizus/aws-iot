@@ -7,7 +7,7 @@ path.append(parent_dir)
 
 
 from src.client.account import Endpoint, get_endpoint_of
-test_virginia:Endpoint = get_endpoint_of(account_name='test')
+test_virginia:Endpoint = get_endpoint_of(account_name='test', region='us-east-1')
 
 test_virginia.check_communication_on(
     project_name = 'test',
