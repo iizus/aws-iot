@@ -13,3 +13,6 @@ RUN pip install dotmap
 
 # For launch client
 RUN apt install -y jq
+
+# For Proxy
+RUN apt install -y squid --no-install-recommends
