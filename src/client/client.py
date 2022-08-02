@@ -21,7 +21,7 @@ class Client:
         proxy = endpoint.proxy
         self.__print_log(
             verb = 'Connecting...',
-            message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session}"
+            message = f"to {endpoint.endpoint}, Keep alive: {keep_alive} and Clean session: {clean_session}"
         )
 
         connection:mqtt.Connection = mtls_from_path(
@@ -45,8 +45,7 @@ class Client:
         # fails or succeeds.
         __connect = connection.connect()
         connect_result:dict = __connect.result()
-        # session_present:bool = connect_result.get('session_present')
-        session_present = ''
+        session_present:bool = connect_result.get('session_present')
         self.__print_log(verb='Connected', message=f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}")
         return Connection(self.__project_name, connection)
 
