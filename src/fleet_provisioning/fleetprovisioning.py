@@ -13,7 +13,7 @@ class FleetProvisioning:
         connection:Connection,
         template_parameters:str,
         thing_name:str = str(uuid4()),
-    ) -> str:
+    ):
         fp:FP = FP(self.__template_name)
         provisioned_thing_name:str = fp.provision_thing(
             connection,

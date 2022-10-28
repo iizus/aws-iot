@@ -1,3 +1,4 @@
+from turtle import st
 from uuid import uuid4
 from threading import Event
 from awscrt.http import HttpProxyOptions
@@ -5,11 +6,20 @@ from src.utils import util
 from src.client.client import Project, Client
 from src.client.connection import Topic, Connection
 from src.client.certs import get_ca_path
+from src.fleet_provisioning.util import get_current_time
+
 
 class Endpoint:
     from awscrt import mqtt
 
-    def __init__(self, name:str, ca:str='RSA2048', port:int=8883, proxy:HttpProxyOptions=None, provisioning=None) -> None:
+    def __init__(
+        self,
+        name:str,
+        ca:str = 'RSA2048',
+        port:int = 8883,
+        proxy:HttpProxyOptions = None,
+        provisioning = None
+    ) -> None:
         self.name:str = name
         self.ca:str = ca
         self.ca_path:str = get_ca_path(type=ca)
@@ -18,32 +28,70 @@ class Endpoint:
         self.endpoint:str = f"{self.name}:{self.port}"
         self.__provisioning:Provisioning = provisioning
         fp_template_name:str = 'None' if provisioning is None else provisioning.template_name
-        util.print_log(subject='Endpoint', verb='Set', message=f"to {self.endpoint}, CA path: {self.ca_path}, FP template: {fp_template_name}")
+        
+        util.print_log(
+            subject = 'Endpoint',
+            verb = 'Set',
+            message = f"to {self.endpoint}, CA path: {self.ca_path}, FP template: {fp_template_name}"
+        )
 
 
     def set_ca(self, type:str='RSA2048'):
-        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy, provisioning=self.__provisioning)
-
+        return Endpoint(
+            name = self.name,
+            ca = type,
+            port = self.port,
+            proxy = self.proxy,
+            provisioning = self.__provisioning
+        )
 
     def set_port(self, number:int=8883):
-        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy, provisioning=self.__provisioning)
+        return Endpoint(
+            name = self.name,
+            ca = self.ca,
+            port = number,
+            proxy = self.proxy,
+            provisioning = self.__provisioning
+        )
 
     def set_proxy(self, host:str, port:int):
         options:HttpProxyOptions = HttpProxyOptions(host_name=host, port=port)
-        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, provisioning=self.__provisioning)
+        return Endpoint(
+            name = self.name,
+            ca = self.ca,
+            port = self.port,
+            proxy = options,
+            provisioning = self.__provisioning
+        )
 
     # def set_proxy(self, options:HttpProxyOptions=None):
-        # return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options, provisioning=self.__provisioning)
+    #     return Endpoint(
+    #          name = self.name,
+    #          ca = self.ca,
+    #          port = self.port,
+    #          proxy = options,
+    #          provisioning = self.__provisioning
+    #         )
+
+    def set_FP(self, template_name:str, thing_name_key:str):
+        provisioning:Provisioning = Provisioning(
+            endpoint = self,
+            template_name = template_name,
+            thing_name_key = thing_name_key,
+        )
+        return Endpoint(
+            name = self.name,
+            ca = self.ca,
+            port = self.port,
+            proxy = self.proxy,
+            provisioning = provisioning
+        )
 
 
-    def set_FP(self, template_name:str):
-        provisioning:Provisioning = Provisioning(endpoint=self, template_name=template_name)
-        return Endpoint(name=self.name, ca=self.ca, port = self.port, proxy=self.proxy, provisioning=provisioning)
-
-
-    def provision_thing(self, template_parameters:dict, name:str=str(uuid4())) -> Client:
+    def provision_thing(self) -> Client:
+        name:str = get_current_time()
         util.print_log(subject=name, verb='Provisioning...')
-        provisioned_thing:Client = self.__provisioning.provision_thing(template_parameters, name)
+        provisioned_thing:Client = self.__provisioning.provision_thing(name)
         util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
 
@@ -83,7 +131,15 @@ class Endpoint:
         publisher_connection.disconnect()
 
 
-    def __on_message_received(self, topic:str, payload:str, dup:bool, qos:mqtt.QoS, retain:bool, **kwargs:dict) -> None:
+    def __on_message_received(
+        self,
+        topic:str,
+        payload:str,
+        dup:bool,
+        qos:mqtt.QoS,
+        retain:bool,
+        **kwargs:dict
+    ) -> None:
         Topic.print_recieved_message(topic, payload, dup, qos, retain, **kwargs)
         self.__received_event.set()
 
@@ -115,16 +171,21 @@ def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
 class Provisioning:
-    def __init__(self, endpoint:Endpoint, template_name:str) -> None:
+    def __init__(self, endpoint:Endpoint, template_name:str, thing_name_key:str) -> None:
         self.template_name:str = template_name
         self.__endpoint:Endpoint = endpoint
         self.__fp:FleetProvisioning = FleetProvisioning(template_name)
+        self.__thing_name_key:str = thing_name_key
         self.__project:Project = Project(name='fleet_provisioning')
         self.__claim:Client = self.__project.create_client(client_id='claim')
 
 
-    def provision_thing(self, template_parameters:dict, name:str=str(uuid4())) -> Client:
+    def provision_thing(self, name:str) -> Client:
         connection:Connection = self.__claim.connect_to(self.__endpoint)
+        template_parameters:dict = {
+            self.__thing_name_key: name
+        }
+
         provisioned_thing_name:str = connection.provision_thing_by(self.__fp, template_parameters, name)
         provisioned_thing:Client = self.__project.create_client(
             client_id = provisioned_thing_name,
