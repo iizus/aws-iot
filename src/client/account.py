@@ -172,17 +172,15 @@ class Provisioning:
     def __init__(self, endpoint:Endpoint, template_name:str, thing_name_key:str) -> None:
         self.template_name:str = template_name
         self.__endpoint:Endpoint = endpoint
-        self.__fp:FleetProvisioning = FleetProvisioning(template_name)
-        self.__thing_name_key:str = thing_name_key
+        self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key)
         self.__project:Project = Project(name='fleet_provisioning')
         self.__claim:Client = self.__project.create_client(client_id='claim')
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
         connection:Connection = self.__claim.connect_to(self.__endpoint)
-        provisioned_thing_name:str = connection.provision_thing_by(self.__fp, self.__thing_name_key, name)
         provisioned_thing:Client = self.__project.create_client(
-            client_id = provisioned_thing_name,
+            client_id = connection.provision_thing_by(self.__fp, name),
             cert_dir = 'individual/'
         )
         return provisioned_thing

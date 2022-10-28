@@ -33,15 +33,8 @@ class Connection:
         return disconnect_result
 
 
-    def provision_thing_by(self, fp:FleetProvisioning, thing_name_key:str, name:str=str(uuid4())) -> str:
-        template_parameters:dict = {
-            thing_name_key: name
-        }
-        provisioned_thing_name:str = fp.provision_thing(
-            connection = self.__connection,
-            template_parameters = template_parameters,
-            thing_name = name,
-        )
+    def provision_thing_by(self, fp:FleetProvisioning, name:str=str(uuid4())) -> str:
+        provisioned_thing_name:str = fp.provision_thing(self.__connection, name)
         if name != provisioned_thing_name:
             path:str = 'certs/fleet_provisioning/individual'
             old_path:str = f'{path}/{name}'
