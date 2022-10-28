@@ -15,5 +15,9 @@ class FleetProvisioning:
         thing_name:str = str(uuid4()),
     ) -> str:
         fp:FP = FP(self.__template_name)
-        provisioned_thing_name:str = fp.provision_thing(connection, template_parameters, thing_name)
+        provisioned_thing_name:str = fp.provision_thing(
+            connection,
+            template_parameters,
+            thing_name
+        )
         return provisioned_thing_name
