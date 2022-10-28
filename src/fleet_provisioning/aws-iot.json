@@ -12,10 +12,10 @@
 					"Ref": "DeviceID"
 				},
 				"ThingGroups": [
-					"EC2"
+					"aws-iot"
 				],
-				"ThingTypeName": "ec2",
-				"BillingGroup": "ec2"
+				"ThingTypeName": "aws-iot",
+				"BillingGroup": "aws-iot"
 			},
 			"OverrideSettings": {
 				"AttributePayload": "MERGE",
@@ -35,7 +35,7 @@
 		"policy": {
 			"Type": "AWS::IoT::Policy",
 			"Properties": {
-				"PolicyName": "Full-Access-Policy"
+				"PolicyName": "aws-iot"
 			}
 		}
 	}
