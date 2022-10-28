@@ -1,6 +1,6 @@
 {
 	"Parameters": {
-		"DeviceID": {
+		"device_id": {
 			"Type": "String"
 		}
 	},
@@ -9,17 +9,19 @@
 			"Type": "AWS::IoT::Thing",
 			"Properties": {
 				"ThingName": {
-					"Ref": "DeviceID"
+					"Ref": "device_id"
 				},
-				"ThingGroups": [
-					"aws-iot"
-				],
+				"ThingGroups": [],
+				"AttributePayload": {
+					"fp" : true,
+					"gg" : false
+				},
 				"ThingTypeName": "aws-iot",
 				"BillingGroup": "aws-iot"
 			},
 			"OverrideSettings": {
 				"AttributePayload": "MERGE",
-				"ThingGroups": "DO_NOTHING",
+				"ThingGroups": "MERGE",
 				"ThingTypeName": "REPLACE"
 			}
 		},

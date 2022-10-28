@@ -9,14 +9,19 @@ path.append(parent_dir)
 from src.client.account import Endpoint, get_endpoint_of
 from src.client.client import Project
 
-test_virginia:Endpoint = get_endpoint_of(account_name='aws-iot')
+test_virginia:Endpoint = get_endpoint_of(account_name='isengard')
 fp:Endpoint = test_virginia.set_FP(template_name='aws-iot')
 
-test:Project = Project(name='aws-iot')
-provisioning_thing_name:str = 'before_provisioned_thing'
-template_parameters:dict = {'DeviceID': provisioning_thing_name}
+aws_iot:Project = Project(name='isengard')
+# provisioning_thing_name:str = 'fddddfd'
+
+import datetime
+now = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9)))
+provisioning_thing_name:str = now.strftime('%Y-%m-%dT%H-%M-%S')
+
+template_parameters:dict = {'device_id': provisioning_thing_name}
 
 test_virginia.check_communication_between(
-    publisher = test.create_client(client_id='client1'),
+    publisher = aws_iot.create_client(client_id='client1'),
     subscriber = fp.provision_thing(template_parameters, provisioning_thing_name),
 )
