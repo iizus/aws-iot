@@ -1,5 +1,5 @@
-from os import rename
-from src.utils import util
+# from os import rename
+# from src.utils import util
 from src.fleet_provisioning.fp import FP
 
 
@@ -24,10 +24,10 @@ class FleetProvisioning:
             template_parameters,
             name
         )
-        if name != provisioned_thing_name:
-            path:str = 'certs/fleet_provisioning/individual'
-            old_path:str = f'{path}/{name}'
-            new_path:str = f'{path}/{provisioned_thing_name}'
-            util.remove(new_path)
-            rename(old_path, new_path)
+        # if name != provisioned_thing_name:
+        #     path:str = 'certs/fleet_provisioning/individual'
+        #     old_path:str = f'{path}/{name}'
+        #     new_path:str = f'{path}/{provisioned_thing_name}'
+        #     util.remove(new_path)
+        #     rename(old_path, new_path)
         return provisioned_thing_name
