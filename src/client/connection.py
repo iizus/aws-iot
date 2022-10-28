@@ -1,4 +1,3 @@
-from os import rename
 from typing import Literal
 from awscrt import mqtt
 from src.utils import util
@@ -35,12 +34,5 @@ class Connection:
 
     def provision_thing_by(self, fp:FleetProvisioning, name:str=str(uuid4())) -> str:
         provisioned_thing_name:str = fp.provision_thing(self.__connection, name)
-        if name != provisioned_thing_name:
-            path:str = 'certs/fleet_provisioning/individual'
-            old_path:str = f'{path}/{name}'
-            new_path:str = f'{path}/{provisioned_thing_name}'
-            util.remove(new_path)
-            rename(old_path, new_path)
-            
         self.disconnect()
         return provisioned_thing_name
