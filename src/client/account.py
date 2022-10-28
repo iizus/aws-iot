@@ -1,5 +1,3 @@
-from turtle import st
-from uuid import uuid4
 from threading import Event
 from awscrt.http import HttpProxyOptions
 from src.utils import util
@@ -180,7 +178,7 @@ class Provisioning:
         self.__claim:Client = self.__project.create_client(client_id='claim')
 
 
-    def provision_thing(self, name:str) -> Client:
+    def provision_thing(self, name:str=get_current_time()) -> Client:
         connection:Connection = self.__claim.connect_to(self.__endpoint)
         template_parameters:dict = {
             self.__thing_name_key: name
