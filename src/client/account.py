@@ -180,11 +180,7 @@ class Provisioning:
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
         connection:Connection = self.__claim.connect_to(self.__endpoint)
-        template_parameters:dict = {
-            self.__thing_name_key: name
-        }
-
-        provisioned_thing_name:str = connection.provision_thing_by(self.__fp, template_parameters, name)
+        provisioned_thing_name:str = connection.provision_thing_by(self.__fp, self.__thing_name_key, name)
         provisioned_thing:Client = self.__project.create_client(
             client_id = provisioned_thing_name,
             cert_dir = 'individual/'

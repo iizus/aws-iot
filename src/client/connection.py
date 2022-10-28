@@ -33,7 +33,10 @@ class Connection:
         return disconnect_result
 
 
-    def provision_thing_by(self, fp:FleetProvisioning, template_parameters:dict, name:str=str(uuid4())) -> str:
+    def provision_thing_by(self, fp:FleetProvisioning, thing_name_key:str, name:str=str(uuid4())) -> str:
+        template_parameters:dict = {
+            thing_name_key: name
+        }
         provisioned_thing_name:str = fp.provision_thing(
             connection = self.__connection,
             template_parameters = template_parameters,
