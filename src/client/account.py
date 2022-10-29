@@ -4,6 +4,7 @@ from src.client.endpoint import Endpoint
 
 DEFAULT_ACCOUNT_NAME:str = 'isengard'
 DEFAULT_REGION_NAME:str = 'us-east-1'
+DEFAULT_ENDPOINT_FILE_PATH:str = 'endpoint.json'
 
 
 from awsiot import __version__
@@ -14,7 +15,7 @@ class Account:
     def __init__(
         self,
         name:str = DEFAULT_ACCOUNT_NAME,
-        config_path:str = 'endpoint.json',
+        config_path:str = DEFAULT_ENDPOINT_FILE_PATH,
     ) -> None:
         endpoints:dict = util.load_json(config_path)
         self.__endpoint_prefix:str = endpoints.get(name)

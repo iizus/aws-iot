@@ -6,6 +6,8 @@ from src.client.connection import Topic, Connection
 from src.client.certs import get_ca_path
 from src.fleet_provisioning.util import get_current_time
 
+DEFAULT_TOPIC:str = 'check/communication'
+
 
 class Endpoint:
     from awscrt import mqtt
@@ -114,7 +116,7 @@ class Endpoint:
         self,
         publisher:Client,
         subscriber:Client,
-        topic:str = 'check/communication'
+        topic:str = DEFAULT_TOPIC
     ) -> None:
         subscriber_connection = subscriber.connect_to(self)
         publisher_connection = publisher.connect_to(self)
@@ -128,7 +130,11 @@ class Endpoint:
         publisher_topic.publish({'from': publisher_topic.client_id})
         
         client_id:str = subscriber_connection.client_id
-        util.print_log(subject=client_id, verb='Waiting...', message="for all messages to be received")
+        util.print_log(
+            subject = client_id,
+            verb = 'Waiting...',
+            message = "for all messages to be received"
+        )
         self.__received_event.wait()
         subscriber_topic.unsubscribe()
 
@@ -136,7 +142,7 @@ class Endpoint:
         publisher_connection.disconnect()
 
 
-    def excute_callback_on(self, client:Client, callback, topic:str='test/test') -> None:
+    def excute_callback_on(self, client:Client, callback, topic:str=DEFAULT_TOPIC) -> None:
         connection:Connection = client.connect_to(self)
         client_topic:Topic = connection.use_topic(topic)
         callback(client_topic)
