@@ -6,8 +6,6 @@ from src.utils.util import print_log
 from src.fleet_provisioning import util
 
 class FP:
-    from uuid import uuid4
-
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
         self.__response:dict = dict()
@@ -17,7 +15,7 @@ class FP:
         self,
         connection:Connection,
         template_parameters:str,
-        thing_name:str = str(uuid4()),
+        thing_name:str = util.get_current_time(),
     ) -> str:
         self.__thing_name:str = thing_name
         provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
@@ -170,18 +168,20 @@ class FP:
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
-        self.__response['CreateKeysAndCertificate'] = None
-        self.__publish_CreateKeysAndCertificate_topic_by(client)
-        self.__wait_for('CreateKeysAndCertificate')
+        self.__request_and_wait_for(
+            client = client,
+            request_name = 'CreateKeysAndCertificate',
+            request = self.__publish_CreateKeysAndCertificate_topic_by,
+        )
         if self.__response['CreateKeysAndCertificate'] is None:
             raise Exception('CreateKeysAndCertificate API did not succeed')
 
 
     def __publish_CreateKeysAndCertificate_topic_by(
         self,
-        client:iotidentity.IotIdentityClient
+        client:iotidentity.IotIdentityClient,
+        template_parameters:dict,
     ) -> None:
-        self.__print_publishing('CreateKeysAndCertificate')
         future:Future = client.publish_create_keys_and_certificate(
             request = iotidentity.CreateKeysAndCertificateRequest(),
             qos = QoS.AT_LEAST_ONCE
@@ -192,19 +192,31 @@ class FP:
     def __register_thing_by(
         self,
         client:iotidentity.IotIdentityClient,
-        template_parameters:dict
+        template_parameters:dict,
     ) -> str:
-        self.__response['RegisterThing'] = None
-        self.__publish_RegisterThing_topic_by(client, template_parameters)
-        self.__wait_for('RegisterThing')
+        self.__request_and_wait_for(
+            client = client,
+            request_name = 'RegisterThing',
+            request = self.__publish_RegisterThing_topic_by,
+            template_parameters = template_parameters
+        )
         return self.__response['RegisterThing'].thing_name
 
 
-    def __wait_for(self, response_name):
+    def __request_and_wait_for(
+        self,
+        client:iotidentity.IotIdentityClient,
+        request_name:str,
+        request,
+        template_parameters:dict = None,
+    ) -> None:
+        self.__response[request_name] = None
+        self.__print_log(verb='Publishing...', message=f'{request_name} topic')
+        request(client, template_parameters)
         loop_count:int = 0
-        while loop_count < 10 and self.__response[response_name] is None:
-            if self.__response[response_name] is not None: break
-            self.__print_log(verb='Waiting...', message=f'{response_name}Response')
+        while loop_count < 10 and self.__response[request_name] is None:
+            if self.__response[request_name] is not None: break
+            self.__print_log(verb='Waiting...', message=f'{request_name}Response')
             sleep(1)
             loop_count += 1
 
@@ -219,7 +231,6 @@ class FP:
             certificate_ownership_token = self.__response['CreateKeysAndCertificate'].certificate_ownership_token,
             parameters = template_parameters,
         )
-        self.__print_publishing('RegisterThing')
         future:Future = client.publish_register_thing(
             request = request,
             qos = QoS.AT_LEAST_ONCE
@@ -233,10 +244,6 @@ class FP:
 
     def __on_publish_RegisterThing(self, future:Future) -> None:
         self.__print_published('RegisterThing', future)
-
-
-    def __print_publishing(self, topic:str) -> None:
-        self.__print_log(verb='Publishing...', message=f'{topic} topic')
 
 
     def __print_published(self, api:str, future:Future) -> None:
@@ -262,11 +269,6 @@ class FP:
 
     def __print_subscribed(self, topic:str) -> None:
         self.__print_log(verb='Subscribed', message=topic)
-
-
-    # def __print_waitting_for(self, response:str) -> None:
-    #     self.__print_log(verb='Waiting...', message=response+'Response')
-    #     sleep(1)
 
     
     def __print_rejected(self, api:str, response:iotidentity.ErrorResponse) -> None:
