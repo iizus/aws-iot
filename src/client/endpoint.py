@@ -107,27 +107,28 @@ class Endpoint:
     ) -> None:
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
         self.check_communication_between(
-            publisher = fp.provision_thing(),
+            # publisher = fp.provision_thing(),
             subscriber = fp.provision_thing(),
         )
 
 
     def check_communication_between(
         self,
-        publisher:Client,
+        # publisher:Client,
         subscriber:Client,
         topic:str = DEFAULT_TOPIC
     ) -> None:
         subscriber_connection = subscriber.connect_to(self)
-        publisher_connection = publisher.connect_to(self)
+        # publisher_connection = publisher.connect_to(self)
 
         subscriber_topic = subscriber_connection.use_topic(topic)
-        publisher_topic = publisher_connection.use_topic(topic)
+        # publisher_topic = publisher_connection.use_topic(topic)
 
         self.__received_event:Event = Event()
         subscriber_topic.subscribe(callback=self.__on_message_received)
 
-        publisher_topic.publish({'from': publisher_topic.client_id})
+        # publisher_topic.publish({'from': publisher_topic.client_id})
+        self.check_publishing()
         
         client_id:str = subscriber_connection.client_id
         util.print_log(
@@ -139,7 +140,7 @@ class Endpoint:
         subscriber_topic.unsubscribe()
 
         subscriber_connection.disconnect()
-        publisher_connection.disconnect()
+        # publisher_connection.disconnect()
 
 
     def check_publishing(self) -> None:
