@@ -69,7 +69,6 @@ class FP:
         response:iotidentity.CreateKeysAndCertificateResponse
     ) -> None:
         try:
-            # self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = response
             self.__response['CreateKeysAndCertificate'] = response
         except Exception as e:
             util.error(e)
@@ -81,7 +80,6 @@ class FP:
 
     def __on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
         try:
-            # self.__registerThingResponse:iotidentity.RegisterThingResponse = response
             self.__response['RegisterThing'] = response
         except Exception as e:
             util.error(e)
@@ -172,16 +170,9 @@ class FP:
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
-        # self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
         self.__response['CreateKeysAndCertificate'] = None
         self.__publish_CreateKeysAndCertificate_topic_by(client)
         self.__wait_for('CreateKeysAndCertificate')
-        # loop_count:int = 0
-        # while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
-        #     if self.__createKeysAndCertificateResponse is not None: break
-        #     self.__print_waitting_for('createKeysAndCertificateResponse')
-        #     loop_count += 1
-
         if self.__response['CreateKeysAndCertificate'] is None:
             raise Exception('CreateKeysAndCertificate API did not succeed')
 
@@ -203,15 +194,9 @@ class FP:
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
     ) -> str:
-        # self.__registerThingResponse:iotidentity.RegisterThingResponse = None
         self.__response['RegisterThing'] = None
         self.__publish_RegisterThing_topic_by(client, template_parameters)
         self.__wait_for('RegisterThing')
-        # loop_count:int = 0
-        # while loop_count < 10 and self.__registerThingResponse is None:
-        #     if self.__registerThingResponse is not None: break
-        #     self.__print_waitting_for('RegisterThingResponse')
-        #     loop_count += 1
         return self.__response['RegisterThing'].thing_name
 
 
@@ -219,7 +204,8 @@ class FP:
         loop_count:int = 0
         while loop_count < 10 and self.__response[response_name] is None:
             if self.__response[response_name] is not None: break
-            self.__print_waitting_for(response_name)
+            self.__print_log(verb='Waiting...', message=f'{response_name}Response')
+            sleep(1)
             loop_count += 1
 
 
@@ -278,9 +264,9 @@ class FP:
         self.__print_log(verb='Subscribed', message=topic)
 
 
-    def __print_waitting_for(self, response:str) -> None:
-        self.__print_log(verb='Waiting...', message=response+'Response')
-        sleep(1)
+    # def __print_waitting_for(self, response:str) -> None:
+    #     self.__print_log(verb='Waiting...', message=response+'Response')
+    #     sleep(1)
 
     
     def __print_rejected(self, api:str, response:iotidentity.ErrorResponse) -> None:
