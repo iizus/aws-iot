@@ -9,8 +9,7 @@ from src.client.topic import Topic
 from src.client.account import Endpoint, get_endpoint_of
 
 def publish(topic:Topic) -> None:
-    message:dict = {'from': topic.client_id}
-    topic.publish(message)
+    topic.publish({'from': topic.client_id})
 
 def check_publishing_to(endpoint:Endpoint) -> None:
     fp:Endpoint = endpoint.set_FP()
