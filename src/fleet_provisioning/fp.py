@@ -18,8 +18,6 @@ class FP:
         template_parameters:str,
         thing_name:str = str(uuid4()),
     ) -> str:
-        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
-        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
         self.__thing_name:str = thing_name
         provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
         self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
@@ -167,6 +165,7 @@ class FP:
         self,
         client:iotidentity.IotIdentityClient
     ) -> None:
+        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
         self.__publish_CreateKeysAndCertificate_topic_by(client)
         loop_count:int = 0
         while loop_count < 10 and self.__createKeysAndCertificateResponse is None:
@@ -195,6 +194,7 @@ class FP:
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
     ) -> str:
+        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
         self.__publish_RegisterThing_topic_by(client, template_parameters)
         loop_count:int = 0
         while loop_count < 10 and self.__registerThingResponse is None:
