@@ -102,37 +102,40 @@ class Endpoint:
         self,
         template_name:str = 'aws-iot',
         thing_name_key:str = 'device_id',
-        topic:str = DEFAULT_TOPIC,
+        topic_name:str = DEFAULT_TOPIC,
     ) -> None:
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
         self.check_communication_between(
+            publisher = fp.provision_thing(),
             subscriber = fp.provision_thing(),
-            topic = topic,
+            topic_name = topic_name,
         )
-
 
     def check_communication_between(
         self,
-        # publisher:Client,
+        publisher:Client,
         subscriber:Client,
-        topic:str = DEFAULT_TOPIC,
+        topic_name:str = DEFAULT_TOPIC,
     ) -> None:
-        pubsub = PubSub(self)
-        pubsub.excute_callback_on(client=subscriber, callback=pubsub.subscribe, topic=topic)
-        return subscriber
-
+        pubsub:PubSub = PubSub(endpoint=self, topic_name=topic_name)
+        pubsub.excute_callback_on(
+            client = subscriber,
+            callback = pubsub.subscribe,
+            publisher = publisher,
+        )
 
 
 class PubSub:
     from awscrt import mqtt
 
-    def __init__(self, endpoint) -> None:
-        self.endpoint = endpoint
+    def __init__(self, endpoint:Endpoint, topic_name:str=DEFAULT_TOPIC) -> None:
+        self.__endpoint:Endpoint = endpoint
+        self.__topic_name:str = topic_name
             
-    def subscribe(self, topic:Topic) -> int:
+    def subscribe(self, publisher:Client, topic:Topic) -> int:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
-        self.publish(topic)
+        self.excute_callback_on(client=publisher, callback=self.publish)
         util.print_log(
             subject = topic.client_id,
             verb = 'Waiting...',
@@ -141,22 +144,24 @@ class PubSub:
         self.__received_event.wait()
         packet_id:int = topic.unsubscribe()
         return packet_id
-
-    def publish(self, topic:str=DEFAULT_TOPIC) -> Client:
-        fp:Endpoint = self.set_FP()
-        publisher:Client = fp.provision_thing()
-        self.excute_callback_on(client=publisher, callback=self.publish, topic=topic)
-        return publisher
-
-    def excute_callback_on(self, client:Client, callback, topic:str=DEFAULT_TOPIC) -> None:
-        connection:Connection = client.connect_to(self.endpoint)
-        client_topic:Topic = connection.use_topic(topic)
-        callback(client_topic)
-        connection.disconnect()
-
-    def publish(self, topic:Topic) -> int:
+    
+    def publish(self, publisher:Client, topic:Topic) -> int:
         packet_id:int = topic.publish({'from': topic.client_id})
         return packet_id
+
+    def excute_callback_on(
+        self,
+        client:Client,
+        callback,
+        publisher:Client = None,
+    ):
+        connection:Connection = client.connect_to(self.__endpoint)
+        result = callback(
+            publisher = publisher,
+            topic = connection.use_topic(self.__topic_name),
+        )
+        connection.disconnect()
+        return result
 
     def __on_message_received(
         self,
