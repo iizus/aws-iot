@@ -1,5 +1,6 @@
 from threading import Event
 from awscrt.http import HttpProxyOptions
+# from src.client.account import get_endpoint
 from src.utils import util
 from src.client.client import Client
 from src.client.connection import Topic, Connection
@@ -101,31 +102,45 @@ class Endpoint:
         return provisioned_thing
 
 
-    def publish(
+
+class PubSub:
+    from awscrt import mqtt
+
+    def __init__(
         self,
+        endpoint:Endpoint,
         template_name:str = DEFAULT_TEMPLATE_NAME,
         thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
+    ) -> None:
+        self.__endpoint:Endpoint = endpoint
+        self.__fp:Endpoint = self.__endpoint.set_FP(template_name, thing_name_key)
+        self.__topic_name:str = topic_name
+
+    
+
+    def publish(
+        self,
+        # template_name:str = DEFAULT_TEMPLATE_NAME,
+        # thing_name_key:str = DEFAULT_THING_NAME_KEY,
     ):
-        fp:Endpoint = self.set_FP(template_name, thing_name_key)
-        pubsub:PubSub = PubSub(endpoint=self, topic_name=topic_name)
-        result = pubsub.excute_callback_on(
-            client = fp.provision_thing(),
-            callback = pubsub.publish,
+        result = self.excute_callback_on(
+            client = self.__fp.provision_thing(),
+            callback = self.__publish,
         )
         return result
 
 
     def check_communication(
         self,
-        template_name:str = DEFAULT_TEMPLATE_NAME,
-        thing_name_key:str = DEFAULT_THING_NAME_KEY,
+        # template_name:str = DEFAULT_TEMPLATE_NAME,
+        # thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
     ):
-        fp:Endpoint = self.set_FP(template_name, thing_name_key)
+        # fp:Endpoint = self.set_FP(template_name, thing_name_key)
         result = self.check_communication_between(
-            publisher = fp.provision_thing(),
-            subscriber = fp.provision_thing(),
+            publisher = self.__fp.provision_thing(),
+            subscriber = self.__fp.provision_thing(),
             topic_name = topic_name,
         )
         return result
@@ -134,25 +149,18 @@ class Endpoint:
         self,
         publisher:Client,
         subscriber:Client,
-        topic_name:str = DEFAULT_TOPIC,
+        # topic_name:str = DEFAULT_TOPIC,
     ):
-        pubsub:PubSub = PubSub(endpoint=self, topic_name=topic_name)
-        result = pubsub.excute_callback_on(
+        result = self.excute_callback_on(
             client = subscriber,
-            callback = pubsub.subscribe,
+            callback = self.__subscribe,
             publisher = publisher,
         )
         return result
 
 
-class PubSub:
-    from awscrt import mqtt
-
-    def __init__(self, endpoint:Endpoint, topic_name:str=DEFAULT_TOPIC) -> None:
-        self.__endpoint:Endpoint = endpoint
-        self.__topic_name:str = topic_name
             
-    def subscribe(self, publisher:Client, topic:Topic) -> int:
+    def __subscribe(self, publisher:Client, topic:Topic) -> int:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
         self.excute_callback_on(client=publisher, callback=self.publish)
@@ -165,7 +173,7 @@ class PubSub:
         packet_id:int = topic.unsubscribe()
         return packet_id
     
-    def publish(self, publisher:Client, topic:Topic) -> int:
+    def __publish(self, publisher:Client, topic:Topic) -> int:
         packet_id:int = topic.publish({'from': topic.client_id})
         return packet_id
 
