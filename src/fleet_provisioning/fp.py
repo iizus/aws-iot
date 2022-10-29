@@ -43,14 +43,12 @@ class FP:
     ) -> str:
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
         self.__print_log(verb='Saving...', message=f"Certificate ID: {cert.certificate_id}")
-        self.__print_log(
-            verb = 'Saved',
-            message = util.save_certs_in(
-                dir = 'certs/fleet_provisioning/individual',
-                response = cert,
-                thing_name = self.__thing_name
-            ),
+        log:str = util.save_certs_in(
+            dir = 'certs/fleet_provisioning/individual',
+            response = cert,
+            thing_name = self.__thing_name
         )
+        self.__print_log(verb='Saved', message=log)
         thing_name:str = self.__register_thing_by(client, template_parameters, cert)
         return thing_name
 
@@ -168,7 +166,7 @@ class FP:
         self,
         client:iotidentity.IotIdentityClient
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        self.__request_and_wait_for(
+        self.__request_and_wait(
             client = client,
             request_name = 'CreateKeysAndCertificate',
             request = self.__publish_CreateKeysAndCertificate_topic_by,
@@ -181,7 +179,7 @@ class FP:
     def __publish_CreateKeysAndCertificate_topic_by(
         self,
         client:iotidentity.IotIdentityClient,
-        template_parameters:dict,
+        template_parameters:dict = None,
         cert:iotidentity.CreateKeysAndCertificateResponse = None,
     ) -> None:
         future:Future = client.publish_create_keys_and_certificate(
@@ -197,7 +195,7 @@ class FP:
         template_parameters:dict,
         cert:iotidentity.CreateKeysAndCertificateResponse,
     ) -> str:
-        self.__request_and_wait_for(
+        self.__request_and_wait(
             client = client,
             request_name = 'RegisterThing',
             request = self.__publish_RegisterThing_topic_by,
@@ -207,7 +205,7 @@ class FP:
         return self.__response['RegisterThing'].thing_name
 
 
-    def __request_and_wait_for(
+    def __request_and_wait(
         self,
         client:iotidentity.IotIdentityClient,
         request_name:str,
@@ -218,7 +216,10 @@ class FP:
         self.__response[request_name] = None
         self.__print_log(verb='Publishing...', message=f'{request_name} topic')
         request(client, template_parameters, cert)
+        self.__wait_for(request_name)
 
+
+    def __wait_for(self, request_name:str) -> None:
         loop_count:int = 0
         while loop_count < 10 and self.__response[request_name] is None:
             if self.__response[request_name] is not None: break
