@@ -113,14 +113,13 @@ class PubSub:
         thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
     ) -> None:
-        self.__endpoint:Endpoint = endpoint
-        self.__fp:Endpoint = self.__endpoint.set_FP(template_name, thing_name_key)
+        self.__endpoint:Endpoint = endpoint.set_FP(template_name, thing_name_key)
         self.__topic_name:str = topic_name
 
 
     def publish(self):
         result = self.excute_callback_on(
-            client = self.__fp.provision_thing(),
+            client = self.__endpoint.provision_thing(),
             callback = self.__publish,
         )
         return result
@@ -128,8 +127,8 @@ class PubSub:
 
     def check_communication(self):
         result = self.check_communication_between(
-            publisher = self.__fp.provision_thing(),
-            subscriber = self.__fp.provision_thing(),
+            publisher = self.__endpoint.provision_thing(),
+            subscriber = self.__endpoint.provision_thing(),
         )
         return result
 
@@ -155,17 +154,14 @@ class PubSub:
         self.__received_event.wait()
         packet_id:int = topic.unsubscribe()
         return packet_id
-    
+
+
     def __publish(self, publisher:Client, topic:Topic) -> int:
         packet_id:int = topic.publish({'from': topic.client_id})
         return packet_id
 
-    def excute_callback_on(
-        self,
-        client:Client,
-        callback,
-        publisher:Client = None,
-    ):
+
+    def excute_callback_on(self, client:Client, callback, publisher:Client = None):
         connection:Connection = client.connect_to(self.__endpoint)
         result = callback(
             publisher = publisher,
@@ -173,6 +169,7 @@ class PubSub:
         )
         connection.disconnect()
         return result
+
 
     def __on_message_received(
         self,
