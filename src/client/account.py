@@ -71,7 +71,11 @@ class Endpoint:
     #          provisioning = self.__provisioning
     #         )
 
-    def set_FP(self, template_name:str, thing_name_key:str):
+    def set_FP(
+        self,
+        template_name:str = 'aws-iot',
+        thing_name_key:str = 'device_id'
+    ):
         provisioning:Provisioning = Provisioning(
             endpoint = self,
             template_name = template_name,
@@ -94,32 +98,43 @@ class Endpoint:
         return provisioned_thing
 
 
-    def check_communication_on(self, project_name:str, publisher_name:str, subscriber_name:str) -> None:
-        project:Project = Project(project_name)
+    def check_communication(
+        self,
+        template_name:str = 'aws-iot',
+        thing_name_key:str = 'device_id'
+    ) -> None:
+        fp:Endpoint = self.set_FP(template_name, thing_name_key)
         self.check_communication_between(
-            publisher = project.create_client(publisher_name),
-            subscriber = project.create_client(subscriber_name),
+            publisher = fp.provision_thing(),
+            subscriber = fp.provision_thing(),
         )
 
 
-    def excute_callback_on(self, client:Client, callback, topic:str='test/test') -> None:
-        connection:Connection = client.connect_to(self)
-        client_topic:Topic = connection.use_topic(topic)
-        callback(client_topic)
-        connection.disconnect()
+    # def check_communication_on(self, project_name:str, publisher_name:str, subscriber_name:str) -> None:
+    #     project:Project = Project(project_name)
+    #     self.check_communication_between(
+    #         publisher = project.create_client(publisher_name),
+    #         subscriber = project.create_client(subscriber_name),
+    #     )
 
 
-    def check_communication_between(self, publisher:Client, subscriber:Client) -> None:
+    def check_communication_between(
+        self,
+        publisher:Client,
+        subscriber:Client,
+        topic:str = 'check/communication'
+    ) -> None:
         subscriber_connection = subscriber.connect_to(self)
         publisher_connection = publisher.connect_to(self)
 
-        topic:str = 'check/communication'
         subscriber_topic = subscriber_connection.use_topic(topic)
         publisher_topic = publisher_connection.use_topic(topic)
 
         self.__received_event:Event = Event()
         subscriber_topic.subscribe(callback=self.__on_message_received)
+
         publisher_topic.publish({'from': publisher_topic.client_id})
+        
         client_id:str = subscriber_connection.client_id
         util.print_log(subject=client_id, verb='Waiting...', message="for all messages to be received")
         self.__received_event.wait()
@@ -127,6 +142,13 @@ class Endpoint:
 
         subscriber_connection.disconnect()
         publisher_connection.disconnect()
+
+
+    def excute_callback_on(self, client:Client, callback, topic:str='test/test') -> None:
+        connection:Connection = client.connect_to(self)
+        client_topic:Topic = connection.use_topic(topic)
+        callback(client_topic)
+        connection.disconnect()
 
 
     def __on_message_received(
@@ -157,6 +179,9 @@ class Account:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region}.amazonaws.com'
         return Endpoint(name)
 
+
+def check_communication(account_name:str='isengard') -> None:
+    get_endpoint_of(account_name).check_communication()
 
 
 def get_endpoint_of(account_name:str='test', region:str='us-east-1') -> Endpoint:
