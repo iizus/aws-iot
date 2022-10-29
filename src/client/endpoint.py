@@ -28,8 +28,8 @@ class Endpoint:
         self.proxy:HttpProxyOptions = proxy
         self.endpoint:str = f"{self.name}:{self.port}"
         self.__provisioning:Provisioning = provisioning
+
         fp_template_name:str = 'None' if provisioning is None else provisioning.template_name
-        
         util.print_log(
             subject = 'Endpoint',
             verb = 'Set',
