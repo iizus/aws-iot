@@ -106,13 +106,14 @@ class Endpoint:
         template_name:str = DEFAULT_TEMPLATE_NAME,
         thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
-    ) -> None:
+    ):
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
         pubsub:PubSub = PubSub(endpoint=self, topic_name=topic_name)
-        pubsub.excute_callback_on(
+        result = pubsub.excute_callback_on(
             client = fp.provision_thing(),
             callback = pubsub.publish,
         )
+        return result
 
 
     def check_communication(
@@ -120,26 +121,28 @@ class Endpoint:
         template_name:str = DEFAULT_TEMPLATE_NAME,
         thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
-    ) -> None:
+    ):
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
-        self.check_communication_between(
+        result = self.check_communication_between(
             publisher = fp.provision_thing(),
             subscriber = fp.provision_thing(),
             topic_name = topic_name,
         )
+        return result
 
     def check_communication_between(
         self,
         publisher:Client,
         subscriber:Client,
         topic_name:str = DEFAULT_TOPIC,
-    ) -> None:
+    ):
         pubsub:PubSub = PubSub(endpoint=self, topic_name=topic_name)
-        pubsub.excute_callback_on(
+        result = pubsub.excute_callback_on(
             client = subscriber,
             callback = pubsub.subscribe,
             publisher = publisher,
         )
+        return result
 
 
 class PubSub:

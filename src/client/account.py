@@ -6,6 +6,10 @@ DEFAULT_ACCOUNT_NAME:str = 'isengard'
 DEFAULT_REGION_NAME:str = 'us-east-1'
 DEFAULT_ENDPOINT_FILE_PATH:str = 'endpoint.json'
 
+DEFAULT_TOPIC:str = 'check/communication'
+DEFAULT_TEMPLATE_NAME:str = 'aws-iot'
+DEFAULT_THING_NAME_KEY:str = 'device_id'
+
 
 from awsiot import __version__
 print(f"Version of AWS IoT Device SDK for Python v2: {__version__}")
@@ -27,13 +31,21 @@ class Account:
         return Endpoint(name)
 
 
-def check_communication(account_name:str=DEFAULT_ACCOUNT_NAME) -> None:
-    get_endpoint(account_name).check_communication()
+def check_communication(
+    account_name:str = DEFAULT_ACCOUNT_NAME,
+    region_name:str = DEFAULT_REGION_NAME,
+    template_name:str = DEFAULT_TEMPLATE_NAME,
+    thing_name_key:str = DEFAULT_THING_NAME_KEY,
+    topic_name:str = DEFAULT_TOPIC,
+):
+    endpoint:Endpoint = get_endpoint(account_name, region_name)
+    result = endpoint.check_communication(template_name, thing_name_key, topic_name)
+    return result
 
 
 def get_endpoint(
     account_name:str = DEFAULT_ACCOUNT_NAME,
-    region_name:str = DEFAULT_REGION_NAME
+    region_name:str = DEFAULT_REGION_NAME,
 ) -> Endpoint:
     account:Account = Account(account_name)
     endpoint:Endpoint = account.get_endpoint_of(region_name)
