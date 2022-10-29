@@ -28,10 +28,10 @@ class Account:
 
 
 def check_communication(account_name:str=DEFAULT_ACCOUNT_NAME) -> None:
-    get_endpoint_of(account_name).check_communication()
+    get_endpoint(account_name).check_communication()
 
 
-def get_endpoint_of(
+def get_endpoint(
     account_name:str = DEFAULT_ACCOUNT_NAME,
     region_name:str = DEFAULT_REGION_NAME
 ) -> Endpoint:

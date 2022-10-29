@@ -142,6 +142,14 @@ class Endpoint:
         publisher_connection.disconnect()
 
 
+    def check_publishing(self) -> None:
+        fp:Endpoint = self.set_FP()
+        self.excute_callback_on(
+            client = fp.provision_thing(),
+            callback = publish
+        )
+
+
     def excute_callback_on(self, client:Client, callback, topic:str=DEFAULT_TOPIC) -> None:
         connection:Connection = client.connect_to(self)
         client_topic:Topic = connection.use_topic(topic)
@@ -160,6 +168,10 @@ class Endpoint:
     ) -> None:
         Topic.print_recieved_message(topic, payload, dup, qos, retain, **kwargs)
         self.__received_event.set()
+
+
+def publish(topic:Topic) -> None:
+    topic.publish({'from': topic.client_id})
 
 
 

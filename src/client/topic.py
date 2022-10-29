@@ -4,7 +4,6 @@ from awscrt import mqtt
 from src.utils import util
 
 
-
 class Topic:
     def print_recieved_message(
         topic:str,
@@ -42,7 +41,12 @@ class Topic:
     def publish(self, message:dict={'message': 'test'}) -> int:
         payload:str = json.dumps(message)
         self.__print_publish_log(verb='Publishing...', payload=payload)
-        _, packet_id = self.__connection.publish(self.__topic, payload, self.__QoS, self.__retain)
+        _, packet_id = self.__connection.publish(
+            self.__topic,
+            payload,
+            self.__QoS,
+            self.__retain
+        )
         self.__print_publish_log(verb='Published', payload=payload, packet_id=packet_id)
         return packet_id
 
