@@ -10,8 +10,6 @@ DEFAULT_TOPIC:str = 'check/communication'
 
 
 class Endpoint:
-    from awscrt import mqtt
-
     def __init__(
         self,
         name:str,
@@ -108,7 +106,6 @@ class Endpoint:
     ) -> None:
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
         self.check_communication_between(
-            # publisher = fp.provision_thing(),
             subscriber = fp.provision_thing(),
             topic = topic,
         )
@@ -116,40 +113,50 @@ class Endpoint:
 
     def check_communication_between(
         self,
-        subscriber:Client,
         # publisher:Client,
+        subscriber:Client,
         topic:str = DEFAULT_TOPIC,
     ) -> None:
-        subscriber_connection = subscriber.connect_to(self)
-        subscriber_topic = subscriber_connection.use_topic(topic)
-        self.__received_event:Event = Event()
-        subscriber_topic.subscribe(callback=self.__on_message_received)
+        pubsub = PubSub(self)
+        pubsub.excute_callback_on(client=subscriber, callback=pubsub.subscribe, topic=topic)
+        return subscriber
 
+
+
+class PubSub:
+    from awscrt import mqtt
+
+    def __init__(self, endpoint) -> None:
+        self.endpoint = endpoint
+            
+    def subscribe(self, topic:Topic) -> int:
+        self.__received_event:Event = Event()
+        topic.subscribe(callback=self.__on_message_received)
         self.publish(topic)
-        
         util.print_log(
-            subject = subscriber_connection.client_id,
+            subject = topic.client_id,
             verb = 'Waiting...',
             message = "for all messages to be received"
         )
         self.__received_event.wait()
-        subscriber_topic.unsubscribe()
-        subscriber_connection.disconnect()
-
+        packet_id:int = topic.unsubscribe()
+        return packet_id
 
     def publish(self, topic:str=DEFAULT_TOPIC) -> Client:
         fp:Endpoint = self.set_FP()
         publisher:Client = fp.provision_thing()
-        self.excute_callback_on(client=publisher, callback=publish, topic=topic)
+        self.excute_callback_on(client=publisher, callback=self.publish, topic=topic)
         return publisher
 
-
     def excute_callback_on(self, client:Client, callback, topic:str=DEFAULT_TOPIC) -> None:
-        connection:Connection = client.connect_to(self)
+        connection:Connection = client.connect_to(self.endpoint)
         client_topic:Topic = connection.use_topic(topic)
         callback(client_topic)
         connection.disconnect()
 
+    def publish(self, topic:Topic) -> int:
+        packet_id:int = topic.publish({'from': topic.client_id})
+        return packet_id
 
     def __on_message_received(
         self,
@@ -163,10 +170,6 @@ class Endpoint:
         Topic.print_recieved_message(topic, payload, dup, qos, retain, **kwargs)
         self.__received_event.set()
 
-
-def publish(topic:Topic) -> int:
-    packet_id:int = topic.publish({'from': topic.client_id})
-    return packet_id
 
 
 
