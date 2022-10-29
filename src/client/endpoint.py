@@ -103,32 +103,29 @@ class Endpoint:
     def check_communication(
         self,
         template_name:str = 'aws-iot',
-        thing_name_key:str = 'device_id'
+        thing_name_key:str = 'device_id',
+        topic:str = DEFAULT_TOPIC,
     ) -> None:
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
         self.check_communication_between(
             # publisher = fp.provision_thing(),
             subscriber = fp.provision_thing(),
+            topic = DEFAULT_TOPIC,
         )
 
 
     def check_communication_between(
         self,
-        # publisher:Client,
         subscriber:Client,
-        topic:str = DEFAULT_TOPIC
+        # publisher:Client,
+        topic:str = DEFAULT_TOPIC,
     ) -> None:
         subscriber_connection = subscriber.connect_to(self)
-        # publisher_connection = publisher.connect_to(self)
-
         subscriber_topic = subscriber_connection.use_topic(topic)
-        # publisher_topic = publisher_connection.use_topic(topic)
-
         self.__received_event:Event = Event()
         subscriber_topic.subscribe(callback=self.__on_message_received)
 
-        # publisher_topic.publish({'from': publisher_topic.client_id})
-        self.check_publishing()
+        self.check_publishing(topic)
         
         client_id:str = subscriber_connection.client_id
         util.print_log(
@@ -138,17 +135,14 @@ class Endpoint:
         )
         self.__received_event.wait()
         subscriber_topic.unsubscribe()
-
         subscriber_connection.disconnect()
-        # publisher_connection.disconnect()
 
 
-    def check_publishing(self) -> None:
+    def check_publishing(self, topic:str=DEFAULT_TOPIC) -> Client:
         fp:Endpoint = self.set_FP()
-        self.excute_callback_on(
-            client = fp.provision_thing(),
-            callback = publish
-        )
+        publisher:Client = fp.provision_thing()
+        self.excute_callback_on(client=publisher, callback=publish, topic=topic)
+        return publisher
 
 
     def excute_callback_on(self, client:Client, callback, topic:str=DEFAULT_TOPIC) -> None:
