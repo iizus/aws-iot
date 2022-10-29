@@ -6,7 +6,10 @@ from src.client.connection import Topic, Connection
 from src.client.certs import get_ca_path
 from src.fleet_provisioning.util import get_current_time
 
+
 DEFAULT_TOPIC:str = 'check/communication'
+DEFAULT_TEMPLATE_NAME:str = 'aws-iot'
+DEFAULT_THING_NAME_KEY:str = 'device_id'
 
 
 class Endpoint:
@@ -73,8 +76,8 @@ class Endpoint:
 
     def set_FP(
         self,
-        template_name:str = 'aws-iot',
-        thing_name_key:str = 'device_id'
+        template_name:str = DEFAULT_TEMPLATE_NAME,
+        thing_name_key:str = DEFAULT_THING_NAME_KEY,
     ):
         provisioning:Provisioning = Provisioning(
             endpoint = self,
@@ -100,8 +103,8 @@ class Endpoint:
 
     def publish(
         self,
-        template_name:str = 'aws-iot',
-        thing_name_key:str = 'device_id',
+        template_name:str = DEFAULT_TEMPLATE_NAME,
+        thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
     ) -> None:
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
@@ -114,8 +117,8 @@ class Endpoint:
 
     def check_communication(
         self,
-        template_name:str = 'aws-iot',
-        thing_name_key:str = 'device_id',
+        template_name:str = DEFAULT_TEMPLATE_NAME,
+        thing_name_key:str = DEFAULT_THING_NAME_KEY,
         topic_name:str = DEFAULT_TOPIC,
     ) -> None:
         fp:Endpoint = self.set_FP(template_name, thing_name_key)
