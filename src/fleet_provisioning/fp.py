@@ -41,25 +41,25 @@ class FP:
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
     ) -> str:
-        response:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
-        self.__print_log(verb='Saving...', message=f"Certificate ID: {response.certificate_id}")
+        cert:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
+        self.__print_log(verb='Saving...', message=f"Certificate ID: {cert.certificate_id}")
         self.__print_log(
             verb = 'Saved',
             message = util.save_certs_in(
                 dir = 'certs/fleet_provisioning/individual',
-                response = response,
+                response = cert,
                 thing_name = self.__thing_name
             ),
         )
-        thing_name:str = self.__register_thing_by(client, template_parameters)
+        thing_name:str = self.__register_thing_by(client, template_parameters, cert)
         return thing_name
 
 
     def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> iotidentity.CreateKeysAndCertificateResponse:
         self.__subscribe_CreateKeysAndCertificate_topics_by(client)
         self.__subscribe_RegisterThing_topics_by(client)
-        self.__create_keys_and_certificate_by(client)
-        return self.__response['CreateKeysAndCertificate']
+        cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(client)
+        return cert
 
 
     def __on_CreateKeysAndCertificate_accepted(
@@ -167,7 +167,7 @@ class FP:
     def __create_keys_and_certificate_by(
         self,
         client:iotidentity.IotIdentityClient
-    ) -> None:
+    ) -> iotidentity.CreateKeysAndCertificateResponse:
         self.__request_and_wait_for(
             client = client,
             request_name = 'CreateKeysAndCertificate',
@@ -175,12 +175,14 @@ class FP:
         )
         if self.__response['CreateKeysAndCertificate'] is None:
             raise Exception('CreateKeysAndCertificate API did not succeed')
+        return self.__response['CreateKeysAndCertificate']
 
 
     def __publish_CreateKeysAndCertificate_topic_by(
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict,
+        cert:iotidentity.CreateKeysAndCertificateResponse = None,
     ) -> None:
         future:Future = client.publish_create_keys_and_certificate(
             request = iotidentity.CreateKeysAndCertificateRequest(),
@@ -193,12 +195,14 @@ class FP:
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict,
+        cert:iotidentity.CreateKeysAndCertificateResponse,
     ) -> str:
         self.__request_and_wait_for(
             client = client,
             request_name = 'RegisterThing',
             request = self.__publish_RegisterThing_topic_by,
-            template_parameters = template_parameters
+            template_parameters = template_parameters,
+            cert = cert,
         )
         return self.__response['RegisterThing'].thing_name
 
@@ -209,10 +213,12 @@ class FP:
         request_name:str,
         request,
         template_parameters:dict = None,
+        cert:iotidentity.CreateKeysAndCertificateResponse = None,
     ) -> None:
         self.__response[request_name] = None
         self.__print_log(verb='Publishing...', message=f'{request_name} topic')
-        request(client, template_parameters)
+        request(client, template_parameters, cert)
+
         loop_count:int = 0
         while loop_count < 10 and self.__response[request_name] is None:
             if self.__response[request_name] is not None: break
@@ -224,11 +230,12 @@ class FP:
     def __publish_RegisterThing_topic_by(
         self,
         client:iotidentity.IotIdentityClient,
-        template_parameters:dict
+        template_parameters:dict,
+        cert:iotidentity.CreateKeysAndCertificateResponse,
     ) -> None:
         request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
             template_name = self.__template_name,
-            certificate_ownership_token = self.__response['CreateKeysAndCertificate'].certificate_ownership_token,
+            certificate_ownership_token = cert.certificate_ownership_token,
             parameters = template_parameters,
         )
         future:Future = client.publish_register_thing(
