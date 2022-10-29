@@ -135,13 +135,13 @@ class PubSub:
         self,
         # template_name:str = DEFAULT_TEMPLATE_NAME,
         # thing_name_key:str = DEFAULT_THING_NAME_KEY,
-        topic_name:str = DEFAULT_TOPIC,
+        # topic_name:str = DEFAULT_TOPIC,
     ):
         # fp:Endpoint = self.set_FP(template_name, thing_name_key)
         result = self.check_communication_between(
             publisher = self.__fp.provision_thing(),
             subscriber = self.__fp.provision_thing(),
-            topic_name = topic_name,
+            # topic_name = topic_name,
         )
         return result
 
@@ -163,7 +163,7 @@ class PubSub:
     def __subscribe(self, publisher:Client, topic:Topic) -> int:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
-        self.excute_callback_on(client=publisher, callback=self.publish)
+        self.excute_callback_on(client=publisher, callback=self.__publish)
         util.print_log(
             subject = topic.client_id,
             verb = 'Waiting...',

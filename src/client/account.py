@@ -1,5 +1,5 @@
 from src.utils import util
-from src.client.endpoint import Endpoint
+from src.client.endpoint import Endpoint, PubSub
 
 
 DEFAULT_ACCOUNT_NAME:str = 'isengard'
@@ -39,7 +39,8 @@ def check_communication(
     topic_name:str = DEFAULT_TOPIC,
 ):
     endpoint:Endpoint = get_endpoint(account_name, region_name)
-    result = endpoint.check_communication(template_name, thing_name_key, topic_name)
+    pubsub:PubSub = PubSub(endpoint, template_name, thing_name_key, topic_name)
+    result = pubsub.check_communication()
     return result
 
 
