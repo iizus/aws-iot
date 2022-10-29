@@ -10,9 +10,6 @@ class FP:
 
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
-        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
-        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
-        self.__thing_name:str = None
 
 
     def provision_thing(
@@ -21,6 +18,8 @@ class FP:
         template_parameters:str,
         thing_name:str = str(uuid4()),
     ) -> str:
+        self.__createKeysAndCertificateResponse:iotidentity.CreateKeysAndCertificateResponse = None
+        self.__registerThingResponse:iotidentity.RegisterThingResponse = None
         self.__thing_name:str = thing_name
         provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
         self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
