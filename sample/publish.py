@@ -6,18 +6,23 @@ path.append(parent_dir)
 
 
 from src.client.topic import Topic
-from src.client.client import Client
-from src.client.connection import Connection
 from src.client.account import Endpoint, get_endpoint_of
 
+def publish(topic:Topic) -> None:
+    message:dict = {'from': topic.client_id}
+    topic.publish(message)
 
-isengard_virginia:Endpoint = get_endpoint_of(account_name='isengard')
-fp:Endpoint = isengard_virginia.set_FP(
-    template_name = 'aws-iot',
-    thing_name_key = 'device_id'
-)
-client:Client = fp.provision_thing()
+def check_publishing_to(endpoint:Endpoint) -> None:
+    fp:Endpoint = endpoint.set_FP()
+    endpoint.excute_callback_on(
+        client = fp.provision_thing(),
+        callback = publish
+    )
 
-connection:Connection = client.connect_to(endpoint=isengard_virginia)
-topic:Topic = connection.use_topic('check/communication')
-topic.publish(message={'from': client.id})
+def main():
+    isengard_virginia:Endpoint = get_endpoint_of()
+    check_publishing_to(isengard_virginia)
+
+
+if __name__ == '__main__':
+    main()
