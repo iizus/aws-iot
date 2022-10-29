@@ -110,7 +110,7 @@ class Endpoint:
         self.check_communication_between(
             # publisher = fp.provision_thing(),
             subscriber = fp.provision_thing(),
-            topic = DEFAULT_TOPIC,
+            topic = topic,
         )
 
 
@@ -125,11 +125,10 @@ class Endpoint:
         self.__received_event:Event = Event()
         subscriber_topic.subscribe(callback=self.__on_message_received)
 
-        self.check_publishing(topic)
+        self.publish(topic)
         
-        client_id:str = subscriber_connection.client_id
         util.print_log(
-            subject = client_id,
+            subject = subscriber_connection.client_id,
             verb = 'Waiting...',
             message = "for all messages to be received"
         )
@@ -138,7 +137,7 @@ class Endpoint:
         subscriber_connection.disconnect()
 
 
-    def check_publishing(self, topic:str=DEFAULT_TOPIC) -> Client:
+    def publish(self, topic:str=DEFAULT_TOPIC) -> Client:
         fp:Endpoint = self.set_FP()
         publisher:Client = fp.provision_thing()
         self.excute_callback_on(client=publisher, callback=publish, topic=topic)
@@ -165,8 +164,9 @@ class Endpoint:
         self.__received_event.set()
 
 
-def publish(topic:Topic) -> None:
-    topic.publish({'from': topic.client_id})
+def publish(topic:Topic) -> int:
+    packet_id:int = topic.publish({'from': topic.client_id})
+    return packet_id
 
 
 

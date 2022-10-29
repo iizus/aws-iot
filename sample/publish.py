@@ -8,7 +8,7 @@ path.append(parent_dir)
 from src.client.account import get_endpoint
 
 def main():
-    get_endpoint().check_publishing()
+    get_endpoint().publish()
 
 
 if __name__ == '__main__':
