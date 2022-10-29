@@ -98,6 +98,20 @@ class Endpoint:
         return provisioned_thing
 
 
+    def publish(
+        self,
+        template_name:str = 'aws-iot',
+        thing_name_key:str = 'device_id',
+        topic_name:str = DEFAULT_TOPIC,
+    ) -> None:
+        fp:Endpoint = self.set_FP(template_name, thing_name_key)
+        pubsub:PubSub = PubSub(endpoint=self, topic_name=topic_name)
+        pubsub.excute_callback_on(
+            client = fp.provision_thing(),
+            callback = pubsub.publish,
+        )
+
+
     def check_communication(
         self,
         template_name:str = 'aws-iot',
