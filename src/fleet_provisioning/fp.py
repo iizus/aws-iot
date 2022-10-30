@@ -24,14 +24,14 @@ class FP:
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
     ) -> str:
-        self.__claim:str = claim_client.mqtt_connection.client_id
-        self.__print_subscribing_accepted(REGISTER_THING)
+        self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
+        self.__log.print_subscribing_accepted(REGISTER_THING)
         future, topic_name = claim_client.subscribe_to_register_thing_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_RegisterThing_accepted
         )
-        self.__print_subscribed(topic_name)
+        self.__log.print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
         return topic_name
 
@@ -41,13 +41,13 @@ class FP:
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
     ) -> str:
-        self.__print_subscribing_rejected(REGISTER_THING)
+        self.__log.print_subscribing_rejected(REGISTER_THING)
         future, topic_name = claim_client.subscribe_to_register_thing_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_RegisterThing_rejected
         )
-        self.__print_subscribed(topic_name)
+        self.__log.print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
         return topic_name
 
@@ -79,7 +79,7 @@ class FP:
         cert:iotidentity.CreateKeysAndCertificateResponse = None,
     ):
         self.__response[request_name] = None
-        self.__print_log(verb='Publishing...', message=f'{request_name} topic')
+        self.__log.print_log(verb='Publishing...', message=f'{request_name} topic')
         claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
             claim_connection.connection
         )
@@ -93,13 +93,13 @@ class FP:
         cert:iotidentity.CreateKeysAndCertificateResponse,
         provisioning_thing_name:str
     ) -> None:
-        self.__print_log(verb='Saving...', message=f"Certificate ID: {cert.certificate_id}")
+        self.__log.print_log(verb='Saving...', message=f"Certificate ID: {cert.certificate_id}")
         log:str = util.save_certs_in(
             dir = 'certs/fleet_provisioning/individual',
             response = cert,
             thing_name = provisioning_thing_name
         )
-        self.__print_log(verb='Saved', message=log)
+        self.__log.print_log(verb='Saved', message=log)
 
 
     def subscribe_CreateKeysAndCertificate_topics_by(
@@ -133,7 +133,7 @@ class FP:
         if self.__response[CREATE_KEYS_AND_CERTIFICATE] is None:
             raise Exception(f'{CREATE_KEYS_AND_CERTIFICATE} API did not succeed')
         return self.__response[CREATE_KEYS_AND_CERTIFICATE]
-        
+
 
     def __on_CreateKeysAndCertificate_accepted(
         self,
@@ -146,7 +146,7 @@ class FP:
 
 
     def __on_CreateKeysAndCertificate_rejected(self, response:iotidentity.ErrorResponse) -> None:
-        self.__print_rejected(CREATE_KEYS_AND_CERTIFICATE, response)
+        self.__log.print_rejected(CREATE_KEYS_AND_CERTIFICATE, response)
 
 
     def __on_RegisterThing_accepted(self, response:iotidentity.RegisterThingResponse) -> None:
@@ -157,7 +157,7 @@ class FP:
 
 
     def __on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
-        self.__print_rejected(REGISTER_THING, response)
+        self.__log.print_rejected(REGISTER_THING, response)
 
 
     def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
@@ -165,13 +165,13 @@ class FP:
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
     ) -> str:
-        self.__print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
+        self.__log.print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
         future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_CreateKeysAndCertificate_accepted
         )
-        self.__print_subscribed(topic_name)
+        self.__log.print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
         return topic_name
 
@@ -181,13 +181,13 @@ class FP:
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
     ) -> str:
-        self.__print_subscribing_rejected(CREATE_KEYS_AND_CERTIFICATE)
+        self.__log.print_subscribing_rejected(CREATE_KEYS_AND_CERTIFICATE)
         future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_CreateKeysAndCertificate_rejected
         )
-        self.__print_subscribed(topic_name)
+        self.__log.print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
         return topic_name
 
@@ -209,7 +209,7 @@ class FP:
         loop_count:int = 0
         while loop_count < 10 and self.__response[request_name] is None:
             if self.__response[request_name] is not None: break
-            self.__print_log(verb='Waiting...', message=f'{request_name}Response')
+            self.__log.print_log(verb='Waiting...', message=f'{request_name}Response')
             sleep(1)
             loop_count += 1
         else:
@@ -217,45 +217,52 @@ class FP:
 
 
     def __on_publish_CreateKeysAndCertificate(self, future:Future) -> None:
-        self.__print_published(CREATE_KEYS_AND_CERTIFICATE, future)
+        self.__log.print_published(CREATE_KEYS_AND_CERTIFICATE, future)
 
 
     def __on_publish_RegisterThing(self, future:Future) -> None:
-        self.__print_published(REGISTER_THING, future)
+        self.__log.print_published(REGISTER_THING, future)
 
 
-    def __print_published(self, api:str, future:Future) -> None:
+
+
+class Log:
+    def __init__(self, claim_client_name:str) -> None:
+        self.__claim_client_name:str = claim_client_name
+
+
+    def print_published(self, api:str, future:Future) -> None:
         try:
             future.result() # raises exception if publish failed
-            self.__print_log(verb='Published', message=f'{api} request')
+            self.print_log(verb='Published', message=f'{api} request')
         except Exception as e:
             self.__print_log(verb='Failed', message=f'to publish {api} request')
             util.error(e)
 
 
-    def __print_subscribing_accepted(self, topic:str) -> None:
-            self.__print_subscribing(f'{topic} Accepted')
+    def print_subscribing_accepted(self, topic:str) -> None:
+        self.__print_subscribing(f'{topic} Accepted')
 
 
-    def __print_subscribing_rejected(self, topic:str) -> None:
-            self.__print_subscribing(f'{topic} Rejected')
+    def print_subscribing_rejected(self, topic:str) -> None:
+        self.__print_subscribing(f'{topic} Rejected')
 
 
     def __print_subscribing(self, topic:str) -> None:
-        self.__print_log(verb='Subscribing...', message=f'{topic} topic')
+        self.print_log(verb='Subscribing...', message=f'{topic} topic')
 
 
-    def __print_subscribed(self, topic:str) -> None:
-        self.__print_log(verb='Subscribed', message=topic)
+    def print_subscribed(self, topic:str) -> None:
+        self.print_log(verb='Subscribed', message=topic)
 
     
-    def __print_rejected(self, api:str, response:iotidentity.ErrorResponse) -> None:
+    def print_rejected(self, api:str, response:iotidentity.ErrorResponse) -> None:
         # util.error(f"[{self.__claim}] Eroor: {api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}")
-        self.__print_log(
+        self.print_log(
             verb = 'Error',
             message = f"{api} request rejected with code: {response.error_code} message: {response.error_message} status code: {response.status_code}"
         )
 
 
-    def __print_log(self, verb:str, message:str) -> None:
-        print_log(subject=self.__claim, verb=verb, message=message)
+    def print_log(self, verb:str, message:str) -> None:
+        print_log(subject=self.__claim_client_name, verb=verb, message=message)

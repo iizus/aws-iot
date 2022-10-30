@@ -1,6 +1,3 @@
-# from os import rename
-# from src.utils import util
-
 from typing import Tuple
 from awsiot import iotidentity
 from src.fleet_provisioning.fp import FP
@@ -32,13 +29,6 @@ class FleetProvisioning:
             # self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
         except Exception as e:
             error(e)
-        
-        # if name != provisioned_thing_name:
-        #     path:str = 'certs/fleet_provisioning/individual'
-        #     old_path:str = f'{path}/{name}'
-        #     new_path:str = f'{path}/{provisioned_thing_name}'
-        #     util.remove(new_path)
-        #     rename(old_path, new_path)
         return provisioned_thing_name
 
 
