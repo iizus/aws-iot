@@ -30,19 +30,18 @@ class FP:
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
             # to succeed before publishing the corresponding "request".
             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
-            thing_name:str = self.__subscribe_and_pubrish_topics_by(client, template_parameters)
+            thing_name:str = self.__provision_thing_by(client, template_parameters)
             return thing_name
         except Exception as e:
             util.error(e)
 
 
-    def __subscribe_and_pubrish_topics_by(
+    def __provision_thing_by(
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict
     ) -> str:
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
-        self.__subscribe_RegisterThing_topics_by(client)
         thing_name:str = self.__register_thing_by(client, template_parameters, cert)
         return thing_name
 
@@ -195,6 +194,7 @@ class FP:
         template_parameters:dict,
         cert:iotidentity.CreateKeysAndCertificateResponse,
     ) -> str:
+        self.__subscribe_RegisterThing_topics_by(client)
         self.__request_and_wait(
             client = client,
             request_name = 'RegisterThing',
