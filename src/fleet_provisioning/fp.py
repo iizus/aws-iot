@@ -7,15 +7,15 @@ from src.fleet_provisioning import util
 
 
 class FP:
-    def __init__(self, template_name:str) -> None:
+    def __init__(self, template_name:str, thing_name_key:str) -> None:
         self.__template_name:str = template_name
+        self.__thing_name_key:str = thing_name_key
         self.__response:dict = dict()
 
         
     def register_thing_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
-        template_parameters:dict,
         provisioning_thing_name:str,
     ) -> str:
         self.__claim:str = claim_client.mqtt_connection.client_id
@@ -24,7 +24,7 @@ class FP:
             client = claim_client,
             request_name = 'RegisterThing',
             request = self.__publish_RegisterThing_topic_by,
-            template_parameters = template_parameters,
+            template_parameters = { self.__thing_name_key: provisioning_thing_name },
             cert = self.__get_keys_and_certificate_by(claim_client, provisioning_thing_name),
         )
         provisioned_thing_name:str = self.__response['RegisterThing'].thing_name
