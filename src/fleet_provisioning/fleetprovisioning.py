@@ -43,6 +43,6 @@ class FleetProvisioning:
         provisioned_thing_name:str = self.__fp.register_thing_by(
             client = claim,
             template_parameters = { self.__thing_name_key: name },
-            cert = self.__fp.get_keys_and_certificate_by(claim, name),
+            provisioning_thing_name = name,
         )
         return provisioned_thing_name

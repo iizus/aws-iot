@@ -11,13 +11,30 @@ class FP:
         self.__template_name:str = template_name
         self.__response:dict = dict()
 
+        
+    def register_thing_by(
+        self,
+        client:iotidentity.IotIdentityClient,
+        template_parameters:dict,
+        provisioning_thing_name,
+    ) -> str:
+        self.__claim:str = client.mqtt_connection.client_id
+        self.__subscribe_RegisterThing_topics_by(client)
+        self.__request_and_wait(
+            client = client,
+            request_name = 'RegisterThing',
+            request = self.__publish_RegisterThing_topic_by,
+            template_parameters = template_parameters,
+            cert = self.get_keys_and_certificate_by(client, provisioning_thing_name),
+        )
+        return self.__response['RegisterThing'].thing_name
+
 
     def get_keys_and_certificate_by(
         self,
         client:iotidentity.IotIdentityClient,
         provisioning_thing_name:str
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        self.__claim:str = client.mqtt_connection.client_id
         self.__subscribe_CreateKeysAndCertificate_topics_by(client)
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(client)
         self.__save_certs(cert, provisioning_thing_name)
@@ -165,23 +182,6 @@ class FP:
             qos = QoS.AT_LEAST_ONCE
         )
         future.add_done_callback(self.__on_publish_CreateKeysAndCertificate)
-
-
-    def register_thing_by(
-        self,
-        client:iotidentity.IotIdentityClient,
-        template_parameters:dict,
-        cert:iotidentity.CreateKeysAndCertificateResponse,
-    ) -> str:
-        self.__subscribe_RegisterThing_topics_by(client)
-        self.__request_and_wait(
-            client = client,
-            request_name = 'RegisterThing',
-            request = self.__publish_RegisterThing_topic_by,
-            template_parameters = template_parameters,
-            cert = cert,
-        )
-        return self.__response['RegisterThing'].thing_name
 
 
     def __request_and_wait(
