@@ -90,8 +90,8 @@ class Endpoint:
             provisioning = provisioning
         )
 
-    def provision_thing(self) -> Client:
-        name:str = get_current_time()
+    def provision_thing(self, name:str=get_current_time()) -> Client:
+        # name:str = get_current_time()
         util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__provisioning.provision_thing(name)
         util.print_log(subject=name, verb='Provisioned')

@@ -2,6 +2,7 @@ from threading import Event
 from src.utils import util
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Topic, Connection
+from src.fleet_provisioning.util import get_current_time
 
 
 DEFAULT_ACCOUNT_NAME:str = 'isengard'
@@ -19,8 +20,12 @@ def check_communication(
     thing_name_key:str = DEFAULT_THING_NAME_KEY,
     topic_name:str = DEFAULT_TOPIC,
 ):
-    endpoint:Endpoint = get_endpoint(account_name, region_name)
-    pubsub:PubSub = PubSub(endpoint, template_name, thing_name_key, topic_name)
+    pubsub:PubSub = PubSub(
+        endpoint = get_endpoint(account_name, region_name),
+        template_name = template_name,
+        thing_name_key = thing_name_key,
+        topic_name = topic_name,
+    )
     result = pubsub.check_communication()
     return result
 
@@ -42,7 +47,7 @@ class PubSub:
 
     def publish(self):
         result = self.excute_callback_on(
-            client = self.__endpoint.provision_thing(),
+            client = self.__endpoint.provision_thing(name=get_current_time()),
             callback = self.__publish,
         )
         return result
@@ -50,8 +55,8 @@ class PubSub:
 
     def check_communication(self):
         result = self.check_communication_between(
-            publisher = self.__endpoint.provision_thing(),
-            subscriber = self.__endpoint.provision_thing(),
+            publisher = self.__endpoint.provision_thing(name=get_current_time()),
+            subscriber = self.__endpoint.provision_thing(name=get_current_time()),
         )
         return result
 
