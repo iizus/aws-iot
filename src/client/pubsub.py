@@ -1,10 +1,9 @@
 from threading import Event
 from src.utils import util
-from src.client.endpoint import Provisioning
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Topic, Connection
+from src.fleet_provisioning.provisioning import Provisioning
 from src.fleet_provisioning.util import get_current_time
-
 
 
 DEFAULT:dict = util.load_json('default.json')
