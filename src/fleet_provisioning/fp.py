@@ -1,5 +1,4 @@
 from time import sleep
-from typing import Tuple
 from concurrent.futures import Future
 from awsiot import iotidentity
 from awscrt.mqtt import QoS
@@ -102,25 +101,6 @@ class FP:
         self.__log.print_log(verb='Saved', message=log)
 
 
-    def subscribe_CreateKeysAndCertificate_topics_by(
-        self,
-        claim_connection:Connection
-    ) -> Tuple[str]:
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
-        )
-        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
-        accepted_topic_name:str = self.__subscribe_CreateKeysAndCertificate_accepted_topic_by(
-            claim_client,
-            request
-        )
-        rejected_topic_name:str = self.__subscribe_CreateKeysAndCertificate_rejected_topic_by(
-            claim_client,
-            request
-        )
-        return (accepted_topic_name, rejected_topic_name)
-
-
     def create_keys_and_certificate_by(
         self,
         claim_connection:Connection,
@@ -133,6 +113,38 @@ class FP:
         if self.__response[CREATE_KEYS_AND_CERTIFICATE] is None:
             raise Exception(f'{CREATE_KEYS_AND_CERTIFICATE} API did not succeed')
         return self.__response[CREATE_KEYS_AND_CERTIFICATE]
+
+    
+    def subscribe_CreateKeysAndCertificate_accepted_topic_by(
+        self,
+        claim_client:iotidentity.IotIdentityClient,
+        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
+    ) -> str:
+        self.__log.print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
+        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_accepted(
+            request = request,
+            qos = QoS.AT_LEAST_ONCE,
+            callback = self.__on_CreateKeysAndCertificate_accepted
+        )
+        self.__log.print_subscribed(topic_name)
+        future.result() # Wait for subscription to succeed
+        return topic_name
+
+
+    def subscribe_CreateKeysAndCertificate_rejected_topic_by(
+        self,
+        claim_client:iotidentity.IotIdentityClient,
+        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
+    ) -> str:
+        self.__log.print_subscribing_rejected(CREATE_KEYS_AND_CERTIFICATE)
+        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_rejected(
+            request = request,
+            qos = QoS.AT_LEAST_ONCE,
+            callback = self.__on_CreateKeysAndCertificate_rejected
+        )
+        self.__log.print_subscribed(topic_name)
+        future.result() # Wait for subscription to succeed
+        return topic_name
 
 
     def __on_CreateKeysAndCertificate_accepted(
@@ -158,38 +170,6 @@ class FP:
 
     def __on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
         self.__log.print_rejected(REGISTER_THING, response)
-
-
-    def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
-    ) -> str:
-        self.__log.print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
-        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_accepted(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-            callback = self.__on_CreateKeysAndCertificate_accepted
-        )
-        self.__log.print_subscribed(topic_name)
-        future.result() # Wait for subscription to succeed
-        return topic_name
-
-
-    def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
-    ) -> str:
-        self.__log.print_subscribing_rejected(CREATE_KEYS_AND_CERTIFICATE)
-        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_rejected(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-            callback = self.__on_CreateKeysAndCertificate_rejected
-        )
-        self.__log.print_subscribed(topic_name)
-        future.result() # Wait for subscription to succeed
-        return topic_name
 
 
     def __publish_CreateKeysAndCertificate_topic_by(

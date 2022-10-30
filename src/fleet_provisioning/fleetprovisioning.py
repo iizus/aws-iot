@@ -71,7 +71,7 @@ class FleetProvisioning:
         claim_connection:Connection,
         client_name:str,
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        subscribed_topic_names:Tuple[str] = self.__fp.subscribe_CreateKeysAndCertificate_topics_by(
+        subscribed_topic_names:Tuple[str] = self.__subscribe_CreateKeysAndCertificate_topics_by(
             claim_connection
         )
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate_by(claim_connection)
@@ -91,6 +91,25 @@ class FleetProvisioning:
             request
         )
         rejected_topic_name:str = self.__fp.subscribe_RegisterThing_rejected_topic_by(
+            claim_client,
+            request
+        )
+        return (accepted_topic_name, rejected_topic_name)
+
+
+    def __subscribe_CreateKeysAndCertificate_topics_by(
+        self,
+        claim_connection:Connection
+    ) -> Tuple[str]:
+        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+            claim_connection.connection
+        )
+        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
+        accepted_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_accepted_topic_by(
+            claim_client,
+            request
+        )
+        rejected_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_rejected_topic_by(
             claim_client,
             request
         )
