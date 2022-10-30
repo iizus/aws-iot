@@ -32,9 +32,15 @@ class Provisioning:
 
 
     def __provision_thing(self, name:str=get_current_time()) -> Client:
+        # connection:Connection = self.__claim_client.connect_to(self.__endpoint)
+        # provisioned_thing:Client = self.__project.create_client(
+        #     client_id = connection.provision_thing_by(self.__fp, name),
+        #     cert_dir = 'individual/'
+        # )
         connection:Connection = self.__claim_client.connect_to(self.__endpoint)
         provisioned_thing:Client = self.__project.create_client(
-            client_id = connection.provision_thing_by(self.__fp, name),
+            client_id = self.__fp.provision_thing(connection, name),
             cert_dir = 'individual/'
         )
+        connection.disconnect()
         return provisioned_thing

@@ -3,11 +3,12 @@
 
 from src.fleet_provisioning.fp import FP
 from src.fleet_provisioning.util import get_current_time, error
-from awsiot.iotidentity import IotIdentityClient
+# from awsiot.iotidentity import IotIdentityClient
 
 
 class FleetProvisioning:
-    from awscrt.mqtt import Connection
+    # from awscrt.mqtt import Connection
+    from src.client.connection import Connection
 
     def __init__(self, template_name:str, thing_name_key:str) -> None:
         self.__fp:FP = FP(template_name, thing_name_key)
@@ -19,7 +20,7 @@ class FleetProvisioning:
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
             # to succeed before publishing the corresponding "request".
             provisioned_thing_name:str = self.__fp.register_thing_by(
-                claim_client = IotIdentityClient(connection),
+                claim_connection = connection,
                 provisioning_thing_name = name,
             )
             # self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")

@@ -11,6 +11,8 @@ CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 
 
 class FP:
+    from src.client.connection import Connection
+
     def __init__(self, template_name:str, thing_name_key:str) -> None:
         self.__template_name:str = template_name
         self.__thing_name_key:str = thing_name_key
@@ -19,10 +21,11 @@ class FP:
         
     def register_thing_by(
         self,
-        claim_client:iotidentity.IotIdentityClient,
+        claim_connection:Connection,
         provisioning_thing_name:str,
     ) -> str:
-        self.__claim:str = claim_client.mqtt_connection.client_id
+        self.__claim:str = claim_connection.client_id
+        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(claim_connection.connection)
         self.__subscribe_RegisterThing_topics_by(claim_client)
         provisioned_thing_name:str = self.__wait_register_thing(
             claim_client,
