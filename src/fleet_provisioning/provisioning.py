@@ -25,9 +25,9 @@ class Provisioning:
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
-        util.print_log(subject=name, verb='Provisioning...')
-        provisioned_thing:Client = self.__provision_thing(name)
-        util.print_log(subject=name, verb='Provisioned')
+        connection:Connection = self.claim_client.connect_to(self.__endpoint)
+        provisioned_thing:Client = self.provision_thing_by(connection, name)
+        connection.disconnect()
         return provisioned_thing
 
 
@@ -36,15 +36,10 @@ class Provisioning:
         connection:Connection,
         name:str = get_current_time(),
     ) -> Client:
+        util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__project.create_client(
             client_id = self.__fp.provision_thing(connection, name),
             cert_dir = 'individual/'
         )
-        return provisioned_thing
-
-
-    def __provision_thing(self, name:str=get_current_time()) -> Client:
-        connection:Connection = self.claim_client.connect_to(self.__endpoint)
-        provisioned_thing:Client = self.provision_thing_by(connection, name)
-        connection.disconnect()
+        util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
