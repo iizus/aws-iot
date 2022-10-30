@@ -14,7 +14,7 @@ class FP:
     def provision_thing(
         self,
         connection:Connection,
-        template_parameters:str,
+        template_parameters:dict,
         thing_name:str = util.get_current_time(),
     ) -> str:
         self.__thing_name:str = thing_name
@@ -23,7 +23,7 @@ class FP:
         return provisioned_thing_name
 
 
-    def __provision_by(self, connection:Connection, template_parameters:str) -> str:
+    def __provision_by(self, connection:Connection, template_parameters:dict) -> str:
         self.__claim:str = connection.client_id
         try:
             # Subscribe to necessary topics.
@@ -42,6 +42,14 @@ class FP:
         template_parameters:dict
     ) -> str:
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
+        self.__subscribe_RegisterThing_topics_by(client)
+        thing_name:str = self.__register_thing_by(client, template_parameters, cert)
+        return thing_name
+
+
+    def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> iotidentity.CreateKeysAndCertificateResponse:
+        self.__subscribe_CreateKeysAndCertificate_topics_by(client)
+        cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(client)
         self.__print_log(verb='Saving...', message=f"Certificate ID: {cert.certificate_id}")
         log:str = util.save_certs_in(
             dir = 'certs/fleet_provisioning/individual',
@@ -49,14 +57,6 @@ class FP:
             thing_name = self.__thing_name
         )
         self.__print_log(verb='Saved', message=log)
-        thing_name:str = self.__register_thing_by(client, template_parameters, cert)
-        return thing_name
-
-
-    def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> iotidentity.CreateKeysAndCertificateResponse:
-        self.__subscribe_CreateKeysAndCertificate_topics_by(client)
-        self.__subscribe_RegisterThing_topics_by(client)
-        cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(client)
         return cert
 
 
