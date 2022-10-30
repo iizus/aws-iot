@@ -1,12 +1,12 @@
 # from os import rename
 # from src.utils import util
+
 from src.fleet_provisioning.fp import FP
-from src.fleet_provisioning import util
-from awsiot.iotidentity import IotIdentityClient, CreateKeysAndCertificateResponse
+from src.fleet_provisioning.util import get_current_time, error
+from awsiot.iotidentity import IotIdentityClient
 
 
 class FleetProvisioning:
-    from uuid import uuid4
     from awscrt.mqtt import Connection
 
     def __init__(self, template_name:str, thing_name_key:str) -> None:
@@ -14,8 +14,17 @@ class FleetProvisioning:
         self.__fp:FP = FP(template_name)
 
 
-    def provision_thing(self, connection:Connection, name:str=str(uuid4())) -> str:
-        provisioned_thing_name:str = self.__provision_thing(connection, name)
+    def provision_thing(self, connection:Connection, name:str=get_current_time()) -> str:
+        try:
+            # Subscribe to necessary topics.
+            # Note that is **is** important to wait for "accepted/rejected" subscriptions
+            # to succeed before publishing the corresponding "request".
+            provisioned_thing_name:str = self.__provision_thing_by(connection, name)
+            # self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
+            return provisioned_thing_name
+        except Exception as e:
+            error(e)
+        
         # if name != provisioned_thing_name:
         #     path:str = 'certs/fleet_provisioning/individual'
         #     old_path:str = f'{path}/{name}'
@@ -25,28 +34,15 @@ class FleetProvisioning:
         return provisioned_thing_name
 
 
-    def __provision_thing(self, connection:Connection, name:str) -> str:
-        provisioned_thing_name:str = self.__provision_by(connection, name)
-        # self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
-        return provisioned_thing_name
-
-
-    def __provision_by(self, connection:Connection, name:str) -> str:
-        try:
-            # Subscribe to necessary topics.
-            # Note that is **is** important to wait for "accepted/rejected" subscriptions
-            # to succeed before publishing the corresponding "request".
-            client:IotIdentityClient = IotIdentityClient(connection)
-            provisioned_thing_name:str = self.__provision_thing_by(client, name)
-            return provisioned_thing_name
-        except Exception as e:
-            util.error(e)
-
-
-    def __provision_thing_by(self, client:IotIdentityClient, name:str) -> str:
+    def __provision_thing_by(
+        self,
+        connection:Connection,
+        name:str = get_current_time()
+    ) -> str:
+        claim:IotIdentityClient = IotIdentityClient(connection)
         provisioned_thing_name:str = self.__fp.register_thing_by(
-            client = client,
+            client = claim,
             template_parameters = { self.__thing_name_key: name },
-            cert = self.__fp.get_keys_and_certificate_by(client, name),
+            cert = self.__fp.get_keys_and_certificate_by(claim, name),
         )
         return provisioned_thing_name
