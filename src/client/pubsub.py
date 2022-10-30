@@ -4,6 +4,9 @@ from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Topic, Connection
 from src.fleet_provisioning.util import get_current_time
 
+from src.client.endpoint import Provisioning
+
+
 DEFAULT:dict = util.load_json('default.json')
 
 def check_communication(
@@ -34,13 +37,15 @@ class PubSub:
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
-        self.__endpoint:Endpoint = endpoint.set_FP(template_name, thing_name_key)
+        # self.__endpoint:Endpoint = endpoint.set_FP(template_name, thing_name_key)
+        self.__endpoint:Endpoint = endpoint
+        self.__fp:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
         self.__topic_name:str = topic_name
 
 
     def publish(self, publisher_name:str=get_current_time()):
         result = self.excute_callback_on(
-            client = self.__endpoint.provision_thing(publisher_name),
+            client = self.__fp.provision_thing(publisher_name),
             callback = self.__publish,
         )
         return result
@@ -52,8 +57,8 @@ class PubSub:
         subscriber_name:str = get_current_time(),
     ):
         result = self.check_communication_between(
-            publisher = self.__endpoint.provision_thing(publisher_name),
-            subscriber = self.__endpoint.provision_thing(subscriber_name),
+            publisher = self.__fp.provision_thing(publisher_name),
+            subscriber = self.__fp.provision_thing(subscriber_name),
         )
         return result
 

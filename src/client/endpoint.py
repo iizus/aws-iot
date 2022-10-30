@@ -68,29 +68,29 @@ class Endpoint:
     #          provisioning = self.__provisioning
     #         )
 
-    def set_FP(
-        self,
-        template_name:str = DEFAULT.get('TEMPLATE_NAME'),
-        thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
-    ):
-        provisioning:Provisioning = Provisioning(
-            endpoint = self,
-            template_name = template_name,
-            thing_name_key = thing_name_key,
-        )
-        return Endpoint(
-            name = self.name,
-            ca = self.ca,
-            port = self.port,
-            proxy = self.proxy,
-            provisioning = provisioning
-        )
+    # def set_FP(
+    #     self,
+    #     template_name:str = DEFAULT.get('TEMPLATE_NAME'),
+    #     thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
+    # ):
+    #     provisioning:Provisioning = Provisioning(
+    #         endpoint = self,
+    #         template_name = template_name,
+    #         thing_name_key = thing_name_key,
+    #     )
+    #     return Endpoint(
+    #         name = self.name,
+    #         ca = self.ca,
+    #         port = self.port,
+    #         proxy = self.proxy,
+    #         provisioning = provisioning
+    #     )
 
-    def provision_thing(self, name:str=get_current_time()) -> Client:
-        util.print_log(subject=name, verb='Provisioning...')
-        provisioned_thing:Client = self.__provisioning.provision_thing(name)
-        util.print_log(subject=name, verb='Provisioned')
-        return provisioned_thing
+    # def provision_thing(self, name:str=get_current_time()) -> Client:
+    #     util.print_log(subject=name, verb='Provisioning...')
+    #     provisioned_thing:Client = self.__provisioning.provision_thing(name)
+    #     util.print_log(subject=name, verb='Provisioned')
+    #     return provisioned_thing
 
 
 
