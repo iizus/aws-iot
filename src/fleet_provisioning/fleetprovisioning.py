@@ -1,14 +1,22 @@
 # from os import rename
 # from src.utils import util
 
+from typing import Tuple
 from src.fleet_provisioning.fp import FP
 from src.fleet_provisioning.util import get_current_time, error
 
+from awsiot import iotidentity
+
+
+REGISTER_THING:str = 'RegisterThing'
+CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 
 class FleetProvisioning:
     from src.client.connection import Connection
 
     def __init__(self, template_name:str, thing_name_key:str) -> None:
+        self.__template_name:str = template_name
+        self.__thing_name_key:str = thing_name_key
         self.__fp:FP = FP(template_name, thing_name_key)
 
 
@@ -17,7 +25,7 @@ class FleetProvisioning:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
             # to succeed before publishing the corresponding "request".
-            provisioned_thing_name:str = self.__fp.register_thing_by(
+            provisioned_thing_name:str = self.register_thing_by(
                 claim_connection = connection,
                 provisioning_thing_name = name,
             )
@@ -32,3 +40,52 @@ class FleetProvisioning:
         #     util.remove(new_path)
         #     rename(old_path, new_path)
         return provisioned_thing_name
+
+
+    def register_thing_by(
+        self,
+        claim_connection:Connection,
+        provisioning_thing_name:str
+    ) -> str:
+        subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
+            claim_connection
+        )
+        provisioned_thing_name:str = self.__wait_register_thing(
+            claim_connection,
+            provisioning_thing_name
+        )
+        return provisioned_thing_name
+
+
+    def __wait_register_thing(
+        self,
+        claim_connection:Connection,
+        provisioning_thing_name:str
+    ) -> str:
+        response = self.__fp.request_and_wait(
+            claim_connection = claim_connection,
+            request_name = REGISTER_THING,
+            request = self.__fp.publish_RegisterThing_topic_by,
+            template_parameters = { self.__thing_name_key: provisioning_thing_name },
+            cert = self.__fp.save_keys_and_certificate_by(claim_connection, provisioning_thing_name),
+        )
+        provisioned_thing_name:str = response.thing_name
+        return provisioned_thing_name
+
+    
+    def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:
+        request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
+            template_name = self.__template_name
+        )
+        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+            claim_connection.connection
+        )
+        accepted_topic_name:str = self.__fp.subscribe_RegisterThing_accepted_topic_by(
+            claim_client,
+            request
+        )
+        rejected_topic_name:str = self.__fp.subscribe_RegisterThing_rejected_topic_by(
+            claim_client,
+            request
+        )
+        return (accepted_topic_name, rejected_topic_name)

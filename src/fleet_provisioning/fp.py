@@ -16,32 +16,32 @@ class FP:
 
     def __init__(self, template_name:str, thing_name_key:str) -> None:
         self.__template_name:str = template_name
-        self.__thing_name_key:str = thing_name_key
+        # self.__thing_name_key:str = thing_name_key
         self.__response:dict = dict()
 
         
-    def register_thing_by(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
-        self.__claim:str = claim_connection.client_id
-        subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
-            claim_connection
-        )
-        provisioned_thing_name:str = self.__wait_register_thing(
-            claim_connection,
-            provisioning_thing_name
-        )
-        return provisioned_thing_name
+    # def register_thing_by(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
+    #     self.__claim:str = claim_connection.client_id
+    #     subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
+    #         claim_connection
+    #     )
+    #     provisioned_thing_name:str = self.__wait_register_thing(
+    #         claim_connection,
+    #         provisioning_thing_name
+    #     )
+    #     return provisioned_thing_name
 
 
-    def __wait_register_thing(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
-        response = self.__request_and_wait(
-            claim_connection = claim_connection,
-            request_name = REGISTER_THING,
-            request = self.__publish_RegisterThing_topic_by,
-            template_parameters = { self.__thing_name_key: provisioning_thing_name },
-            cert = self.save_keys_and_certificate_by(claim_connection, provisioning_thing_name),
-        )
-        provisioned_thing_name:str = response.thing_name
-        return provisioned_thing_name
+    # def __wait_register_thing(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
+    #     response = self.__request_and_wait(
+    #         claim_connection = claim_connection,
+    #         request_name = REGISTER_THING,
+    #         request = self.__publish_RegisterThing_topic_by,
+    #         template_parameters = { self.__thing_name_key: provisioning_thing_name },
+    #         cert = self.save_keys_and_certificate_by(claim_connection, provisioning_thing_name),
+    #     )
+    #     provisioned_thing_name:str = response.thing_name
+    #     return provisioned_thing_name
 
 
     def save_keys_and_certificate_by(
@@ -147,29 +147,30 @@ class FP:
         return topic_name
 
 
-    def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:
-        request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
-            template_name = self.__template_name
-        )
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
-        )
-        accepted_topic_name:str = self.__subscribe_RegisterThing_accepted_topic_by(
-            claim_client,
-            request
-        )
-        rejected_topic_name:str = self.__subscribe_RegisterThing_rejected_topic_by(
-            claim_client,
-            request
-        )
-        return (accepted_topic_name, rejected_topic_name)
+    # def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:
+    #     request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
+    #         template_name = self.__template_name
+    #     )
+    #     claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+    #         claim_connection.connection
+    #     )
+    #     accepted_topic_name:str = self.__subscribe_RegisterThing_accepted_topic_by(
+    #         claim_client,
+    #         request
+    #     )
+    #     rejected_topic_name:str = self.__subscribe_RegisterThing_rejected_topic_by(
+    #         claim_client,
+    #         request
+    #     )
+    #     return (accepted_topic_name, rejected_topic_name)
 
 
-    def __subscribe_RegisterThing_accepted_topic_by(
+    def subscribe_RegisterThing_accepted_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
     ) -> str:
+        self.__claim:str = claim_client.mqtt_connection.client_id
         self.__print_subscribing_accepted(REGISTER_THING)
         future, topic_name = claim_client.subscribe_to_register_thing_accepted(
             request = request,
@@ -181,7 +182,7 @@ class FP:
         return topic_name
 
 
-    def __subscribe_RegisterThing_rejected_topic_by(
+    def subscribe_RegisterThing_rejected_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
@@ -201,7 +202,7 @@ class FP:
         self,
         claim_connection:Connection,
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        self.__request_and_wait(
+        self.request_and_wait(
             claim_connection = claim_connection,
             request_name = CREATE_KEYS_AND_CERTIFICATE,
             request = self.__publish_CreateKeysAndCertificate_topic_by,
@@ -224,7 +225,7 @@ class FP:
         future.add_done_callback(self.__on_publish_CreateKeysAndCertificate)
 
 
-    def __request_and_wait(
+    def request_and_wait(
         self,
         claim_connection:Connection,
         request_name:str,
@@ -253,7 +254,7 @@ class FP:
             return self.__response[request_name]
 
 
-    def __publish_RegisterThing_topic_by(
+    def publish_RegisterThing_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         template_parameters:dict,
