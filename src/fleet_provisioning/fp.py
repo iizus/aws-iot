@@ -1,4 +1,5 @@
 from time import sleep
+from typing import Tuple
 from concurrent.futures import Future
 from awsiot import iotidentity
 from awscrt.mqtt import QoS
@@ -21,8 +22,9 @@ class FP:
         
     def register_thing_by(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
         self.__claim:str = claim_connection.client_id
-        # claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(claim_connection.connection)
-        self.__subscribe_RegisterThing_topics_by(claim_connection)
+        subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
+            claim_connection
+        )
         provisioned_thing_name:str = self.__wait_register_thing(
             claim_connection,
             provisioning_thing_name
@@ -47,24 +49,12 @@ class FP:
         claim_connection:Connection,
         client_name:str,
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        # claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-        #     claim_connection.connection
-        # )
-        self.__subscribe_CreateKeysAndCertificate_topics_by(claim_connection)
+        subscribed_topic_names:Tuple[str] = self.__subscribe_CreateKeysAndCertificate_topics_by(
+            claim_connection
+        )
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(claim_connection)
         self.__save_certs(cert, client_name)
         return cert
-
-
-    # def __get_keys_and_certificate_by(
-    #     self,
-    #     claim_client:iotidentity.IotIdentityClient,
-    #     provisioning_thing_name:str
-    # ) -> iotidentity.CreateKeysAndCertificateResponse:
-    #     self.__subscribe_CreateKeysAndCertificate_topics_by(claim_client)
-    #     cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(claim_client)
-    #     self.__save_certs(cert, provisioning_thing_name)
-    #     return cert
 
 
     def __save_certs(
@@ -106,84 +96,105 @@ class FP:
         self.__print_rejected(REGISTER_THING, response)
 
 
-    def __subscribe_CreateKeysAndCertificate_topics_by(self, claim_connection:Connection) -> None:
+    def __subscribe_CreateKeysAndCertificate_topics_by(
+        self,
+        claim_connection:Connection
+    ) -> Tuple[str]:
         claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
             claim_connection.connection
         )
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
-        self.__subscribe_CreateKeysAndCertificate_accepted_topic_by(claim_client, request)
-        self.__subscribe_CreateKeysAndCertificate_rejected_topic_by(claim_client, request)
+        accepted_topic_name:str = self.__subscribe_CreateKeysAndCertificate_accepted_topic_by(
+            claim_client,
+            request
+        )
+        rejected_topic_name:str = self.__subscribe_CreateKeysAndCertificate_rejected_topic_by(
+            claim_client,
+            request
+        )
+        return (accepted_topic_name, rejected_topic_name)
 
 
     def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
-    ) -> None:
+    ) -> str:
         self.__print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
-        future, topic = claim_client.subscribe_to_create_keys_and_certificate_accepted(
+        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_CreateKeysAndCertificate_accepted
         )
-        self.__print_subscribed(topic)
+        self.__print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
+        return topic_name
 
 
     def __subscribe_CreateKeysAndCertificate_rejected_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
-    ) -> None:
+    ) -> str:
         self.__print_subscribing_rejected(CREATE_KEYS_AND_CERTIFICATE)
-        future, topic = claim_client.subscribe_to_create_keys_and_certificate_rejected(
+        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_CreateKeysAndCertificate_rejected
         )
-        self.__print_subscribed(topic)
+        self.__print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
+        return topic_name
 
 
-    def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> None:
+    def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:
         request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
             template_name = self.__template_name
         )
         claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
             claim_connection.connection
         )
-        self.__subscribe_RegisterThing_accepted_topic_by(claim_client, request)
-        self.__subscribe_RegisterThing_rejected_topic_by(claim_client, request)
+        accepted_topic_name:str = self.__subscribe_RegisterThing_accepted_topic_by(
+            claim_client,
+            request
+        )
+        rejected_topic_name:str = self.__subscribe_RegisterThing_rejected_topic_by(
+            claim_client,
+            request
+        )
+        return (accepted_topic_name, rejected_topic_name)
 
 
     def __subscribe_RegisterThing_accepted_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
-    ) -> None:
+    ) -> str:
         self.__print_subscribing_accepted(REGISTER_THING)
-        future, topic = claim_client.subscribe_to_register_thing_accepted(
+        future, topic_name = claim_client.subscribe_to_register_thing_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_RegisterThing_accepted
         )
-        self.__print_subscribed(topic)
+        self.__print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
+        return topic_name
 
 
     def __subscribe_RegisterThing_rejected_topic_by(
         self,
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
-    ) -> None:
+    ) -> str:
         self.__print_subscribing_rejected(REGISTER_THING)
-        future, topic = claim_client.subscribe_to_register_thing_rejected(
+        future, topic_name = claim_client.subscribe_to_register_thing_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_RegisterThing_rejected
         )
-        self.__print_subscribed(topic)
+        self.__print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
+        return topic_name
 
 
     def __create_keys_and_certificate_by(
