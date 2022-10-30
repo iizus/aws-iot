@@ -5,11 +5,10 @@ parent_dir:str = dirname(current_dir)
 path.append(parent_dir)
 
 
-from src.client.account import PubSub, get_endpoint
+from src.client.pubsub import PubSub
 
 def main():
-    pubsub:PubSub = PubSub(endpoint=get_endpoint())
-    pubsub.publish()
+    PubSub().publish()
 
 if __name__ == '__main__':
     main()

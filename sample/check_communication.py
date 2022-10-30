@@ -5,5 +5,5 @@ parent_dir:str = dirname(current_dir)
 path.append(parent_dir)
 
 
-from src.client.account import check_communication
+from src.client.pubsub import check_communication
 check_communication()

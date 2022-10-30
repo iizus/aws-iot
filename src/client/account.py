@@ -1,5 +1,5 @@
 from src.utils import util
-from src.client.pubsub import PubSub
+# from src.client.pubsub import PubSub
 from src.client.endpoint import Endpoint
 
 
@@ -30,19 +30,6 @@ class Account:
     def get_endpoint_of(self, region_name:str=DEFAULT_REGION_NAME) -> Endpoint:
         name:str = f'{self.__endpoint_prefix}-ats.iot.{region_name}.amazonaws.com'
         return Endpoint(name)
-
-
-def check_communication(
-    account_name:str = DEFAULT_ACCOUNT_NAME,
-    region_name:str = DEFAULT_REGION_NAME,
-    template_name:str = DEFAULT_TEMPLATE_NAME,
-    thing_name_key:str = DEFAULT_THING_NAME_KEY,
-    topic_name:str = DEFAULT_TOPIC,
-):
-    endpoint:Endpoint = get_endpoint(account_name, region_name)
-    pubsub:PubSub = PubSub(endpoint, template_name, thing_name_key, topic_name)
-    result = pubsub.check_communication()
-    return result
 
 
 def get_endpoint(
