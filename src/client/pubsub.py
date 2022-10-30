@@ -1,24 +1,18 @@
 from threading import Event
+from unittest.mock import DEFAULT
 from src.utils import util
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Topic, Connection
 from src.fleet_provisioning.util import get_current_time
 
-
-DEFAULT_ACCOUNT_NAME:str = 'isengard'
-DEFAULT_REGION_NAME:str = 'us-east-1'
-DEFAULT_TOPIC:str = 'check/communication'
-DEFAULT_TEMPLATE_NAME:str = 'aws-iot'
-DEFAULT_THING_NAME_KEY:str = 'device_id'
-
-
+DEFAULT:dict = util.load_json('default.json')
 
 def check_communication(
-    account_name:str = DEFAULT_ACCOUNT_NAME,
-    region_name:str = DEFAULT_REGION_NAME,
-    template_name:str = DEFAULT_TEMPLATE_NAME,
-    thing_name_key:str = DEFAULT_THING_NAME_KEY,
-    topic_name:str = DEFAULT_TOPIC,
+    account_name:str = DEFAULT.get('ACCOUNT_NAME'),
+    region_name:str = DEFAULT.get('REGION_NAME'),
+    template_name:str = DEFAULT.get('TEMPLATE_NAME'),
+    thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
+    topic_name:str = DEFAULT.get('TOPIC_NAME'),
 ):
     pubsub:PubSub = PubSub(
         endpoint = get_endpoint(account_name, region_name),
@@ -37,9 +31,9 @@ class PubSub:
     def __init__(
         self,
         endpoint:Endpoint = get_endpoint(),
-        template_name:str = DEFAULT_TEMPLATE_NAME,
-        thing_name_key:str = DEFAULT_THING_NAME_KEY,
-        topic_name:str = DEFAULT_TOPIC,
+        template_name:str = DEFAULT.get('TEMPLATE_NAME'),
+        thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
+        topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
         self.__endpoint:Endpoint = endpoint.set_FP(template_name, thing_name_key)
         self.__topic_name:str = topic_name

@@ -5,11 +5,7 @@ from src.client.connection import Connection
 from src.client.certs import get_ca_path
 from src.fleet_provisioning.util import get_current_time
 
-
-DEFAULT_TOPIC:str = 'check/communication'
-DEFAULT_TEMPLATE_NAME:str = 'aws-iot'
-DEFAULT_THING_NAME_KEY:str = 'device_id'
-
+DEFAULT:dict = util.load_json('default.json')
 
 class Endpoint:
     def __init__(
@@ -74,8 +70,8 @@ class Endpoint:
 
     def set_FP(
         self,
-        template_name:str = DEFAULT_TEMPLATE_NAME,
-        thing_name_key:str = DEFAULT_THING_NAME_KEY,
+        template_name:str = DEFAULT.get('TEMPLATE_NAME'),
+        thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
     ):
         provisioning:Provisioning = Provisioning(
             endpoint = self,

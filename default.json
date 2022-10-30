@@ -1,0 +1,8 @@
+{
+    "ENDPOINT_FILE_PATH": "endpoint.json",
+    "ACCOUNT_NAME": "isengard",
+    "REGION_NAME": "us-east-1",
+    "TOPIC_NAME": "check/communication",
+    "TEMPLATE_NAME": "aws-iot",
+    "THING_NAME_KEY": "device_id"
+}
