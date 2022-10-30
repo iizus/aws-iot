@@ -3,11 +3,9 @@
 
 from src.fleet_provisioning.fp import FP
 from src.fleet_provisioning.util import get_current_time, error
-# from awsiot.iotidentity import IotIdentityClient
 
 
 class FleetProvisioning:
-    # from awscrt.mqtt import Connection
     from src.client.connection import Connection
 
     def __init__(self, template_name:str, thing_name_key:str) -> None:
