@@ -14,7 +14,6 @@ class Endpoint:
         ca:str = 'RSA2048',
         port:int = 8883,
         proxy:HttpProxyOptions = None,
-        provisioning = None
     ) -> None:
         self.name:str = name
         self.ca:str = ca
@@ -22,13 +21,11 @@ class Endpoint:
         self.port:int = port
         self.proxy:HttpProxyOptions = proxy
         self.endpoint:str = f"{self.name}:{self.port}"
-        self.__provisioning:Provisioning = provisioning
 
-        fp_template_name:str = 'None' if provisioning is None else provisioning.template_name
         util.print_log(
             subject = 'Endpoint',
             verb = 'Set',
-            message = f"to {self.endpoint}, CA path: {self.ca_path}, FP template: {fp_template_name}"
+            message = f"to {self.endpoint}, CA path: {self.ca_path}"
         )
 
     def set_ca(self, type:str='RSA2048'):
@@ -37,7 +34,6 @@ class Endpoint:
             ca = type,
             port = self.port,
             proxy = self.proxy,
-            provisioning = self.__provisioning
         )
 
     def set_port(self, number:int=8883):
@@ -46,7 +42,6 @@ class Endpoint:
             ca = self.ca,
             port = number,
             proxy = self.proxy,
-            provisioning = self.__provisioning
         )
 
     def set_proxy(self, host:str, port:int):
@@ -56,7 +51,6 @@ class Endpoint:
             ca = self.ca,
             port = self.port,
             proxy = options,
-            provisioning = self.__provisioning
         )
 
 
