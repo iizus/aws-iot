@@ -1,12 +1,14 @@
 from src.utils import util
+from src.client import client_callback
 from src.client.certs import Cert
 from src.client.connection import Connection
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
-from src.client import client_callback
 
 
 class Client:
+    DEFAULT:dict = util.load_json('default.json')
+    
     __event_loop_group:io.EventLoopGroup = io.EventLoopGroup(1)
     __host_resolver:io.DefaultHostResolver = io.DefaultHostResolver(__event_loop_group)
     client_bootstrap:io.ClientBootstrap = io.ClientBootstrap(__event_loop_group, __host_resolver)
@@ -16,10 +18,18 @@ class Client:
         self.id:str = id
         self.cert:str = cert.get_cert_path()
         self.key:str = cert.get_key_path()
-        self.__print_log(verb='Created', message=f"client with Cert: {self.cert} and Key: {self.key}")
+        self.__print_log(
+            verb = 'Created',
+            message = f"client with Cert: {self.cert} and Key: {self.key}"
+        )
 
         
-    def connect_to(self, endpoint, keep_alive:int=30, clean_session:bool=False) -> Connection:
+    def connect_to(
+        self,
+        endpoint,
+        keep_alive:int = DEFAULT.get('KEEP_A_LIVE_SEC'),
+        clean_session:bool = DEFAULT.get('CLEAN_SESSION')
+    ) -> Connection:
         proxy = endpoint.proxy
         self.__print_log(
             verb = 'Connecting...',
@@ -47,7 +57,10 @@ class Client:
         __connect = connection.connect()
         connect_result:dict = __connect.result()
         session_present:bool = connect_result.get('session_present')
-        self.__print_log(verb='Connected', message=f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}")
+        self.__print_log(
+            verb = 'Connected',
+            message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}"
+        )
         return Connection(self.__project_name, connection)
 
 

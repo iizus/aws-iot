@@ -6,4 +6,9 @@ path.append(parent_dir)
 
 
 from src.client.pubsub import check_communication
-check_communication()
+
+def main():
+    check_communication()
+
+if __name__ == '__main__':
+    main()
