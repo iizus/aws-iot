@@ -23,7 +23,6 @@ class FleetProvisioning:
                 provisioning_thing_name = name,
             )
             # self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
-            return provisioned_thing_name
         except Exception as e:
             error(e)
         
