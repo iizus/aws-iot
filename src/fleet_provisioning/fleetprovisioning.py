@@ -67,10 +67,26 @@ class FleetProvisioning:
             request_name = REGISTER_THING,
             request = self.__fp.publish_RegisterThing_topic_by,
             template_parameters = { self.__thing_name_key: provisioning_thing_name },
-            cert = self.__fp.save_keys_and_certificate_by(claim_connection, provisioning_thing_name),
+            cert = self.save_keys_and_certificate_by(
+                claim_connection,
+                provisioning_thing_name
+            ),
         )
         provisioned_thing_name:str = response.thing_name
         return provisioned_thing_name
+    
+
+    def save_keys_and_certificate_by(
+        self,
+        claim_connection:Connection,
+        client_name:str,
+    ) -> iotidentity.CreateKeysAndCertificateResponse:
+        subscribed_topic_names:Tuple[str] = self.__fp.subscribe_CreateKeysAndCertificate_topics_by(
+            claim_connection
+        )
+        cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate_by(claim_connection)
+        self.__fp.save_certs(cert, client_name)
+        return cert
 
     
     def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:

@@ -17,19 +17,6 @@ class FP:
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
         self.__response:dict = dict()
-
-
-    def save_keys_and_certificate_by(
-        self,
-        claim_connection:Connection,
-        client_name:str,
-    ) -> iotidentity.CreateKeysAndCertificateResponse:
-        subscribed_topic_names:Tuple[str] = self.__subscribe_CreateKeysAndCertificate_topics_by(
-            claim_connection
-        )
-        cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(claim_connection)
-        self.__save_certs(cert, client_name)
-        return cert
     
 
     def subscribe_RegisterThing_accepted_topic_by(
@@ -101,7 +88,7 @@ class FP:
         return self.__response[request_name]
 
 
-    def __save_certs(
+    def save_certs(
         self,
         cert:iotidentity.CreateKeysAndCertificateResponse,
         provisioning_thing_name:str
@@ -114,6 +101,39 @@ class FP:
         )
         self.__print_log(verb='Saved', message=log)
 
+
+    def subscribe_CreateKeysAndCertificate_topics_by(
+        self,
+        claim_connection:Connection
+    ) -> Tuple[str]:
+        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+            claim_connection.connection
+        )
+        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
+        accepted_topic_name:str = self.__subscribe_CreateKeysAndCertificate_accepted_topic_by(
+            claim_client,
+            request
+        )
+        rejected_topic_name:str = self.__subscribe_CreateKeysAndCertificate_rejected_topic_by(
+            claim_client,
+            request
+        )
+        return (accepted_topic_name, rejected_topic_name)
+
+
+    def create_keys_and_certificate_by(
+        self,
+        claim_connection:Connection,
+    ) -> iotidentity.CreateKeysAndCertificateResponse:
+        self.request_and_wait(
+            claim_connection = claim_connection,
+            request_name = CREATE_KEYS_AND_CERTIFICATE,
+            request = self.__publish_CreateKeysAndCertificate_topic_by,
+        )
+        if self.__response[CREATE_KEYS_AND_CERTIFICATE] is None:
+            raise Exception(f'{CREATE_KEYS_AND_CERTIFICATE} API did not succeed')
+        return self.__response[CREATE_KEYS_AND_CERTIFICATE]
+        
 
     def __on_CreateKeysAndCertificate_accepted(
         self,
@@ -138,25 +158,6 @@ class FP:
 
     def __on_RegisterThing_rejected(self, response:iotidentity.ErrorResponse) -> None:
         self.__print_rejected(REGISTER_THING, response)
-
-
-    def __subscribe_CreateKeysAndCertificate_topics_by(
-        self,
-        claim_connection:Connection
-    ) -> Tuple[str]:
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
-        )
-        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
-        accepted_topic_name:str = self.__subscribe_CreateKeysAndCertificate_accepted_topic_by(
-            claim_client,
-            request
-        )
-        rejected_topic_name:str = self.__subscribe_CreateKeysAndCertificate_rejected_topic_by(
-            claim_client,
-            request
-        )
-        return (accepted_topic_name, rejected_topic_name)
 
 
     def __subscribe_CreateKeysAndCertificate_accepted_topic_by(
@@ -189,20 +190,6 @@ class FP:
         self.__print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
         return topic_name
-
-
-    def __create_keys_and_certificate_by(
-        self,
-        claim_connection:Connection,
-    ) -> iotidentity.CreateKeysAndCertificateResponse:
-        self.request_and_wait(
-            claim_connection = claim_connection,
-            request_name = CREATE_KEYS_AND_CERTIFICATE,
-            request = self.__publish_CreateKeysAndCertificate_topic_by,
-        )
-        if self.__response[CREATE_KEYS_AND_CERTIFICATE] is None:
-            raise Exception(f'{CREATE_KEYS_AND_CERTIFICATE} API did not succeed')
-        return self.__response[CREATE_KEYS_AND_CERTIFICATE]
 
 
     def __publish_CreateKeysAndCertificate_topic_by(
