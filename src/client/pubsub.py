@@ -1,10 +1,10 @@
 from threading import Event
 from src.utils import util
+from src.client.endpoint import Provisioning
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Topic, Connection
 from src.fleet_provisioning.util import get_current_time
 
-from src.client.endpoint import Provisioning
 
 
 DEFAULT:dict = util.load_json('default.json')
@@ -37,7 +37,6 @@ class PubSub:
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
-        # self.__endpoint:Endpoint = endpoint.set_FP(template_name, thing_name_key)
         self.__endpoint:Endpoint = endpoint
         self.__fp:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
         self.__topic_name:str = topic_name

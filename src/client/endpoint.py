@@ -59,40 +59,6 @@ class Endpoint:
             provisioning = self.__provisioning
         )
 
-    # def set_proxy(self, options:HttpProxyOptions=None):
-    #     return Endpoint(
-    #          name = self.name,
-    #          ca = self.ca,
-    #          port = self.port,
-    #          proxy = options,
-    #          provisioning = self.__provisioning
-    #         )
-
-    # def set_FP(
-    #     self,
-    #     template_name:str = DEFAULT.get('TEMPLATE_NAME'),
-    #     thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
-    # ):
-    #     provisioning:Provisioning = Provisioning(
-    #         endpoint = self,
-    #         template_name = template_name,
-    #         thing_name_key = thing_name_key,
-    #     )
-    #     return Endpoint(
-    #         name = self.name,
-    #         ca = self.ca,
-    #         port = self.port,
-    #         proxy = self.proxy,
-    #         provisioning = provisioning
-    #     )
-
-    # def provision_thing(self, name:str=get_current_time()) -> Client:
-    #     util.print_log(subject=name, verb='Provisioning...')
-    #     provisioned_thing:Client = self.__provisioning.provision_thing(name)
-    #     util.print_log(subject=name, verb='Provisioned')
-    #     return provisioned_thing
-
-
 
 from src.client.project import Project
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
@@ -107,9 +73,11 @@ class Provisioning:
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
+        util.print_log(subject=name, verb='Provisioning...')
         connection:Connection = self.__claim_client.connect_to(self.__endpoint)
         provisioned_thing:Client = self.__project.create_client(
             client_id = connection.provision_thing_by(self.__fp, name),
             cert_dir = 'individual/'
         )
+        util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
