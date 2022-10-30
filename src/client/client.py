@@ -62,7 +62,7 @@ from concurrent.futures import Future
 def on_connection_resumed(
     connection:mqtt.Connection,
     return_code,
-    session_present
+    session_present,
 ) -> None:
     print(f"[{connection.client_id}] Resumed connection with {connection.host_name}, Return code: {return_code} and Session present: {session_present}")
     if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
@@ -78,7 +78,11 @@ def __resubscribe(connection:mqtt.Connection) -> int:
     # Cannot synchronously wait for resubscribe result because we're on the connection's event-loop thread,
     # evaluate result with a callback instead.
     resubscribe_future.add_done_callback(__on_resubscribe_complete)
-    util.print_log(subject=client_id, verb='Resubscribed', message=f"Endpoint: {endpoint} Packet ID: {packet_id}")
+    util.print_log(
+        subject = client_id,
+        verb = 'Resubscribed',
+        message = f"Endpoint: {endpoint} Packet ID: {packet_id}"
+    )
     return packet_id
 
 
@@ -97,15 +101,14 @@ def on_connection_interrupted(error) -> None:
 
 
 
-class Project:
-    def __init__(self, name:str='test') -> None:
-        self.__name:str = name
+# class Project:
+#     def __init__(self, name:str='test') -> None:
+#         self.__name:str = name
 
-
-    def create_client(self, client_id:str='client1', cert_dir:str='') -> Client:
-        cert_dir:str = f'{self.__name}/{cert_dir}{client_id}'
-        return Client(
-            project_name = self.__name,
-            id = self.__name if client_id == '' else client_id,
-            cert = Cert(cert_dir)
-        )
+#     def create_client(self, client_id:str='client1', cert_dir:str='') -> Client:
+#         cert_dir:str = f'{self.__name}/{cert_dir}{client_id}'
+#         return Client(
+#             project_name = self.__name,
+#             id = self.__name if client_id == '' else client_id,
+#             cert = Cert(cert_dir)
+#         )

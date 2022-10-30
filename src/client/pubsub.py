@@ -1,5 +1,4 @@
 from threading import Event
-from unittest.mock import DEFAULT
 from src.utils import util
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Topic, Connection

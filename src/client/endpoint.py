@@ -94,7 +94,7 @@ class Endpoint:
 
 
 
-from src.client.client import Project
+from src.client.project import Project
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
 class Provisioning:
