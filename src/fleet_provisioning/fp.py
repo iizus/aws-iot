@@ -13,8 +13,7 @@ CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 class FP:
     from src.client.connection import Connection
 
-    def __init__(self, template_name:str) -> None:
-        self.__template_name:str = template_name
+    def __init__(self) -> None:
         self.__response:dict = dict()
     
 
@@ -49,24 +48,6 @@ class FP:
         self.__log.print_subscribed(topic_name)
         future.result() # Wait for subscription to succeed
         return topic_name
-
-    
-    def publish_RegisterThing_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        template_parameters:dict,
-        cert:iotidentity.CreateKeysAndCertificateResponse,
-    ) -> None:
-        request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
-            template_name = self.__template_name,
-            certificate_ownership_token = cert.certificate_ownership_token,
-            parameters = template_parameters,
-        )
-        future:Future = claim_client.publish_register_thing(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-        )
-        future.add_done_callback(self.__on_publish_RegisterThing)
 
     
     def request_and_wait(
@@ -200,5 +181,5 @@ class FP:
         self.__log.print_published(CREATE_KEYS_AND_CERTIFICATE, future)
 
 
-    def __on_publish_RegisterThing(self, future:Future) -> None:
+    def on_publish_RegisterThing(self, future:Future) -> None:
         self.__log.print_published(REGISTER_THING, future)
