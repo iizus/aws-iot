@@ -1,15 +1,10 @@
 from src.utils import util
-# from src.client.pubsub import PubSub
 from src.client.endpoint import Endpoint
 
 
 DEFAULT_ACCOUNT_NAME:str = 'isengard'
 DEFAULT_REGION_NAME:str = 'us-east-1'
 DEFAULT_ENDPOINT_FILE_PATH:str = 'endpoint.json'
-
-DEFAULT_TOPIC:str = 'check/communication'
-DEFAULT_TEMPLATE_NAME:str = 'aws-iot'
-DEFAULT_THING_NAME_KEY:str = 'device_id'
 
 
 from awsiot import __version__
