@@ -1,5 +1,6 @@
 from src.utils import util
-from src.client.endpoint import Endpoint, PubSub
+from src.client.pubsub import PubSub
+from src.client.endpoint import Endpoint
 
 
 DEFAULT_ACCOUNT_NAME:str = 'isengard'
