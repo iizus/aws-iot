@@ -2,14 +2,14 @@
 # from src.utils import util
 
 from typing import Tuple
+from awsiot import iotidentity
 from src.fleet_provisioning.fp import FP
 from src.fleet_provisioning.util import get_current_time, error
-
-from awsiot import iotidentity
 
 
 REGISTER_THING:str = 'RegisterThing'
 CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
+
 
 class FleetProvisioning:
     from src.client.connection import Connection
@@ -17,7 +17,7 @@ class FleetProvisioning:
     def __init__(self, template_name:str, thing_name_key:str) -> None:
         self.__template_name:str = template_name
         self.__thing_name_key:str = thing_name_key
-        self.__fp:FP = FP(template_name, thing_name_key)
+        self.__fp:FP = FP(template_name)
 
 
     def provision_thing(self, connection:Connection, name:str=get_current_time()) -> str:

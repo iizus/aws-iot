@@ -14,34 +14,9 @@ CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 class FP:
     from src.client.connection import Connection
 
-    def __init__(self, template_name:str, thing_name_key:str) -> None:
+    def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
-        # self.__thing_name_key:str = thing_name_key
         self.__response:dict = dict()
-
-        
-    # def register_thing_by(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
-    #     self.__claim:str = claim_connection.client_id
-    #     subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
-    #         claim_connection
-    #     )
-    #     provisioned_thing_name:str = self.__wait_register_thing(
-    #         claim_connection,
-    #         provisioning_thing_name
-    #     )
-    #     return provisioned_thing_name
-
-
-    # def __wait_register_thing(self, claim_connection:Connection, provisioning_thing_name:str) -> str:
-    #     response = self.__request_and_wait(
-    #         claim_connection = claim_connection,
-    #         request_name = REGISTER_THING,
-    #         request = self.__publish_RegisterThing_topic_by,
-    #         template_parameters = { self.__thing_name_key: provisioning_thing_name },
-    #         cert = self.save_keys_and_certificate_by(claim_connection, provisioning_thing_name),
-    #     )
-    #     provisioned_thing_name:str = response.thing_name
-    #     return provisioned_thing_name
 
 
     def save_keys_and_certificate_by(
@@ -55,6 +30,75 @@ class FP:
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(claim_connection)
         self.__save_certs(cert, client_name)
         return cert
+    
+
+    def subscribe_RegisterThing_accepted_topic_by(
+        self,
+        claim_client:iotidentity.IotIdentityClient,
+        request:iotidentity.RegisterThingRequest
+    ) -> str:
+        self.__claim:str = claim_client.mqtt_connection.client_id
+        self.__print_subscribing_accepted(REGISTER_THING)
+        future, topic_name = claim_client.subscribe_to_register_thing_accepted(
+            request = request,
+            qos = QoS.AT_LEAST_ONCE,
+            callback = self.__on_RegisterThing_accepted
+        )
+        self.__print_subscribed(topic_name)
+        future.result() # Wait for subscription to succeed
+        return topic_name
+
+
+    def subscribe_RegisterThing_rejected_topic_by(
+        self,
+        claim_client:iotidentity.IotIdentityClient,
+        request:iotidentity.RegisterThingRequest
+    ) -> str:
+        self.__print_subscribing_rejected(REGISTER_THING)
+        future, topic_name = claim_client.subscribe_to_register_thing_rejected(
+            request = request,
+            qos = QoS.AT_LEAST_ONCE,
+            callback = self.__on_RegisterThing_rejected
+        )
+        self.__print_subscribed(topic_name)
+        future.result() # Wait for subscription to succeed
+        return topic_name
+
+    
+    def publish_RegisterThing_topic_by(
+        self,
+        claim_client:iotidentity.IotIdentityClient,
+        template_parameters:dict,
+        cert:iotidentity.CreateKeysAndCertificateResponse,
+    ) -> None:
+        request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
+            template_name = self.__template_name,
+            certificate_ownership_token = cert.certificate_ownership_token,
+            parameters = template_parameters,
+        )
+        future:Future = claim_client.publish_register_thing(
+            request = request,
+            qos = QoS.AT_LEAST_ONCE,
+        )
+        future.add_done_callback(self.__on_publish_RegisterThing)
+
+    
+    def request_and_wait(
+        self,
+        claim_connection:Connection,
+        request_name:str,
+        request,
+        template_parameters:dict = None,
+        cert:iotidentity.CreateKeysAndCertificateResponse = None,
+    ):
+        self.__response[request_name] = None
+        self.__print_log(verb='Publishing...', message=f'{request_name} topic')
+        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+            claim_connection.connection
+        )
+        request(claim_client, template_parameters, cert)
+        self.__wait_for(request_name)
+        return self.__response[request_name]
 
 
     def __save_certs(
@@ -147,57 +191,6 @@ class FP:
         return topic_name
 
 
-    # def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:
-    #     request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
-    #         template_name = self.__template_name
-    #     )
-    #     claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-    #         claim_connection.connection
-    #     )
-    #     accepted_topic_name:str = self.__subscribe_RegisterThing_accepted_topic_by(
-    #         claim_client,
-    #         request
-    #     )
-    #     rejected_topic_name:str = self.__subscribe_RegisterThing_rejected_topic_by(
-    #         claim_client,
-    #         request
-    #     )
-    #     return (accepted_topic_name, rejected_topic_name)
-
-
-    def subscribe_RegisterThing_accepted_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.RegisterThingRequest
-    ) -> str:
-        self.__claim:str = claim_client.mqtt_connection.client_id
-        self.__print_subscribing_accepted(REGISTER_THING)
-        future, topic_name = claim_client.subscribe_to_register_thing_accepted(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-            callback = self.__on_RegisterThing_accepted
-        )
-        self.__print_subscribed(topic_name)
-        future.result() # Wait for subscription to succeed
-        return topic_name
-
-
-    def subscribe_RegisterThing_rejected_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.RegisterThingRequest
-    ) -> str:
-        self.__print_subscribing_rejected(REGISTER_THING)
-        future, topic_name = claim_client.subscribe_to_register_thing_rejected(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-            callback = self.__on_RegisterThing_rejected
-        )
-        self.__print_subscribed(topic_name)
-        future.result() # Wait for subscription to succeed
-        return topic_name
-
-
     def __create_keys_and_certificate_by(
         self,
         claim_connection:Connection,
@@ -225,24 +218,6 @@ class FP:
         future.add_done_callback(self.__on_publish_CreateKeysAndCertificate)
 
 
-    def request_and_wait(
-        self,
-        claim_connection:Connection,
-        request_name:str,
-        request,
-        template_parameters:dict = None,
-        cert:iotidentity.CreateKeysAndCertificateResponse = None,
-    ):
-        self.__response[request_name] = None
-        self.__print_log(verb='Publishing...', message=f'{request_name} topic')
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
-        )
-        request(claim_client, template_parameters, cert)
-        self.__wait_for(request_name)
-        return self.__response[request_name]
-
-
     def __wait_for(self, request_name:str):
         loop_count:int = 0
         while loop_count < 10 and self.__response[request_name] is None:
@@ -252,24 +227,6 @@ class FP:
             loop_count += 1
         else:
             return self.__response[request_name]
-
-
-    def publish_RegisterThing_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        template_parameters:dict,
-        cert:iotidentity.CreateKeysAndCertificateResponse,
-    ) -> None:
-        request:iotidentity.RegisterThingRequest = iotidentity.RegisterThingRequest(
-            template_name = self.__template_name,
-            certificate_ownership_token = cert.certificate_ownership_token,
-            parameters = template_parameters,
-        )
-        future:Future = claim_client.publish_register_thing(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-        )
-        future.add_done_callback(self.__on_publish_RegisterThing)
 
 
     def __on_publish_CreateKeysAndCertificate(self, future:Future) -> None:
