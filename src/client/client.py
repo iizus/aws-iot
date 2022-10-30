@@ -30,25 +30,11 @@ class Client:
         keep_alive:int = DEFAULT.get('KEEP_A_LIVE_SEC'),
         clean_session:bool = DEFAULT.get('CLEAN_SESSION')
     ) -> Connection:
-        proxy = endpoint.proxy
         self.__print_log(
             verb = 'Connecting...',
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive} and Clean session: {clean_session}"
         )
-        connection:mqtt.Connection = mtls_from_path(
-            endpoint = endpoint.name,
-            ca_filepath = endpoint.ca_path,
-            client_id = self.id,
-            cert_filepath = self.cert,
-            pri_key_filepath = self.key,
-            client_bootstrap = self.client_bootstrap,
-            on_connection_interrupted = client_callback.on_connection_interrupted,
-            on_connection_resumed = client_callback.on_connection_resumed,
-            clean_session = clean_session,
-            keep_alive_secs = keep_alive,
-            port = endpoint.port,
-            http_proxy_options = proxy,
-        )
+        connection:mqtt.Connection = self.__connect_to(endpoint, keep_alive, clean_session)
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
@@ -62,6 +48,28 @@ class Client:
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}"
         )
         return Connection(self.__project_name, connection)
+
+
+    def __connect_to(
+        self,
+        endpoint,
+        keep_alive:int = DEFAULT.get('KEEP_A_LIVE_SEC'),
+        clean_session:bool = DEFAULT.get('CLEAN_SESSION')
+    ) -> mqtt.Connection:
+        return mtls_from_path(
+            endpoint = endpoint.name,
+            ca_filepath = endpoint.ca_path,
+            client_id = self.id,
+            cert_filepath = self.cert,
+            pri_key_filepath = self.key,
+            client_bootstrap = self.client_bootstrap,
+            on_connection_interrupted = client_callback.on_connection_interrupted,
+            on_connection_resumed = client_callback.on_connection_resumed,
+            clean_session = clean_session,
+            keep_alive_secs = keep_alive,
+            port = endpoint.port,
+            http_proxy_options = endpoint.proxy,
+        )
 
 
     def __print_log(self, verb:str, message:str) -> None:
