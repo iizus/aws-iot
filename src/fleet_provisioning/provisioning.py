@@ -21,7 +21,7 @@ class Provisioning:
         self.__endpoint:Endpoint = endpoint
         self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key)
         self.__project:Project = Project(name='fleet_provisioning')
-        self.__claim_client:Client = self.__project.create_client(client_id='claim')
+        self.claim_client:Client = self.__project.create_client(client_id='claim')
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
@@ -31,11 +31,20 @@ class Provisioning:
         return provisioned_thing
 
 
-    def __provision_thing(self, name:str=get_current_time()) -> Client:
-        connection:Connection = self.__claim_client.connect_to(self.__endpoint)
+    def provision_thing_by(
+        self,
+        connection:Connection,
+        name:str = get_current_time(),
+    ) -> Client:
         provisioned_thing:Client = self.__project.create_client(
             client_id = self.__fp.provision_thing(connection, name),
             cert_dir = 'individual/'
         )
+        return provisioned_thing
+
+
+    def __provision_thing(self, name:str=get_current_time()) -> Client:
+        connection:Connection = self.claim_client.connect_to(self.__endpoint)
+        provisioned_thing:Client = self.provision_thing_by(connection, name)
         connection.disconnect()
         return provisioned_thing

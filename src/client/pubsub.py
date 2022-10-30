@@ -1,5 +1,6 @@
 from src.utils import util
 from src.client.account import get_endpoint, Endpoint
+from src.client.connection import Connection
 from src.client.pubsub_callback import PubSub_callback
 from src.fleet_provisioning.provisioning import Provisioning, get_current_time
 
@@ -34,13 +35,14 @@ class PubSub:
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
+        self.__endpoint:Endpoint = endpoint
         self.__callback:PubSub_callback = PubSub_callback(endpoint, topic_name)
-        self.__fp:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
+        self.__provisioning:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
 
 
     def publish(self, publisher_name:str=get_current_time()):
         result = self.__callback.excute_callback_on(
-            client = self.__fp.provision_thing(publisher_name),
+            client = self.__provisioning.provision_thing(publisher_name),
             callback = self.__callback.publish,
         )
         return result
@@ -51,10 +53,12 @@ class PubSub:
         publisher_name:str = get_current_time(),
         subscriber_name:str = get_current_time(),
     ):
+        connection:Connection = self.__provisioning.claim_client.connect_to(self.__endpoint)
         result = self.check_communication_between(
-            publisher = self.__fp.provision_thing(publisher_name),
-            subscriber = self.__fp.provision_thing(subscriber_name),
+            publisher = self.__provisioning.provision_thing_by(connection, name=publisher_name),
+            subscriber = self.__provisioning.provision_thing_by(connection, name=subscriber_name),
         )
+        connection.disconnect()
         return result
 
 
