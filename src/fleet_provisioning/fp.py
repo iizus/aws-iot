@@ -5,58 +5,80 @@ from awscrt.mqtt import Connection, QoS
 from src.utils.util import print_log
 from src.fleet_provisioning import util
 
-class FP:
+# class FP:
+#     def __init__(self, template_name:str) -> None:
+#         self.__fp:FP_base = FP_base(template_name)
+
+
+#     def provision_thing(
+#         self,
+#         connection:Connection,
+#         template_parameters:dict,
+#         # thing_name:str = util.get_current_time(),
+#     ) -> str:
+#         # self.__thing_name:str = thing_name
+#         provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
+#         self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
+#         return provisioned_thing_name
+
+
+#     def __provision_by(self, connection:Connection, template_parameters:dict) -> str:
+#         # self.__claim:str = connection.client_id
+#         try:
+#             # Subscribe to necessary topics.
+#             # Note that is **is** important to wait for "accepted/rejected" subscriptions
+#             # to succeed before publishing the corresponding "request".
+#             client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
+#             provisioned_thing_name:str = self.__provision_thing_by(client, template_parameters)
+#             return provisioned_thing_name
+#         except Exception as e:
+#             util.error(e)
+
+
+#     def __provision_thing_by(
+#         self,
+#         client:iotidentity.IotIdentityClient,
+#         template_parameters:dict
+#     ) -> str:
+#         cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.get_keys_and_certificate_by(client)
+#         provisioned_thing_name:str = self.__fp.register_thing_by(client, template_parameters, cert)
+#         return provisioned_thing_name
+
+
+
+
+
+class FP_base:
     def __init__(self, template_name:str) -> None:
         self.__template_name:str = template_name
+        # self.__thing_name_key:str = thing_name_key
         self.__response:dict = dict()
 
 
-    def provision_thing(
-        self,
-        connection:Connection,
-        template_parameters:dict,
-        thing_name:str = util.get_current_time(),
-    ) -> str:
-        self.__thing_name:str = thing_name
-        provisioned_thing_name:str = self.__provision_by(connection, template_parameters)
-        self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
-        return provisioned_thing_name
-
-
-    def __provision_by(self, connection:Connection, template_parameters:dict) -> str:
-        self.__claim:str = connection.client_id
-        try:
-            # Subscribe to necessary topics.
-            # Note that is **is** important to wait for "accepted/rejected" subscriptions
-            # to succeed before publishing the corresponding "request".
-            client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(connection)
-            thing_name:str = self.__provision_thing_by(client, template_parameters)
-            return thing_name
-        except Exception as e:
-            util.error(e)
-
-
-    def __provision_thing_by(
+    def get_keys_and_certificate_by(
         self,
         client:iotidentity.IotIdentityClient,
-        template_parameters:dict
-    ) -> str:
-        cert:iotidentity.CreateKeysAndCertificateResponse = self.__get_keys_and_certificate_by(client)
-        thing_name:str = self.__register_thing_by(client, template_parameters, cert)
-        return thing_name
-
-
-    def __get_keys_and_certificate_by(self, client:iotidentity.IotIdentityClient) -> iotidentity.CreateKeysAndCertificateResponse:
+        provisioning_thing_name:str
+    ) -> iotidentity.CreateKeysAndCertificateResponse:
+        self.__claim:str = client.mqtt_connection.client_id
         self.__subscribe_CreateKeysAndCertificate_topics_by(client)
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(client)
+        self.__save_certs(cert, provisioning_thing_name)
+        return cert
+
+
+    def __save_certs(
+        self,
+        cert:iotidentity.CreateKeysAndCertificateResponse,
+        provisioning_thing_name:str
+    ) -> None:
         self.__print_log(verb='Saving...', message=f"Certificate ID: {cert.certificate_id}")
         log:str = util.save_certs_in(
             dir = 'certs/fleet_provisioning/individual',
             response = cert,
-            thing_name = self.__thing_name
+            thing_name = provisioning_thing_name
         )
         self.__print_log(verb='Saved', message=log)
-        return cert
 
 
     def __on_CreateKeysAndCertificate_accepted(
@@ -188,7 +210,7 @@ class FP:
         future.add_done_callback(self.__on_publish_CreateKeysAndCertificate)
 
 
-    def __register_thing_by(
+    def register_thing_by(
         self,
         client:iotidentity.IotIdentityClient,
         template_parameters:dict,
