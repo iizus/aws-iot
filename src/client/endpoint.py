@@ -29,36 +29,28 @@ class Endpoint:
         )
 
     def set_ca(self, type:str='RSA2048'):
-        return Endpoint(
-            name = self.name,
-            ca = type,
-            port = self.port,
-            proxy = self.proxy,
-        )
+        return Endpoint(name=self.name, ca=type, port=self.port, proxy=self.proxy)
 
     def set_port(self, number:int=8883):
-        return Endpoint(
-            name = self.name,
-            ca = self.ca,
-            port = number,
-            proxy = self.proxy,
-        )
+        return Endpoint(name=self.name, ca=self.ca, port=number, proxy=self.proxy)
 
     def set_proxy(self, host:str, port:int):
         options:HttpProxyOptions = HttpProxyOptions(host_name=host, port=port)
-        return Endpoint(
-            name = self.name,
-            ca = self.ca,
-            port = self.port,
-            proxy = options,
-        )
+        return Endpoint(name=self.name, ca=self.ca, port=self.port, proxy=options)
+
 
 
 from src.client.project import Project
+from src.client.account import get_endpoint
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
 class Provisioning:
-    def __init__(self, endpoint:Endpoint, template_name:str, thing_name_key:str) -> None:
+    def __init__(
+        self,
+        endpoint:Endpoint = get_endpoint(),
+        template_name:str = DEFAULT.get('TEMPLATE_NAME'),
+        thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
+    ) -> None:
         self.template_name:str = template_name
         self.__endpoint:Endpoint = endpoint
         self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key)
@@ -68,10 +60,15 @@ class Provisioning:
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
         util.print_log(subject=name, verb='Provisioning...')
+        provisioned_thing:Client = self.__provision_thing(name)
+        util.print_log(subject=name, verb='Provisioned')
+        return provisioned_thing
+
+
+    def __provision_thing(self, name:str=get_current_time()) -> Client:
         connection:Connection = self.__claim_client.connect_to(self.__endpoint)
         provisioned_thing:Client = self.__project.create_client(
             client_id = connection.provision_thing_by(self.__fp, name),
             cert_dir = 'individual/'
         )
-        util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
