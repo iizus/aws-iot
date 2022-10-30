@@ -39,9 +39,8 @@ class FleetProvisioning:
         connection:Connection,
         name:str = get_current_time()
     ) -> str:
-        claim:IotIdentityClient = IotIdentityClient(connection)
         provisioned_thing_name:str = self.__fp.register_thing_by(
-            client = claim,
+            claim_client = IotIdentityClient(connection),
             template_parameters = { self.__thing_name_key: name },
             provisioning_thing_name = name,
         )

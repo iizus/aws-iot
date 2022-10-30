@@ -14,29 +14,30 @@ class FP:
         
     def register_thing_by(
         self,
-        client:iotidentity.IotIdentityClient,
+        claim_client:iotidentity.IotIdentityClient,
         template_parameters:dict,
-        provisioning_thing_name,
+        provisioning_thing_name:str,
     ) -> str:
-        self.__claim:str = client.mqtt_connection.client_id
-        self.__subscribe_RegisterThing_topics_by(client)
+        self.__claim:str = claim_client.mqtt_connection.client_id
+        self.__subscribe_RegisterThing_topics_by(claim_client)
         self.__request_and_wait(
-            client = client,
+            client = claim_client,
             request_name = 'RegisterThing',
             request = self.__publish_RegisterThing_topic_by,
             template_parameters = template_parameters,
-            cert = self.get_keys_and_certificate_by(client, provisioning_thing_name),
+            cert = self.__get_keys_and_certificate_by(claim_client, provisioning_thing_name),
         )
-        return self.__response['RegisterThing'].thing_name
+        provisioned_thing_name:str = self.__response['RegisterThing'].thing_name
+        return provisioned_thing_name
 
 
-    def get_keys_and_certificate_by(
+    def __get_keys_and_certificate_by(
         self,
-        client:iotidentity.IotIdentityClient,
+        claim_client:iotidentity.IotIdentityClient,
         provisioning_thing_name:str
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        self.__subscribe_CreateKeysAndCertificate_topics_by(client)
-        cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(client)
+        self.__subscribe_CreateKeysAndCertificate_topics_by(claim_client)
+        cert:iotidentity.CreateKeysAndCertificateResponse = self.__create_keys_and_certificate_by(claim_client)
         self.__save_certs(cert, provisioning_thing_name)
         return cert
 
