@@ -36,15 +36,16 @@ class PubSub:
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
-        self.__endpoint:Endpoint = endpoint
+        # self.__endpoint:Endpoint = endpoint
+        self.__callback:PubSub_callback = PubSub_callback(endpoint, topic_name)
         self.__fp:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
-        self.__topic_name:str = topic_name
+        # self.__topic_name:str = topic_name
 
 
     def publish(self, publisher_name:str=get_current_time()):
-        result = self.excute_callback_on(
+        result = self.__callback.excute_callback_on(
             client = self.__fp.provision_thing(publisher_name),
-            callback = self.__publish,
+            callback = self.__callback.publish,
         )
         return result
 
@@ -62,31 +63,27 @@ class PubSub:
 
 
     def check_communication_between(self, publisher:Client, subscriber:Client):
-        result = self.excute_callback_on(
+        result = self.__callback.excute_callback_on(
             client = subscriber,
-            callback = self.__subscribe,
+            callback = self.__callback.subscribe,
             publisher = publisher,
         )
         return result
 
-            
-    def __subscribe(self, publisher:Client, topic:Topic) -> int:
-        self.__received_event:Event = Event()
-        topic.subscribe(callback=self.__on_message_received)
-        self.excute_callback_on(client=publisher, callback=self.__publish)
-        util.print_log(
-            subject = topic.client_id,
-            verb = 'Waiting...',
-            message = "for all messages to be received"
-        )
-        self.__received_event.wait()
-        packet_id:int = topic.unsubscribe()
-        return packet_id
 
 
-    def __publish(self, publisher:Client, topic:Topic) -> int:
-        packet_id:int = topic.publish({'from': topic.client_id})
-        return packet_id
+class PubSub_callback:
+    from awscrt import mqtt
+    from src.client.client import Client
+
+
+    def __init__(
+        self,
+        endpoint:Endpoint = get_endpoint(),
+        topic_name:str = DEFAULT.get('TOPIC_NAME'),
+    ) -> None:
+        self.__endpoint:Endpoint = endpoint
+        self.__topic_name:str = topic_name
 
 
     def excute_callback_on(self, client:Client, callback, publisher:Client=None):
@@ -97,6 +94,25 @@ class PubSub:
         )
         connection.disconnect()
         return result
+
+            
+    def subscribe(self, publisher:Client, topic:Topic) -> int:
+        self.__received_event:Event = Event()
+        topic.subscribe(callback=self.__on_message_received)
+        self.excute_callback_on(client=publisher, callback=self.publish)
+        util.print_log(
+            subject = topic.client_id,
+            verb = 'Waiting...',
+            message = "for all messages to be received"
+        )
+        self.__received_event.wait()
+        packet_id:int = topic.unsubscribe()
+        return packet_id
+
+
+    def publish(self, publisher:Client, topic:Topic) -> int:
+        packet_id:int = topic.publish({'from': topic.client_id})
+        return packet_id
 
 
     def __on_message_received(
