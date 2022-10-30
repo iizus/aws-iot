@@ -94,7 +94,8 @@ class Endpoint:
         )
 
 
-    def provision_thing(self, name:str=get_current_time()) -> Client:
+    def provision_thing(self) -> Client:
+        name:str = get_current_time()
         util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__provisioning.provision_thing(name)
         util.print_log(subject=name, verb='Provisioned')
@@ -194,11 +195,11 @@ class Provisioning:
         self.__endpoint:Endpoint = endpoint
         self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key)
         self.__project:Project = Project(name='fleet_provisioning')
-        self.__claim:Client = self.__project.create_client(client_id='claim')
+        self.__claim_client:Client = self.__project.create_client(client_id='claim')
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
-        connection:Connection = self.__claim.connect_to(self.__endpoint)
+        connection:Connection = self.__claim_client.connect_to(self.__endpoint)
         provisioned_thing:Client = self.__project.create_client(
             client_id = connection.provision_thing_by(self.__fp, name),
             cert_dir = 'individual/'
