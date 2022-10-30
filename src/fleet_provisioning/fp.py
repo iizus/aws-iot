@@ -20,14 +20,26 @@ class FP:
     ) -> str:
         self.__claim:str = claim_client.mqtt_connection.client_id
         self.__subscribe_RegisterThing_topics_by(claim_client)
-        self.__request_and_wait(
+        provisioned_thing_name:str = self.__wait_register_thing(
+            claim_client,
+            provisioning_thing_name
+        )
+        return provisioned_thing_name
+
+
+    def __wait_register_thing(
+        self,
+        claim_client:iotidentity.IotIdentityClient,
+        provisioning_thing_name:str,
+    ) -> str:
+        response = self.__request_and_wait(
             client = claim_client,
             request_name = 'RegisterThing',
             request = self.__publish_RegisterThing_topic_by,
             template_parameters = { self.__thing_name_key: provisioning_thing_name },
             cert = self.__get_keys_and_certificate_by(claim_client, provisioning_thing_name),
         )
-        provisioned_thing_name:str = self.__response['RegisterThing'].thing_name
+        provisioned_thing_name:str = response.thing_name
         return provisioned_thing_name
 
 
@@ -192,20 +204,23 @@ class FP:
         request,
         template_parameters:dict = None,
         cert:iotidentity.CreateKeysAndCertificateResponse = None,
-    ) -> None:
+    ):
         self.__response[request_name] = None
         self.__print_log(verb='Publishing...', message=f'{request_name} topic')
         request(client, template_parameters, cert)
         self.__wait_for(request_name)
+        return self.__response[request_name]
 
 
-    def __wait_for(self, request_name:str) -> None:
+    def __wait_for(self, request_name:str):
         loop_count:int = 0
         while loop_count < 10 and self.__response[request_name] is None:
             if self.__response[request_name] is not None: break
             self.__print_log(verb='Waiting...', message=f'{request_name}Response')
             sleep(1)
             loop_count += 1
+        else:
+            return self.__response[request_name]
 
 
     def __publish_RegisterThing_topic_by(
