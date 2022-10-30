@@ -57,7 +57,10 @@ def error(msg_or_exception:Exception) -> None:
 nine_hours:datetime.timedelta = datetime.timedelta(hours=9)
 JST:datetime.timezone = datetime.timezone(nine_hours)
 
-def get_current_time() -> str:
-    now = datetime.datetime.now(JST)
-    current_time:str = now.strftime('%Y-%m-%dT%H-%M-%S')
+def get_current_time(
+    timezone:datetime.timezone = JST,
+    format:str = '%Y-%m-%d_%H:%M:%S:%f',
+) -> str:
+    now = datetime.datetime.now(timezone)
+    current_time:str = now.strftime(format)
     return current_time

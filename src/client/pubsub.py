@@ -45,18 +45,22 @@ class PubSub:
         self.__topic_name:str = topic_name
 
 
-    def publish(self):
+    def publish(self, publisher_name:str=get_current_time()):
         result = self.excute_callback_on(
-            client = self.__endpoint.provision_thing(name=get_current_time()),
+            client = self.__endpoint.provision_thing(publisher_name),
             callback = self.__publish,
         )
         return result
 
 
-    def check_communication(self):
+    def check_communication(
+        self,
+        publisher_name:str = get_current_time(),
+        subscriber_name:str = get_current_time(),
+    ):
         result = self.check_communication_between(
-            publisher = self.__endpoint.provision_thing(name=get_current_time()),
-            subscriber = self.__endpoint.provision_thing(name=get_current_time()),
+            publisher = self.__endpoint.provision_thing(publisher_name),
+            subscriber = self.__endpoint.provision_thing(subscriber_name),
         )
         return result
 
@@ -89,7 +93,7 @@ class PubSub:
         return packet_id
 
 
-    def excute_callback_on(self, client:Client, callback, publisher:Client = None):
+    def excute_callback_on(self, client:Client, callback, publisher:Client=None):
         connection:Connection = client.connect_to(self.__endpoint)
         result = callback(
             publisher = publisher,
