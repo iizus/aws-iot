@@ -26,17 +26,8 @@ class Provisioning:
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
-        claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
-        provisioned_thing:Client = self.provision_thing_by(claim_connection, name)
-        return provisioned_thing
-
-
-    def provision_thing_by(
-        self,
-        claim_connection:Connection,
-        name:str = get_current_time(),
-    ) -> Client:
         util.print_log(subject=name, verb='Provisioning...')
+        claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
         provisioned_thing:Client = self.__project.create_client(
             client_id = self.__fp.provision_thing(claim_connection, name),
             cert_dir = 'individual/'
