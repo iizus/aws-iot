@@ -26,13 +26,13 @@ class Provisioning:
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
-        util.print_log(subject=name, verb='Provisioning...')
         claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
-        provisioned_thing:Client = self.__project.create_client(
-            client_id = self.__fp.provision_thing(claim_connection, name),
-            cert_dir = 'individual/'
+        subscribed_topic_names:List[str] = self.subscribe_all_topics(claim_connection)
+        provisioned_thing:str = self.register_thing_by(claim_connection, name)
+        self.unsubscribe_all_topics_and_disconnect(
+            claim_connection,
+            subscribed_topic_names
         )
-        util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
 
 
