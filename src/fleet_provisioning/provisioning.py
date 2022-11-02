@@ -7,6 +7,7 @@ from src.client.project import Project
 from src.client.account import get_endpoint, Endpoint
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
+# from awsiot import iotidentity
 
 DEFAULT:dict = util.load_json('default.json')
 
@@ -19,10 +20,12 @@ class Provisioning:
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
     ) -> None:
         self.template_name:str = template_name
-        self.__endpoint:Endpoint = endpoint
-        self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key)
+        # self.__endpoint:Endpoint = endpoint
         self.__project:Project = Project(name='fleet_provisioning')
-        self.claim_client:Client = self.__project.create_client(client_id='claim')
+        self.__claim_client:Client = self.__project.create_client(client_id='claim')
+        claim_connection:Connection = self.__claim_client.connect_to(endpoint)
+        self.__subscribed_topic_names:List[str] = list()
+        self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key, claim_connection)
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
@@ -33,9 +36,9 @@ class Provisioning:
 
 
     def subscribe_all_topics(self) -> List[str]:
-        claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
-        subscribed_topic_names:List[str] = self.__fp.subscribe_all_topics(claim_connection)
-        return subscribed_topic_names
+        self.__subscribed_topic_names += self.__fp.subscribe_CreateKeysAndCertificate_topics_by()
+        self.__subscribed_topic_names += self.__fp.subscribe_RegisterThing_topics_by()
+        return self.__subscribed_topic_names
 
 
     def register_thing_as(self, name:str = get_current_time()) -> Client:
@@ -49,4 +52,4 @@ class Provisioning:
 
     
     def unsubscribe_all_topics_and_disconnect(self) -> dict:
-        return self.__fp.unsubscribe_all_topics_and_disconnect()
+        return self.__fp.unsubscribe_all_topics_and_disconnect(self.__subscribed_topic_names)

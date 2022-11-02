@@ -36,7 +36,6 @@ class PubSub:
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
-        self.__endpoint:Endpoint = endpoint
         self.__callback:PubSub_callback = PubSub_callback(endpoint, topic_name)
         self.__provisioning:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
 
