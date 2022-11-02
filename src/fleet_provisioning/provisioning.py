@@ -7,7 +7,6 @@ from src.client.project import Project
 from src.client.account import get_endpoint, Endpoint
 from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
 
-# from awsiot import iotidentity
 
 DEFAULT:dict = util.load_json('default.json')
 
@@ -19,8 +18,6 @@ class Provisioning:
         template_name:str = DEFAULT.get('TEMPLATE_NAME'),
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
     ) -> None:
-        self.template_name:str = template_name
-        # self.__endpoint:Endpoint = endpoint
         self.__project:Project = Project(name='fleet_provisioning')
         self.__claim_client:Client = self.__project.create_client(client_id='claim')
         claim_connection:Connection = self.__claim_client.connect_to(endpoint)
@@ -36,8 +33,8 @@ class Provisioning:
 
 
     def subscribe_all_topics(self) -> List[str]:
-        self.__subscribed_topic_names += self.__fp.subscribe_CreateKeysAndCertificate_topics_by()
-        self.__subscribed_topic_names += self.__fp.subscribe_RegisterThing_topics_by()
+        self.__subscribed_topic_names += self.__fp.subscribe_CreateKeysAndCertificate_topics()
+        self.__subscribed_topic_names += self.__fp.subscribe_RegisterThing_topics()
         return self.__subscribed_topic_names
 
 
@@ -47,7 +44,7 @@ class Provisioning:
             client_id = self.__fp.register_thing_by(name),
             cert_dir = 'individual/'
         )
-        util.print_log(subject=name, verb='Provisioned')
+        util.print_log(subject=name, verb='Provisioned successfully')
         return provisioned_thing
 
     

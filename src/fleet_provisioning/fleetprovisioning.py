@@ -4,7 +4,6 @@ from awsiot import iotidentity
 from awscrt.mqtt import QoS
 from src.client.connection import Connection
 from src.fleet_provisioning.fp import FP
-# from src.fleet_provisioning.util import get_current_time, error
 
 
 REGISTER_THING:str = 'RegisterThing'
@@ -20,17 +19,6 @@ class FleetProvisioning:
             claim_connection.connection
         )
         self.__fp:FP = FP()
-
-
-    # def subscribe_all_topics(self, claim_connection:Connection) -> List[str]:
-    #     self.__claim_connection:Connection = claim_connection
-    #     claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-    #         claim_connection.connection
-    #     )
-    #     self.__subscribed_topic_names:List[str] = list()
-    #     self.__subscribed_topic_names += self.__subscribe_CreateKeysAndCertificate_topics_by(claim_client)
-    #     self.__subscribed_topic_names += self.__subscribe_RegisterThing_topics_by(claim_client)
-    #     return self.__subscribed_topic_names
     
 
     def register_thing_by(self, provisioning_thing_name:str) -> str:
@@ -62,7 +50,7 @@ class FleetProvisioning:
             return result
         
     
-    def subscribe_RegisterThing_topics_by(self) -> Tuple[str]:
+    def subscribe_RegisterThing_topics(self) -> Tuple[str]:
         request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
             template_name = self.__template_name
         )
@@ -77,7 +65,7 @@ class FleetProvisioning:
         return (accepted_topic_name, rejected_topic_name)
 
 
-    def subscribe_CreateKeysAndCertificate_topics_by(self) -> Tuple[str]:
+    def subscribe_CreateKeysAndCertificate_topics(self) -> Tuple[str]:
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
         accepted_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_accepted_topic_by(
             self.__claim_client,
