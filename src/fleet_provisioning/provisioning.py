@@ -1,24 +1,20 @@
-# from typing import List
+from typing import Tuple, List
+from concurrent.futures import Future
+from awsiot import iotidentity
+from awscrt.mqtt import QoS
+
 from src.utils import util
 from src.client.client import Client
 from src.client.connection import Connection
 from src.fleet_provisioning.util import get_current_time
 from src.client.project import Project
 from src.client.account import get_endpoint, Endpoint
-# from src.fleet_provisioning.fleetprovisioning import FleetProvisioning
-
-from typing import Tuple, List
-from concurrent.futures import Future
-from awsiot import iotidentity
-from awscrt.mqtt import QoS
 from src.client.connection import Connection
 from src.fleet_provisioning.fp import FP
 
 
 REGISTER_THING:str = 'RegisterThing'
 CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
-
-
 
 DEFAULT:dict = util.load_json('default.json')
 
@@ -39,7 +35,6 @@ class Provisioning:
             self.__claim_connection.connection
         )
         self.__subscribed_topic_names:List[str] = list()
-        # self.__fp:FleetProvisioning = FleetProvisioning(template_name, thing_name_key, claim_connection)
         self.__fp:FP = FP()
 
 
@@ -67,9 +62,11 @@ class Provisioning:
 
     
     def unsubscribe_all_topics_and_disconnect(self) -> dict:
-        return self.__unsubscribe_all_topics_and_disconnect(self.__subscribed_topic_names)
-
-
+        for topic in self.__subscribed_topic_names:
+            self.__claim_connection.connection.unsubscribe(topic)
+        else:
+            result:dict = self.__claim_connection.disconnect()
+            return result
 
 
     def __register_thing_as(self, provisioning_thing_name:str) -> str:
@@ -91,14 +88,6 @@ class Provisioning:
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate_by(self.__claim_connection)
         self.__fp.save_certs(cert, client_name)
         return cert
-
-
-    def __unsubscribe_all_topics_and_disconnect(self, subscribed_topic_names:List[str]) -> dict:
-        for topic in subscribed_topic_names:
-            self.__claim_connection.connection.unsubscribe(topic)
-        else:
-            result:dict = self.__claim_connection.disconnect()
-            return result
         
     
     def __subscribe_RegisterThing_topics(self) -> Tuple[str]:
