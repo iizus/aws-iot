@@ -33,15 +33,15 @@ class Provisioning:
 
 
     def subscribe_all_topics(self) -> List[str]:
-        self.__claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
-        self.__subscribed_topic_names:List[str] = self.__fp.subscribe_all_topics(self.__claim_connection)
-        return self.__subscribed_topic_names
+        claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
+        subscribed_topic_names:List[str] = self.__fp.subscribe_all_topics(claim_connection)
+        return subscribed_topic_names
 
 
     def register_thing_as(self, name:str = get_current_time()) -> Client:
         util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__project.create_client(
-            client_id = self.__fp.register_thing_by(self.__claim_connection, name),
+            client_id = self.__fp.register_thing_by(name),
             cert_dir = 'individual/'
         )
         util.print_log(subject=name, verb='Provisioned')
@@ -49,7 +49,4 @@ class Provisioning:
 
     
     def unsubscribe_all_topics_and_disconnect(self) -> dict:
-        return self.__fp.unsubscribe_all_topics_and_disconnect(
-            self.__claim_connection,
-            self.__subscribed_topic_names,
-        )
+        return self.__fp.unsubscribe_all_topics_and_disconnect()
