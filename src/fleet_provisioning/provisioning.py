@@ -28,7 +28,6 @@ class Provisioning:
     def provision_thing(self, name:str=get_current_time()) -> Client:
         claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
         provisioned_thing:Client = self.provision_thing_by(claim_connection, name)
-        claim_connection.disconnect()
         return provisioned_thing
 
 

@@ -64,7 +64,6 @@ class PubSub:
             claim_connection,
             subscribed_topic_names
         )
-        # claim_connection.disconnect()
         return result
 
 
