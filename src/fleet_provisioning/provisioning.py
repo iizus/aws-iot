@@ -26,41 +26,30 @@ class Provisioning:
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
-        claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
-        subscribed_topic_names:List[str] = self.subscribe_all_topics(claim_connection)
-        provisioned_thing:str = self.register_thing_by(claim_connection, name)
-        self.unsubscribe_all_topics_and_disconnect(
-            claim_connection,
-            subscribed_topic_names
-        )
+        subscribed_topic_names:List[str] = self.subscribe_all_topics()
+        provisioned_thing:str = self.register_thing_as(name)
+        self.unsubscribe_all_topics_and_disconnect(subscribed_topic_names)
         return provisioned_thing
 
 
-    def register_thing_by(
-        self,
-        claim_connection:Connection,
-        name:str = get_current_time(),
-    ) -> Client:
+    def subscribe_all_topics(self) -> List[str]:
+        self.__claim_connection:Connection = self.claim_client.connect_to(self.__endpoint)
+        subscribed_topic_names:List[str] = self.__fp.subscribe_all_topics(self.__claim_connection)
+        return subscribed_topic_names
+
+
+    def register_thing_as(self, name:str = get_current_time()) -> Client:
         util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__project.create_client(
-            client_id = self.__fp.register_thing_by(claim_connection, name),
+            client_id = self.__fp.register_thing_by(self.__claim_connection, name),
             cert_dir = 'individual/'
         )
         util.print_log(subject=name, verb='Provisioned')
         return provisioned_thing
 
-
-    def subscribe_all_topics(self, claim_connection:Connection) -> List[str]:
-        subscribed_topic_names:List[str] = self.__fp.subscribe_all_topics(claim_connection)
-        return subscribed_topic_names
-
     
-    def unsubscribe_all_topics_and_disconnect(
-        self,
-        claim_connection:Connection, 
-        subscribed_topic_names:List[str],
-    ) -> dict:
+    def unsubscribe_all_topics_and_disconnect(self, subscribed_topic_names:List[str]) -> dict:
         return self.__fp.unsubscribe_all_topics_and_disconnect(
-            claim_connection,
-            subscribed_topic_names
+            self.__claim_connection,
+            subscribed_topic_names,
         )

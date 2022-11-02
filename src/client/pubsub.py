@@ -54,16 +54,12 @@ class PubSub:
         publisher_name:str = get_current_time(),
         subscriber_name:str = get_current_time(),
     ):
-        claim_connection:Connection = self.__provisioning.claim_client.connect_to(self.__endpoint)
-        subscribed_topic_names:List[str] = self.__provisioning.subscribe_all_topics(claim_connection)
+        subscribed_topic_names:List[str] = self.__provisioning.subscribe_all_topics()
         result = self.check_communication_between(
-            publisher = self.__provisioning.register_thing_by(claim_connection, name=publisher_name),
-            subscriber = self.__provisioning.register_thing_by(claim_connection, name=subscriber_name),
+            publisher = self.__provisioning.register_thing_as(publisher_name),
+            subscriber = self.__provisioning.register_thing_as(subscriber_name),
         )
-        self.__provisioning.unsubscribe_all_topics_and_disconnect(
-            claim_connection,
-            subscribed_topic_names
-        )
+        self.__provisioning.unsubscribe_all_topics_and_disconnect(subscribed_topic_names)
         return result
 
 
