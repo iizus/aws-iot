@@ -1,3 +1,4 @@
+from typing import List
 from src.utils import util
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Connection
@@ -53,12 +54,17 @@ class PubSub:
         publisher_name:str = get_current_time(),
         subscriber_name:str = get_current_time(),
     ):
-        connection:Connection = self.__provisioning.claim_client.connect_to(self.__endpoint)
+        claim_connection:Connection = self.__provisioning.claim_client.connect_to(self.__endpoint)
+        subscribed_topic_names:List[str] = self.__provisioning.subscribe_all_topics(claim_connection)
         result = self.check_communication_between(
-            publisher = self.__provisioning.provision_thing_by(connection, name=publisher_name),
-            subscriber = self.__provisioning.provision_thing_by(connection, name=subscriber_name),
+            publisher = self.__provisioning.register_thing_by(claim_connection, name=publisher_name),
+            subscriber = self.__provisioning.register_thing_by(claim_connection, name=subscriber_name),
         )
-        connection.disconnect()
+        self.__provisioning.unsubscribe_all_topics_and_disconnect(
+            claim_connection,
+            subscribed_topic_names
+        )
+        # claim_connection.disconnect()
         return result
 
 
