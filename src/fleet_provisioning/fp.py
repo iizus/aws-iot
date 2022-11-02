@@ -22,7 +22,6 @@ class FP:
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.RegisterThingRequest
     ) -> str:
-        self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
         self.__log.print_subscribing_accepted(REGISTER_THING)
         future, topic_name = claim_client.subscribe_to_register_thing_accepted(
             request = request,
@@ -101,6 +100,7 @@ class FP:
         claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
     ) -> str:
+        self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
         self.__log.print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
         future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_accepted(
             request = request,

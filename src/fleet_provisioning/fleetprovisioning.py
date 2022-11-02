@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, List
 from concurrent.futures import Future
 from awsiot import iotidentity
 from awscrt.mqtt import QoS
@@ -19,16 +19,18 @@ class FleetProvisioning:
         self.__fp:FP = FP()
 
 
-    def provision_thing(self, connection:Connection, name:str=get_current_time()) -> str:
+    def provision_thing(self, claim_connection:Connection, name:str=get_current_time()) -> str:
         try:
             # Subscribe to necessary topics.
             # Note that is **is** important to wait for "accepted/rejected" subscriptions
             # to succeed before publishing the corresponding "request".
+            subscribed_topic_names:List[str] = self.subscribe_all_topics(claim_connection)
             provisioned_thing_name:str = self.register_thing_by(
-                claim_connection = connection,
+                claim_connection = claim_connection,
                 provisioning_thing_name = name,
             )
             # self.__print_log(verb='Success', message=f"fleet provisioning of {provisioned_thing_name}")
+            self.unsubscribe_all_topics_and_disconnect(claim_connection, subscribed_topic_names)
         except Exception as e:
             error(e)
         return provisioned_thing_name
@@ -39,9 +41,9 @@ class FleetProvisioning:
         claim_connection:Connection,
         provisioning_thing_name:str
     ) -> str:
-        subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
-            claim_connection
-        )
+        # subscribed_topic_names:Tuple[str] = self.__subscribe_RegisterThing_topics_by(
+        #     claim_connection
+        # )
         provisioned_thing_name:str = self.__wait_register_thing(
             claim_connection,
             provisioning_thing_name
@@ -54,12 +56,35 @@ class FleetProvisioning:
         claim_connection:Connection,
         client_name:str,
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        subscribed_topic_names:Tuple[str] = self.__subscribe_CreateKeysAndCertificate_topics_by(
-            claim_connection
-        )
+        # subscribed_topic_names:Tuple[str] = self.__subscribe_CreateKeysAndCertificate_topics_by(
+        #     claim_connection
+        # )
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate_by(claim_connection)
         self.__fp.save_certs(cert, client_name)
         return cert
+
+
+    def subscribe_all_topics(self, claim_connection:Connection) -> List[str]:
+        self.__subscribed_topic_names:List[str] = list()
+        self.__subscribed_topic_names += self.__subscribe_CreateKeysAndCertificate_topics_by(
+            claim_connection
+        )
+        self.__subscribed_topic_names += self.__subscribe_RegisterThing_topics_by(
+            claim_connection
+        )
+        return self.__subscribed_topic_names
+
+    
+    def unsubscribe_all_topics_and_disconnect(
+        self,
+        claim_connection:Connection, 
+        subscribed_topic_names:List[str],
+    ) -> dict:
+        for topic in subscribed_topic_names:
+            claim_connection.connection.unsubscribe(topic)
+        else:
+            result:dict = claim_connection.disconnect()
+            return result
 
 
     def __wait_register_thing(
