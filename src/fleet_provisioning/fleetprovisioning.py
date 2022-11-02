@@ -34,13 +34,12 @@ class FleetProvisioning:
 
     def subscribe_all_topics(self, claim_connection:Connection) -> List[str]:
         self.__claim_connection:Connection = claim_connection
+        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+            claim_connection.connection
+        )
         self.__subscribed_topic_names:List[str] = list()
-        self.__subscribed_topic_names += self.__subscribe_CreateKeysAndCertificate_topics_by(
-            claim_connection
-        )
-        self.__subscribed_topic_names += self.__subscribe_RegisterThing_topics_by(
-            claim_connection
-        )
+        self.__subscribed_topic_names += self.__subscribe_CreateKeysAndCertificate_topics_by(claim_client)
+        self.__subscribed_topic_names += self.__subscribe_RegisterThing_topics_by(claim_client)
         return self.__subscribed_topic_names
     
 
@@ -73,12 +72,9 @@ class FleetProvisioning:
             return result
         
     
-    def __subscribe_RegisterThing_topics_by(self, claim_connection:Connection) -> Tuple[str]:
+    def __subscribe_RegisterThing_topics_by(self, claim_client:iotidentity.IotIdentityClient) -> Tuple[str]:
         request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
             template_name = self.__template_name
-        )
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
         )
         accepted_topic_name:str = self.__fp.subscribe_RegisterThing_accepted_topic_by(
             claim_client,
@@ -91,13 +87,7 @@ class FleetProvisioning:
         return (accepted_topic_name, rejected_topic_name)
 
 
-    def __subscribe_CreateKeysAndCertificate_topics_by(
-        self,
-        claim_connection:Connection
-    ) -> Tuple[str]:
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
-        )
+    def __subscribe_CreateKeysAndCertificate_topics_by(self, claim_client:iotidentity.IotIdentityClient) -> Tuple[str]:
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
         accepted_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_accepted_topic_by(
             claim_client,
