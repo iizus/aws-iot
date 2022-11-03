@@ -11,19 +11,17 @@ CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 
 
 class FP:
-    from src.client.connection import Connection
+    # from src.client.connection import Connection
 
-    def __init__(self) -> None:
+    def __init__(self, claim_client:iotidentity.IotIdentityClient) -> None:
+        self.__claim_client:iotidentity.IotIdentityClient = claim_client
+        self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
         self.__response:dict = dict()
     
 
-    def subscribe_RegisterThing_accepted_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.RegisterThingRequest
-    ) -> str:
+    def subscribe_RegisterThing_accepted_topic_by(self, request:iotidentity.RegisterThingRequest) -> str:
         self.__log.print_subscribing_accepted(REGISTER_THING)
-        future, topic_name = claim_client.subscribe_to_register_thing_accepted(
+        future, topic_name = self.__claim_client.subscribe_to_register_thing_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_RegisterThing_accepted
@@ -33,13 +31,9 @@ class FP:
         return topic_name
 
 
-    def subscribe_RegisterThing_rejected_topic_by(
-        self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.RegisterThingRequest
-    ) -> str:
+    def subscribe_RegisterThing_rejected_topic_by(self, request:iotidentity.RegisterThingRequest) -> str:
         self.__log.print_subscribing_rejected(REGISTER_THING)
-        future, topic_name = claim_client.subscribe_to_register_thing_rejected(
+        future, topic_name = self.__claim_client.subscribe_to_register_thing_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_RegisterThing_rejected
@@ -51,7 +45,6 @@ class FP:
     
     def request_and_wait(
         self,
-        claim_connection:Connection,
         request_name:str,
         request,
         template_parameters:dict = None,
@@ -59,10 +52,10 @@ class FP:
     ):
         self.__response[request_name] = None
         self.__log.print_log(verb='Publishing...', message=f'{request_name} topic')
-        claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            claim_connection.connection
-        )
-        request(claim_client, template_parameters, cert)
+        # claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
+        #     claim_connection.connection
+        # )
+        request(template_parameters, cert)
         self.__wait_for(request_name)
         return self.__response[request_name]
 
@@ -81,12 +74,8 @@ class FP:
         self.__log.print_log(verb='Saved', message=log)
 
 
-    def create_keys_and_certificate_by(
-        self,
-        claim_connection:Connection,
-    ) -> iotidentity.CreateKeysAndCertificateResponse:
+    def create_keys_and_certificate(self) -> iotidentity.CreateKeysAndCertificateResponse:
         self.request_and_wait(
-            claim_connection = claim_connection,
             request_name = CREATE_KEYS_AND_CERTIFICATE,
             request = self.__publish_CreateKeysAndCertificate_topic_by,
         )
@@ -97,12 +86,10 @@ class FP:
     
     def subscribe_CreateKeysAndCertificate_accepted_topic_by(
         self,
-        claim_client:iotidentity.IotIdentityClient,
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
     ) -> str:
-        self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
         self.__log.print_subscribing_accepted(CREATE_KEYS_AND_CERTIFICATE)
-        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_accepted(
+        future, topic_name = self.__claim_client.subscribe_to_create_keys_and_certificate_accepted(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_CreateKeysAndCertificate_accepted
@@ -114,11 +101,10 @@ class FP:
 
     def subscribe_CreateKeysAndCertificate_rejected_topic_by(
         self,
-        claim_client:iotidentity.IotIdentityClient,
-        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest
+        request:iotidentity.CreateKeysAndCertificateSubscriptionRequest,
     ) -> str:
         self.__log.print_subscribing_rejected(CREATE_KEYS_AND_CERTIFICATE)
-        future, topic_name = claim_client.subscribe_to_create_keys_and_certificate_rejected(
+        future, topic_name = self.__claim_client.subscribe_to_create_keys_and_certificate_rejected(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
             callback = self.__on_CreateKeysAndCertificate_rejected
@@ -155,11 +141,10 @@ class FP:
 
     def __publish_CreateKeysAndCertificate_topic_by(
         self,
-        claim_client:iotidentity.IotIdentityClient,
         template_parameters:dict = None,
         cert:iotidentity.CreateKeysAndCertificateResponse = None,
     ) -> None:
-        future:Future = claim_client.publish_create_keys_and_certificate(
+        future:Future = self.__claim_client.publish_create_keys_and_certificate(
             request = iotidentity.CreateKeysAndCertificateRequest(),
             qos = QoS.AT_LEAST_ONCE
         )

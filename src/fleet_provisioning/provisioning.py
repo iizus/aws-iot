@@ -35,7 +35,7 @@ class Provisioning:
             self.__claim_connection.connection
         )
         self.__subscribed_topic_names:List[str] = list()
-        self.__fp:FP = FP()
+        self.__fp:FP = FP(self.__claim_client)
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:
@@ -71,7 +71,6 @@ class Provisioning:
 
     def __register_thing_as(self, provisioning_thing_name:str) -> str:
         response = self.__fp.request_and_wait(
-            claim_connection = self.__claim_connection,
             request_name = REGISTER_THING,
             request = self.__publish_RegisterThing_topic_by,
             template_parameters = { self.__thing_name_key: provisioning_thing_name },
@@ -85,42 +84,29 @@ class Provisioning:
         self,
         client_name:str,
     ) -> iotidentity.CreateKeysAndCertificateResponse:
-        cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate_by(self.__claim_connection)
+        cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate()
         self.__fp.save_certs(cert, client_name)
         return cert
         
     
     def __subscribe_RegisterThing_topics(self) -> Tuple[str]:
         request:iotidentity.RegisterThingSubscriptionRequest = iotidentity.RegisterThingSubscriptionRequest(
-            template_name = self.__template_name
+            self.__template_name
         )
-        accepted_topic_name:str = self.__fp.subscribe_RegisterThing_accepted_topic_by(
-            self.__claim_client,
-            request
-        )
-        rejected_topic_name:str = self.__fp.subscribe_RegisterThing_rejected_topic_by(
-            self.__claim_client,
-            request
-        )
+        accepted_topic_name:str = self.__fp.subscribe_RegisterThing_accepted_topic_by(request)
+        rejected_topic_name:str = self.__fp.subscribe_RegisterThing_rejected_topic_by(request)
         return (accepted_topic_name, rejected_topic_name)
 
 
     def __subscribe_CreateKeysAndCertificate_topics(self) -> Tuple[str]:
         request:iotidentity.CreateKeysAndCertificateSubscriptionRequest = iotidentity.CreateKeysAndCertificateSubscriptionRequest()
-        accepted_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_accepted_topic_by(
-            self.__claim_client,
-            request
-        )
-        rejected_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_rejected_topic_by(
-            self.__claim_client,
-            request
-        )
+        accepted_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_accepted_topic_by(request)
+        rejected_topic_name:str = self.__fp.subscribe_CreateKeysAndCertificate_rejected_topic_by(request)
         return (accepted_topic_name, rejected_topic_name)
 
     
     def __publish_RegisterThing_topic_by(
         self,
-        claim_client:iotidentity.IotIdentityClient,
         template_parameters:dict,
         cert:iotidentity.CreateKeysAndCertificateResponse,
     ) -> None:
@@ -129,7 +115,7 @@ class Provisioning:
             certificate_ownership_token = cert.certificate_ownership_token,
             parameters = template_parameters,
         )
-        future:Future = claim_client.publish_register_thing(
+        future:Future = self.__claim_client.publish_register_thing(
             request = request,
             qos = QoS.AT_LEAST_ONCE,
         )
