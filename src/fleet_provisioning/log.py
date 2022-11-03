@@ -31,7 +31,7 @@ class Log:
 
 
     def print_subscribed(self, topic:str) -> None:
-        self.print_log(verb='Subscribed', message=topic)
+        self.print_log(verb='Subscribed    ', message=topic)
 
     
     def print_rejected(self, api:str, response:iotidentity.ErrorResponse) -> None:

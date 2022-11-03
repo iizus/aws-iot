@@ -44,7 +44,7 @@ class Client:
         connect_result:dict = __connect.result()
         session_present:bool = connect_result.get('session_present')
         self.__print_log(
-            verb = 'Connected',
+            verb = 'Connected    ',
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}"
         )
         self.__connection:Connection = Connection(self.__project_name, connection)
