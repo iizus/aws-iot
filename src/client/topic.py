@@ -78,14 +78,18 @@ class Topic:
 
 
     def __print_publish_log(self, verb:str, payload:str, packet_id:int=None) -> None:
-        message:str = f"{payload} to {self.__endpoint} by QoS{self.__QoS}, Retain message: {self.__retain}"
-        self.__print_pubsub_log(verb, message, packet_id)
+        self.__print_pubsub_log(
+            verb = verb,
+            message = f"{payload} to {self.__endpoint} by QoS{self.__QoS} and Retain message: {self.__retain}",
+            packet_id = packet_id,
+        )
 
 
     def __print_subscribe_log(self, verb:str, QoS:Literal, callback_name:str, packet_id:int=None) -> None:
         self.__print_pubsub_log(
             verb = verb,
-            message = f"{self.__endpoint} by QoS{QoS}, Callback: {callback_name}", packet_id=packet_id
+            message = f"{self.__endpoint} by QoS{QoS}, Callback: {callback_name}",
+            packet_id = packet_id,
         )
 
 

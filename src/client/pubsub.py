@@ -8,6 +8,7 @@ from src.fleet_provisioning.provisioning import Provisioning, get_current_time
 
 DEFAULT:dict = util.load_json('default.json')
 
+
 def check_communication(
     account_name:str = DEFAULT.get('ACCOUNT_NAME'),
     region_name:str = DEFAULT.get('REGION_NAME'),

@@ -57,11 +57,17 @@ class Provisioning:
 
     
     def unsubscribe_all_topics_and_disconnect(self) -> dict:
-        for topic in self.__subscribed_topic_names:
-            self.__connection.unsubscribe(topic)
+        for topic_name in self.__subscribed_topic_names:
+            self.__print_claim_log('Unsubscribing...', topic_name)
+            self.__connection.unsubscribe(topic_name)
+            self.__print_claim_log('Unsubscribed    ', topic_name)
         else:
             result:dict = self.__claim_client.disconnect()
             return result
+
+    
+    def __print_claim_log(self, verb:str, topic_name:str) -> None:
+        util.print_log(subject=self.__claim_client.id, verb=verb, message=topic_name)
 
 
     def __register_thing_as(self, provisioning_thing_name:str) -> str:
