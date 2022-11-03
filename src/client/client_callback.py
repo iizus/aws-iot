@@ -5,12 +5,12 @@ from concurrent.futures import Future
 
 
 # Callback when an interrupted connection is re-established.
-def on_connection_resumed(
-    connection:mqtt.Connection,
-    return_code,
-    session_present,
-) -> None:
-    print(f"[{connection.client_id}] Resumed connection with {connection.host_name}, Return code: {return_code} and Session present: {session_present}")
+def on_connection_resumed(connection:mqtt.Connection, return_code:int, session_present:bool) -> None:
+    util.print_log(
+        subject = connection.client_id,
+        verb = 'Resumed',
+        message = f"connection with {connection.host_name}, Return code: {return_code} and Session present: {session_present}"
+    )
     if return_code == mqtt.ConnectReturnCode.ACCEPTED and not session_present:
         packet_id:int = __resubscribe(connection)
         
