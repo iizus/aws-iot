@@ -29,7 +29,7 @@ class PubSub_callback:
         return result
 
             
-    def subscribe(self, publisher:Client, topic:Topic) -> int:
+    def subscribe(self, publisher:Client, topic:Topic) -> None:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
         self.excute_callback_on(client=publisher, callback=self.publish)
@@ -39,8 +39,6 @@ class PubSub_callback:
             message = "for all messages to be received"
         )
         self.__received_event.wait()
-        packet_id:int = topic.unsubscribe()
-        return packet_id
 
 
     def publish(self, publisher:Client, topic:Topic) -> int:
