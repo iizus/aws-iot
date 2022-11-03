@@ -1,3 +1,4 @@
+import json
 from threading import Event
 from src.utils import util
 from src.client.account import get_endpoint, Endpoint
@@ -29,7 +30,7 @@ class PubSub_callback:
         return result
 
             
-    def subscribe(self, publisher:Client, topic:Topic) -> None:
+    def subscribe_and_wait_massage(self, publisher:Client, topic:Topic) -> None:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
         self.excute_callback_on(client=publisher, callback=self.publish)
@@ -42,7 +43,8 @@ class PubSub_callback:
 
 
     def publish(self, publisher:Client, topic:Topic) -> int:
-        packet_id:int = topic.publish({'from': topic.client_id})
+        self.__message:str = {'from': topic.client_id}
+        packet_id:int = topic.publish(self.__message)
         return packet_id
 
 
@@ -56,4 +58,9 @@ class PubSub_callback:
         **kwargs:dict
     ) -> None:
         Topic.print_recieved_message(topic, payload, dup, qos, retain, **kwargs)
-        self.__received_event.set()
+        decoded_payload:dict = json.loads(payload.decode('utf-8'))
+        if self.__message == decoded_payload:
+            self.__received_event.set()
+        else:
+            print(self.__message)
+            print(decoded_payload)

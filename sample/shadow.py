@@ -6,13 +6,8 @@ path.append(parent_dir)
 
 
 
-from src.client.account import Account, Endpoint, Project
+from src.client.account import Account, Endpoint
 from src.client.connection import Topic
-
-
-def publish_messages(topic:Topic) -> None:
-    for i in range(3):
-        topic.publish(message={'client': topic.client_id, 'times': i})
 
 
 test_env:Account = Account(name='test')
@@ -23,7 +18,6 @@ test_tokyo:Endpoint = test_env.get_endpoint_of(region='ap-northeast-1')
 
 test_virginia_443:Endpoint = test_virginia.set_port(443)
 test_virginia_443_ca:Endpoint = test_virginia_443.set_ca(type='RSA2048')
-fp:Endpoint = test_virginia.set_FP(template_name='ec2')
 
 test_project:Project = Project(name='test')
 

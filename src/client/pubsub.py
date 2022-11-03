@@ -66,7 +66,7 @@ class PubSub:
     def check_communication_between(self, publisher:Client, subscriber:Client):
         result = self.__callback.excute_callback_on(
             client = subscriber,
-            callback = self.__callback.subscribe,
+            callback = self.__callback.subscribe_and_wait_massage,
             publisher = publisher,
         )
         return result
