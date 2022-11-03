@@ -11,8 +11,6 @@ from src.fleet_provisioning.fp import FP
 
 
 REGISTER_THING:str = 'RegisterThing'
-CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
-
 DEFAULT:dict = util.load_json('default.json')
 
 
@@ -57,14 +55,21 @@ class Provisioning:
 
     
     def unsubscribe_all_topics_and_disconnect(self) -> dict:
-        for topic_name in self.__subscribed_topic_names:
-            self.__print_claim_log('Unsubscribing...', topic_name)
-            self.__connection.unsubscribe(topic_name)
-            self.__print_claim_log('Unsubscribed    ', topic_name)
-        else:
-            result:dict = self.__claim_client.disconnect()
-            return result
+        self.__unsubscribe_all_topics()
+        result:dict = self.__claim_client.disconnect()
+        return result
 
+
+    def __unsubscribe_all_topics(self) -> None:
+        for topic_name in self.__subscribed_topic_names:
+            self.__unsubscribe(topic_name)
+
+
+    def __unsubscribe(self, topic_name:str) -> None:
+        self.__print_claim_log('Unsubscribing...', topic_name)
+        self.__connection.unsubscribe(topic_name)
+        self.__print_claim_log('Unsubscribed    ', topic_name)
+        
     
     def __print_claim_log(self, verb:str, topic_name:str) -> None:
         util.print_log(subject=self.__claim_client.id, verb=verb, message=topic_name)

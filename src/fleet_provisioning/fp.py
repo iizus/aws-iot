@@ -66,7 +66,7 @@ class FP:
             response = cert,
             thing_name = provisioning_thing_name
         )
-        self.__log.print_log(verb='Saved', message=log)
+        self.__log.print_log(verb='Saved    ', message=log)
 
 
     def create_keys_and_certificate(self) -> iotidentity.CreateKeysAndCertificateResponse:
