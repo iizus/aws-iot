@@ -34,20 +34,21 @@ class Client:
             verb = 'Connecting...',
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive} and Clean session: {clean_session}"
         )
-        self.__connection:mqtt.Connection = self.__connect_to(endpoint, keep_alive, clean_session)
+        connection:mqtt.Connection = self.__connect_to(endpoint, keep_alive, clean_session)
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
-        __connect = self.__connection.connect()
+        __connect = connection.connect()
         connect_result:dict = __connect.result()
         session_present:bool = connect_result.get('session_present')
         self.__print_log(
             verb = 'Connected',
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}"
         )
-        return Connection(self.__project_name, self.__connection)
+        self.__connection:Connection = Connection(self.__project_name, connection)
+        return self.__connection
 
 
     def __connect_to(
@@ -73,15 +74,11 @@ class Client:
 
 
     def disconnect(self) -> dict:
-        util.print_log(subject=self.id, verb="Disconnecting...")
-        disconnect_result:dict = self.__connection.disconnect().result()
-        util.print_log(
-            subject = self.id,
-            verb = 'Disconnected',
-            message = f"Result: {disconnect_result}"
-        )
+        self.__print_log(verb="Disconnecting...")
+        disconnect_result:dict = self.__connection.disconnect()
+        self.__print_log(verb='Disconnected', message=f"Result: {disconnect_result}")
         return disconnect_result
 
 
-    def __print_log(self, verb:str, message:str) -> None:
+    def __print_log(self, verb:str, message:str='') -> None:
         util.print_log(subject=self.id, verb=verb, message=message)
