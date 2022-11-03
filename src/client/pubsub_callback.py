@@ -25,7 +25,7 @@ class PubSub_callback:
             publisher = publisher,
             topic = connection.use_topic(self.__topic_name),
         )
-        connection.disconnect()
+        client.disconnect()
         return result
 
             

@@ -28,26 +28,26 @@ class Client:
         self,
         endpoint,
         keep_alive:int = DEFAULT.get('KEEP_A_LIVE_SEC'),
-        clean_session:bool = DEFAULT.get('CLEAN_SESSION')
+        clean_session:bool = DEFAULT.get('CLEAN_SESSION'),
     ) -> Connection:
         self.__print_log(
             verb = 'Connecting...',
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive} and Clean session: {clean_session}"
         )
-        connection:mqtt.Connection = self.__connect_to(endpoint, keep_alive, clean_session)
+        self.__connection:mqtt.Connection = self.__connect_to(endpoint, keep_alive, clean_session)
         # Wait for connection to be fully established.
         # Note that it's not necessary to wait, commands issued to the
         # mqtt_connection before its fully connected will simply be queued.
         # But this sample waits here so it's obvious when a connection
         # fails or succeeds.
-        __connect = connection.connect()
+        __connect = self.__connection.connect()
         connect_result:dict = __connect.result()
         session_present:bool = connect_result.get('session_present')
         self.__print_log(
             verb = 'Connected',
             message = f"to {endpoint.endpoint}, Keep alive: {keep_alive}, Clean session: {clean_session} and Session present: {session_present}"
         )
-        return Connection(self.__project_name, connection)
+        return Connection(self.__project_name, self.__connection)
 
 
     def __connect_to(
@@ -70,6 +70,17 @@ class Client:
             port = endpoint.port,
             http_proxy_options = endpoint.proxy,
         )
+
+
+    def disconnect(self) -> dict:
+        util.print_log(subject=self.id, verb="Disconnecting...")
+        disconnect_result:dict = self.__connection.disconnect().result()
+        util.print_log(
+            subject = self.id,
+            verb = 'Disconnected',
+            message = f"Result: {disconnect_result}"
+        )
+        return disconnect_result
 
 
     def __print_log(self, verb:str, message:str) -> None:

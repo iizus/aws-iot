@@ -18,14 +18,3 @@ class Connection:
         retain:bool = False
     ):
         return Topic(self.__project_name, self.connection, name, QoS, retain)
-
-
-    def disconnect(self) -> dict:
-        util.print_log(subject=self.client_id, verb="Disconnecting...")
-        disconnect_result:dict = self.connection.disconnect().result()
-        util.print_log(
-            subject = self.client_id,
-            verb = 'Disconnected',
-            message = f"Result: {disconnect_result}"
-        )
-        return disconnect_result

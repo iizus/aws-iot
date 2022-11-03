@@ -26,9 +26,10 @@ class Provisioning:
         self.__template_name:str = template_name
         self.__thing_name_key:str = thing_name_key
         self.__project:Project = Project(name='fleet_provisioning')
-        claim_client:Client = self.__project.create_client(client_id='claim')
-        self.__claim_connection:Connection = claim_client.connect_to(endpoint)
-        self.__fp:FP = FP(self.__claim_connection.connection)
+        self.__claim_client:Client = self.__project.create_client(client_id='claim')
+        claim_connection:Connection = self.__claim_client.connect_to(endpoint)
+        self.__connection = claim_connection.connection
+        self.__fp:FP = FP(self.__connection)
         self.__subscribed_topic_names:List[str] = list()
 
 
@@ -57,9 +58,9 @@ class Provisioning:
     
     def unsubscribe_all_topics_and_disconnect(self) -> dict:
         for topic in self.__subscribed_topic_names:
-            self.__claim_connection.connection.unsubscribe(topic)
+            self.__connection.unsubscribe(topic)
         else:
-            result:dict = self.__claim_connection.disconnect()
+            result:dict = self.__claim_client.disconnect()
             return result
 
 
