@@ -11,8 +11,6 @@ CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 
 
 class FP:
-    # from src.client.connection import Connection
-
     def __init__(self, claim_client:iotidentity.IotIdentityClient) -> None:
         self.__claim_client:iotidentity.IotIdentityClient = claim_client
         self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
@@ -52,9 +50,6 @@ class FP:
     ):
         self.__response[request_name] = None
         self.__log.print_log(verb='Publishing...', message=f'{request_name} topic')
-        # claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-        #     claim_connection.connection
-        # )
         request(template_parameters, cert)
         self.__wait_for(request_name)
         return self.__response[request_name]
@@ -114,10 +109,15 @@ class FP:
         return topic_name
 
 
-    def __on_CreateKeysAndCertificate_accepted(
-        self,
-        response:iotidentity.CreateKeysAndCertificateResponse
-    ) -> None:
+    def publish_RegisterThing_topic_by(self, request:iotidentity.RegisterThingRequest) -> None:
+        future:Future = self.__claim_client.publish_register_thing(
+            request = request,
+            qos = QoS.AT_LEAST_ONCE,
+        )
+        future.add_done_callback(self.__on_publish_RegisterThing)
+
+
+    def __on_CreateKeysAndCertificate_accepted(self, response:iotidentity.CreateKeysAndCertificateResponse) -> None:
         try:
             self.__response[CREATE_KEYS_AND_CERTIFICATE] = response
         except Exception as e:
@@ -166,5 +166,5 @@ class FP:
         self.__log.print_published(CREATE_KEYS_AND_CERTIFICATE, future)
 
 
-    def on_publish_RegisterThing(self, future:Future) -> None:
+    def __on_publish_RegisterThing(self, future:Future) -> None:
         self.__log.print_published(REGISTER_THING, future)

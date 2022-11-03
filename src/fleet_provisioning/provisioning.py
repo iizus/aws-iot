@@ -80,10 +80,7 @@ class Provisioning:
         return provisioned_thing_name
     
 
-    def save_keys_and_certificate_by(
-        self,
-        client_name:str,
-    ) -> iotidentity.CreateKeysAndCertificateResponse:
+    def save_keys_and_certificate_by(self, client_name:str) -> iotidentity.CreateKeysAndCertificateResponse:
         cert:iotidentity.CreateKeysAndCertificateResponse = self.__fp.create_keys_and_certificate()
         self.__fp.save_certs(cert, client_name)
         return cert
@@ -115,8 +112,4 @@ class Provisioning:
             certificate_ownership_token = cert.certificate_ownership_token,
             parameters = template_parameters,
         )
-        future:Future = self.__claim_client.publish_register_thing(
-            request = request,
-            qos = QoS.AT_LEAST_ONCE,
-        )
-        future.add_done_callback(self.__fp.on_publish_RegisterThing)
+        self.__fp.publish_RegisterThing_topic_by(request)
