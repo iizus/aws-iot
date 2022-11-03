@@ -1,7 +1,5 @@
 from typing import Tuple, List
-from concurrent.futures import Future
 from awsiot import iotidentity
-from awscrt.mqtt import QoS
 
 from src.utils import util
 from src.client.client import Client
@@ -9,7 +7,6 @@ from src.client.connection import Connection
 from src.fleet_provisioning.util import get_current_time
 from src.client.project import Project
 from src.client.account import get_endpoint, Endpoint
-from src.client.connection import Connection
 from src.fleet_provisioning.fp import FP
 
 
@@ -31,11 +28,8 @@ class Provisioning:
         self.__project:Project = Project(name='fleet_provisioning')
         claim_client:Client = self.__project.create_client(client_id='claim')
         self.__claim_connection:Connection = claim_client.connect_to(endpoint)
-        self.__claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(
-            self.__claim_connection.connection
-        )
+        self.__fp:FP = FP(self.__claim_connection.connection)
         self.__subscribed_topic_names:List[str] = list()
-        self.__fp:FP = FP(self.__claim_client)
 
 
     def provision_thing(self, name:str=get_current_time()) -> Client:

@@ -1,7 +1,7 @@
 from time import sleep
 from concurrent.futures import Future
 from awsiot import iotidentity
-from awscrt.mqtt import QoS
+from awscrt.mqtt import QoS, Connection
 from src.fleet_provisioning.log import Log
 from src.fleet_provisioning import util
 
@@ -11,9 +11,9 @@ CREATE_KEYS_AND_CERTIFICATE:str = 'CreateKeysAndCertificate'
 
 
 class FP:
-    def __init__(self, claim_client:iotidentity.IotIdentityClient) -> None:
-        self.__claim_client:iotidentity.IotIdentityClient = claim_client
-        self.__log:Log = Log(claim_client_name=claim_client.mqtt_connection.client_id)
+    def __init__(self, claim_connection:Connection) -> None:
+        self.__claim_client:iotidentity.IotIdentityClient = iotidentity.IotIdentityClient(claim_connection)
+        self.__log:Log = Log(claim_client_name=claim_connection.client_id)
         self.__response:dict = dict()
     
 
