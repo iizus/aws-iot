@@ -11,10 +11,14 @@ class Topic:
         dup:bool,
         qos:mqtt.QoS,
         retain:bool,
-        **kwargs:dict
+        **kwargs:dict,
     ) -> None:
         message:dict = json.loads(payload)
-        util.print_log(subject=topic, verb='Recieved', message=f"{message} by QoS{qos}, DUP: {dup} and Retain message: {retain}")
+        util.print_log(
+            subject = topic,
+            verb = 'Recieved',
+            message = f"{message} by QoS{qos}, DUP: {dup} and Retain message: {retain}"
+        )
 
 
     def __init__(
@@ -31,8 +35,8 @@ class Topic:
         self.__endpoint:str = f"{connection.host_name}:{connection.port}/{self.__topic}"
         self.__QoS:Literal = QoS
         self.__retain:bool = retain
-        util.print_log(
-            subject = self.client_id,
+        self.__subscribed_topic:str = None
+        self.__print_log(
             verb = 'Set',
             message = f"topic as {self.__topic} by QoS{self.__QoS} and Retain message: {self.__retain}"
         )
@@ -59,17 +63,18 @@ class Topic:
             callback,
         )
         subscribe_result:dict = subscribe_future.result()
-        # topic:str = subscribe_result.get('topic')
+        self.__subscribed_topic:str = subscribe_result.get('topic')
         QoS:int = subscribe_result.get('qos')
         self.__print_subscribe_log(verb='Subscribed', QoS=QoS, callback_name=callback.__name__, packet_id=packet_id)
         return subscribe_result
 
 
     def unsubscribe(self) -> int:
-        self.__print_unsubscribe_log(verb='Unsubscribing...')
-        _, packet_id = self.__connection.unsubscribe(self.__topic)
-        self.__print_unsubscribe_log(verb='Unsubscribed', packet_id=packet_id)
-        return packet_id
+        if self.__subscribed_topic:
+            self.__print_unsubscribe_log(verb='Unsubscribing...')
+            _, packet_id = self.__connection.unsubscribe(self.__subscribed_topic)
+            self.__print_unsubscribe_log(verb='Unsubscribed', packet_id=packet_id)
+            return packet_id
 
 
     def __print_publish_log(self, verb:str, payload:str, packet_id:int=None) -> None:
@@ -78,7 +83,10 @@ class Topic:
 
 
     def __print_subscribe_log(self, verb:str, QoS:Literal, callback_name:str, packet_id:int=None) -> None:
-        self.__print_pubsub_log(verb=verb, message=f"{self.__endpoint} by QoS{QoS}, Callback: {callback_name}", packet_id=packet_id)
+        self.__print_pubsub_log(
+            verb = verb,
+            message = f"{self.__endpoint} by QoS{QoS}, Callback: {callback_name}", packet_id=packet_id
+        )
 
 
     def __print_unsubscribe_log(self, verb:str, packet_id:int=None) -> None:
@@ -86,7 +94,7 @@ class Topic:
 
 
     def __print_pubsub_log(self, verb:str, message:str, packet_id:int=None) -> None:
-        self.__print_log(verb, f"{message} and Packet ID: {packet_id}")
+        self.__print_log(verb=verb, message=f"{message} and Packet ID: {packet_id}")
 
 
     def __print_log(self, verb:str, message:str) -> None:
