@@ -36,7 +36,7 @@ class PubSub:
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
         self.__callback:PubSub_callback = PubSub_callback(endpoint, topic_name)
-        self.__provisioning:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
+        self.provisioning:Provisioning = Provisioning(endpoint, template_name, thing_name_key)
 
 
     def publish(self, publisher_name:str=get_current_time()):
@@ -52,12 +52,12 @@ class PubSub:
         publisher_name:str = get_current_time(),
         subscriber_name:str = get_current_time(),
     ):
-        self.__provisioning.subscribe_all_topics()
+        # self.__provisioning.subscribe_all_topics()
         result = self.check_communication_between(
-            publisher = self.__provisioning.register_thing_as(publisher_name),
-            subscriber = self.__provisioning.register_thing_as(subscriber_name),
+            publisher = self.provisioning.register_thing_as(publisher_name),
+            subscriber = self.provisioning.register_thing_as(subscriber_name),
         )
-        self.__provisioning.unsubscribe_all_topics_and_disconnect()
+        # self.__provisioning.unsubscribe_all_topics_and_disconnect()
         return result
 
 

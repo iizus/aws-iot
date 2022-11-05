@@ -7,7 +7,7 @@ path.append(parent_dir)
 
 from src.client.client import Client
 from src.client.pubsub import check_communication, PubSub
-from src.fleet_provisioning.provisioning import Provisioning
+from src.fleet_provisioning.provisioning import Provisioning, get_current_time
 
 
 def main():
@@ -15,11 +15,11 @@ def main():
 
 
 def check_communications(times:int=3):
+    # provisioning:Provisioning = Provisioning()
     pubsub:PubSub = PubSub()
-    provisioning:Provisioning = Provisioning()
     
-    publisher:Client = provisioning.provision_thing()
-    subscriber:Client = provisioning.provision_thing()
+    publisher:Client = pubsub.provisioning.register_thing_as(name=get_current_time())
+    subscriber:Client = pubsub.provisioning.register_thing_as(name=get_current_time())
 
     for _ in range(times):
         pubsub.check_communication_between(publisher, subscriber)

@@ -33,12 +33,12 @@ class PubSub_callback:
     def subscribe_and_wait_massage(self, publisher:Client, topic:Topic) -> None:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
-        self.excute_callback_on(client=publisher, callback=self.publish)
         util.print_log(
             subject = topic.client_id,
             verb = 'Waiting...',
             message = "for all messages to be received"
         )
+        self.excute_callback_on(client=publisher, callback=self.publish)
         self.__received_event.wait()
 
 

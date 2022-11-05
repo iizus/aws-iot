@@ -29,13 +29,11 @@ class Provisioning:
         self.__connection = claim_connection.connection
         self.__fp:FP = FP(self.__connection)
         self.__subscribed_topic_names:List[str] = list()
-
-
-    def provision_thing(self, name:str=get_current_time()) -> Client:
         self.subscribe_all_topics()
-        provisioned_thing:str = self.register_thing_as(name)
+
+    
+    def __del__(self):
         self.unsubscribe_all_topics_and_disconnect()
-        return provisioned_thing
 
 
     def subscribe_all_topics(self) -> List[str]:
@@ -44,7 +42,7 @@ class Provisioning:
         return self.__subscribed_topic_names
 
 
-    def register_thing_as(self, name:str = get_current_time()) -> Client:
+    def register_thing_as(self, name:str=get_current_time()) -> Client:
         util.print_log(subject=name, verb='Provisioning...')
         provisioned_thing:Client = self.__project.create_client(
             client_id = self.__register_thing_as(name),
@@ -75,7 +73,7 @@ class Provisioning:
         util.print_log(subject=self.__claim_client.id, verb=verb, message=topic_name)
 
 
-    def __register_thing_as(self, provisioning_thing_name:str) -> str:
+    def __register_thing_as(self, provisioning_thing_name:str=get_current_time()) -> str:
         response = self.__fp.request_and_wait(
             request_name = REGISTER_THING,
             request = self.__publish_RegisterThing_topic_by,
