@@ -41,7 +41,7 @@ class PubSub:
 
     def publish(self, publisher_name:str=get_current_time()):
         result = self.__callback.excute_callback_on(
-            client = self.__provisioning.provision_thing(publisher_name),
+            client = self.provisioning.register_thing_as(publisher_name),
             callback = self.__callback.publish,
         )
         return result
