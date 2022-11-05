@@ -1,4 +1,5 @@
 from src.utils import util
+from src.client.connection import Connection
 from src.client.account import get_endpoint, Endpoint
 from src.client.pubsub_callback import PubSub_callback
 from src.fleet_provisioning.provisioning import Provisioning, get_current_time
@@ -61,10 +62,14 @@ class PubSub:
         return result
 
 
-    def check_communication_between(self, publisher:Client, subscriber:Client):
+    def check_communication_between(
+        self,
+        publisher_connection:Connection,
+        subscriber_connection:Connection,
+    ):
         result = self.__callback.excute_callback_on(
-            client = subscriber,
+            connection = subscriber_connection,
             callback = self.__callback.subscribe_and_wait_massage,
-            publisher = publisher,
+            publisher_connection = publisher_connection,
         )
         return result

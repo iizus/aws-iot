@@ -21,6 +21,7 @@ class Provisioning:
         template_name:str = DEFAULT.get('TEMPLATE_NAME'),
         thing_name_key:str = DEFAULT.get('THING_NAME_KEY'),
     ) -> None:
+        self.__endopoint:Endpoint = endpoint
         self.__template_name:str = template_name
         self.__thing_name_key:str = thing_name_key
         self.__project:Project = Project(name='fleet_provisioning')
@@ -34,6 +35,12 @@ class Provisioning:
     
     def __del__(self):
         self.unsubscribe_all_topics_and_disconnect()
+
+    
+    def provision_and_connect_thing(self, name:str=get_current_time()) -> Connection:
+        provisioned_thing:Client = self.register_thing_as(name)
+        provisioned_thing_connection:Connection = provisioned_thing.connect_to(self.__endopoint)
+        return provisioned_thing_connection
 
 
     def subscribe_all_topics(self) -> List[str]:

@@ -16,21 +16,26 @@ class PubSub_callback:
         endpoint:Endpoint = get_endpoint(),
         topic_name:str = DEFAULT.get('TOPIC_NAME'),
     ) -> None:
-        self.__endpoint:Endpoint = endpoint
+        # self.__endpoint:Endpoint = endpoint
         self.__topic_name:str = topic_name
 
 
-    def excute_callback_on(self, client:Client, callback, publisher:Client=None):
-        connection:Connection = client.connect_to(self.__endpoint)
+    def excute_callback_on(
+        self,
+        connection:Connection,
+        callback,
+        publisher_connection:Connection = None,
+    ):
+        # connection:Connection = client.connect_to(self.__endpoint)
         result = callback(
-            publisher = publisher,
+            publisher_connection = publisher_connection,
             topic = connection.use_topic(self.__topic_name),
         )
-        client.disconnect()
+        # client.disconnect()
         return result
 
             
-    def subscribe_and_wait_massage(self, publisher:Client, topic:Topic) -> None:
+    def subscribe_and_wait_massage(self, publisher_connection:Connection, topic:Topic) -> None:
         self.__received_event:Event = Event()
         topic.subscribe(callback=self.__on_message_received)
         util.print_log(
@@ -38,11 +43,11 @@ class PubSub_callback:
             verb = 'Waiting...',
             message = "for all messages to be received"
         )
-        self.excute_callback_on(client=publisher, callback=self.publish)
+        self.excute_callback_on(connection=publisher_connection, callback=self.publish)
         self.__received_event.wait()
 
 
-    def publish(self, publisher:Client, topic:Topic) -> int:
+    def publish(self, publisher_connection:Connection, topic:Topic) -> int:
         self.__message:str = {'from': topic.client_id}
         packet_id:int = topic.publish(self.__message)
         return packet_id
