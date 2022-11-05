@@ -27,7 +27,7 @@ def check_communication(
 
 
 class PubSub:
-    from src.client.client import Client
+    # from src.client.client import Client
 
     def __init__(
         self,

@@ -7,7 +7,7 @@ from src.client.connection import Topic, Connection
 
 class PubSub_callback:
     from awscrt import mqtt
-    from src.client.client import Client
+    # from src.client.client import Client
 
     DEFAULT:dict = util.load_json('default.json')
 
