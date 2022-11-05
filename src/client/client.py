@@ -1,6 +1,7 @@
 from src.utils import util
 from src.client import client_callback
 from src.client.certs import Cert
+from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Connection
 from awscrt import io, mqtt
 from awsiot.mqtt_connection_builder import mtls_from_path
@@ -26,7 +27,7 @@ class Client:
         
     def connect_to(
         self,
-        endpoint,
+        endpoint:Endpoint = get_endpoint(),
         keep_alive:int = DEFAULT.get('KEEP_A_LIVE_SEC'),
         clean_session:bool = DEFAULT.get('CLEAN_SESSION'),
     ) -> Connection:
@@ -53,9 +54,9 @@ class Client:
 
     def __connect_to(
         self,
-        endpoint,
+        endpoint:Endpoint = get_endpoint(),
         keep_alive:int = DEFAULT.get('KEEP_A_LIVE_SEC'),
-        clean_session:bool = DEFAULT.get('CLEAN_SESSION')
+        clean_session:bool = DEFAULT.get('CLEAN_SESSION'),
     ) -> mqtt.Connection:
         return mtls_from_path(
             endpoint = endpoint.name,
