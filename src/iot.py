@@ -1,9 +1,11 @@
 from src.utils.util import load_json
-from src.utils import util
-from src.client.account import Account, Endpoint, get_endpoint
-from src.client.client import Client
-from src.fleet_provisioning.util import get_current_time
-from src.fleet_provisioning.provisioning import Provisioning
+# from src.utils import util
+from src.client.account import Account
+from src.client.endpoint import Endpoint
+from src.client.project import Project
+# from src.client.client import Client
+# from src.fleet_provisioning.util import get_current_time
+# from src.fleet_provisioning.provisioning import Provisioning
 
 
 class IoT:
@@ -11,6 +13,7 @@ class IoT:
         config:dict = load_json(config_path)
         self.__account:Account = self.__set_account_as(config)
         self.__endpoint:Endpoint = self.__set_endpoint_as(config)
+        self.__project:Project = self.__set_project_as(config)
 
     def get_account(self, name:str) -> Account:
         return Account(name)
@@ -31,3 +34,9 @@ class IoT:
             ca = config.get('CA'),
             port = config.get('PORT'),
         )
+
+    def get_project(self, name:str) -> Project:
+        return Project(name)
+
+    def __set_project_as(self, config:dict) -> Account:
+        return self.get_project(name=config.get('PROJECT_NAME'))
