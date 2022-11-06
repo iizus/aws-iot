@@ -1,4 +1,5 @@
 {
+    "CA": "RSA2048",
     "ENDPOINT_FILE_PATH": "endpoint.json",
     "ACCOUNT_NAME": "isengard",
     "REGION_NAME": "us-east-1",

@@ -23,7 +23,8 @@ class IoT:
 
     def get_endpoint(self, region_name:str, ca:str, port:int) -> Endpoint:
         return Endpoint(
-            name = self.__account.get_endpoint_of(region_name),
+            accout = self.__account,
+            region_name = region_name,
             ca = ca,
             port = port,
         )
