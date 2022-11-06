@@ -6,7 +6,9 @@ path.append(parent_dir)
 
 
 # from src.client.account import Account
-from src.client.endpoint import Endpoint
+# from src.client.endpoint import Endpoint
+from src.client.project import Project
 
 # account:Account = Account()
-endpoint:Endpoint = Endpoint()
+# endpoint:Endpoint = Endpoint()
+project:Project = Project()

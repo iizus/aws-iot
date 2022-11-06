@@ -4,7 +4,7 @@
     "REGION_NAME": "us-east-1",
     "CA": "RSA2048",
     "PORT": 8883,
-    "PROJECT_NAME": "TEST",
+    "PROJECT_NAME": "experiment",
     "TOPIC_NAME": "check/communication",
     "PUBLISHER_NAME": "publisher",
     "SUBSCRIBER_NAME": "subscriber",
