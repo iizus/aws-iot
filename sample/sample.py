@@ -4,6 +4,9 @@ current_dir:str = path[0]
 parent_dir:str = dirname(current_dir)
 path.append(parent_dir)
 
-from src.iot import IoT
 
-iot:IoT = IoT(config_path='test1.json')
+# from src.client.account import Account
+from src.client.endpoint import Endpoint
+
+# account:Account = Account()
+endpoint:Endpoint = Endpoint()

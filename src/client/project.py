@@ -1,4 +1,4 @@
-from src.client.certs import Cert
+from utils.certs import Cert
 from src.client.client import Client
 from src.fleet_provisioning.util import get_current_time
 

@@ -1,6 +1,6 @@
 from src.utils import util
 from src.client import client_callback
-from src.client.certs import Cert
+from utils.certs import Cert
 from src.client.account import get_endpoint, Endpoint
 from src.client.connection import Connection
 from awscrt import io, mqtt

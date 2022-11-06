@@ -1,23 +1,23 @@
 from awscrt.http import HttpProxyOptions
-from src.utils import util
-from src.client.certs import get_ca_path
+
+from src.utils import util, certs
 from src.client.account import Account
 
 
 class Endpoint:
-    DEFAULT:dict = util.load_json('default.json')
+    config:dict = util.load_json('config.json')
 
     def __init__(
         self,
-        accout:Account,
-        region_name:str = DEFAULT.get('REGION_NAME'),
-        ca:str = DEFAULT.get('CA'),
-        port:int = DEFAULT.get('PORT'),
+        accout:Account = Account(),
+        region_name:str = config.get('REGION_NAME'),
+        ca:str = config.get('CA'),
+        port:int = config.get('PORT'),
         proxy:HttpProxyOptions = None,
     ) -> None:
         self.name:str = f'{accout.endpoint_prefix}-ats.iot.{region_name}.amazonaws.com'
         self.ca:str = ca
-        self.ca_path:str = get_ca_path(type=ca)
+        self.ca_path:str = certs.get_ca_path(type=ca)
         self.port:int = port
         self.proxy:HttpProxyOptions = proxy
         self.endpoint:str = f"{self.name}:{self.port}"

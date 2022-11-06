@@ -1,0 +1,16 @@
+{
+    "ENDPOINT_FILE_PATH": "endpoint.json",
+    "ACCOUNT_NAME": "isengard",
+    "REGION_NAME": "us-east-1",
+    "CA": "RSA2048",
+    "PORT": 8883,
+    "PROJECT_NAME": "TEST",
+    "TOPIC_NAME": "check/communication",
+    "PUBLISHER_NAME": "publisher",
+    "SUBSCRIBER_NAME": "subscriber",
+    "TEMPLATE_NAME": "aws-iot",
+    "THING_NAME_KEY": "device_id",
+    "KEEP_A_LIVE_SEC": 30,
+    "CLEAN_SESSION": false,
+    "TIMES": 1
+}
